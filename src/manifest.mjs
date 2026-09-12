@@ -17,6 +17,31 @@ function requireString(errors, value, where) {
   if (typeof value !== 'string' || value.length === 0) errors.push(`${where}: required non-empty string`)
 }
 
+function requireObject(errors, value, where) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) errors.push(`${where}: required object`)
+}
+
+function validateBase(errors, base) {
+  if (base === undefined) return
+  requireObject(errors, base, 'base')
+  if (base !== null && typeof base === 'object' && !Array.isArray(base)) requireString(errors, base.source, 'base.source')
+}
+
+function validateLock(errors, lock) {
+  if (lock === undefined) return
+  requireObject(errors, lock, 'lock')
+  if (lock === null || typeof lock !== 'object' || Array.isArray(lock)) return
+  requireString(errors, lock.version, 'lock.version')
+  requireObject(errors, lock.outputs, 'lock.outputs')
+  if (lock.base !== undefined) {
+    requireObject(errors, lock.base, 'lock.base')
+    if (lock.base !== null && typeof lock.base === 'object' && !Array.isArray(lock.base)) {
+      requireString(errors, lock.base.version, 'lock.base.version')
+      requireObject(errors, lock.base.files, 'lock.base.files')
+    }
+  }
+}
+
 /**
  * Return the structural errors in a manifest.
  *
@@ -61,5 +86,7 @@ export function validateManifest(manifest) {
     })
   }
 
+  validateBase(errors, manifest.base)
+  validateLock(errors, manifest.lock)
   return errors
 }

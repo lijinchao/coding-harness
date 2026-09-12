@@ -1,30 +1,33 @@
 {
   "version": "0.1.0",
+  "base": {
+    "source": "../../dist"
+  },
   "compositions": [
     {
       "output": "AGENTS.md",
       "sources": [
-        "../../base/AGENTS.base.md",
+        "base:AGENTS.base.md",
         "AGENTS.delta.md"
       ]
     },
     {
       "output": "REVIEW.md",
       "sources": [
-        "../../base/REVIEW.base.md"
+        "base:REVIEW.base.md"
       ]
     }
   ],
   "skills": [
     {
       "id": "test-driven-development",
-      "path": "../../base/skills/test-driven-development/SKILL.md",
+      "path": "base:skills/test-driven-development/SKILL.md",
       "trigger": "before writing implementation code",
       "owner": "@platform"
     },
     {
       "id": "writing-a-gate",
-      "path": "../../base/skills/writing-a-gate/SKILL.md",
+      "path": "base:skills/writing-a-gate/SKILL.md",
       "trigger": "before adding a gate",
       "owner": "@platform"
     }
@@ -50,6 +53,16 @@
     "outputs": {
       "AGENTS.md": "49e47ec4f18592f77ca6569dea34d5c5ad14c7ee394b92cff7c2e669a880a9fc",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
+    },
+    "base": {
+      "version": "0.1.0",
+      "files": {
+        "AGENTS.base.md": "98e3bc918d9459a6111a4814bc3673152bac4c89435fb4e7f5062e2b274129c1",
+        "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
+        "VERSION": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
+        "skills/test-driven-development/SKILL.md": "06ebb705e6b7806c6b86b8639c279671683b46d2f831f7f572522df0354d18cf",
+        "skills/writing-a-gate/SKILL.md": "d0ea2cde58332a2da2280adc69d691e86f735d108c1ce18726d2adfd7ee53539"
+      }
     }
   }
 }

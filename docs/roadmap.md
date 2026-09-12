@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.0 — a working scaffold, adopted by no repository yet.
+Status: v0.1.0 — the base is a versioned, hashed release and one consumer is pinned to it. Hosted CI still needs a repository remote.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -9,7 +9,7 @@ This page carries the forward plan: the next three actions, the milestones ahead
 Three things, in order.
 
 1. **Adopt it in one real repository.** Run `node bin/harness.mjs init --dir <repo>`, author that repository's `AGENTS.delta.md`, and add `harness check` to its CI. Then hand-edit the composed `AGENTS.md` once and watch the job fail; that failure is the gate's proof.
-2. **Make the base distributable.** The manifest currently reaches the base by relative path, which only works when the base sits beside the consumer. Move to a pinned, fetched base: a released version plus a per-file hash in `harness.lock`, so a consumer pulls `base@0.1.0` from anywhere.
+2. **Make the base distributable.** The base is now a released version plus per-file hashes in `harness.lock`; a consumer resolves `base@0.1.0` from a registry. What remains is fetching that registry from a remote instead of a local directory.
 3. **Collect the first effectiveness signals.** Record the first-pass check rate and every review finding that cites a policy already covered by a guide. Two weeks of those two numbers tell you which guide is not working.
 
 ## Milestones
@@ -20,11 +20,15 @@ Compose one repository's `AGENTS.md` from the base, run `harness check` in CI, a
 
 Done when: that repository's CI job fails on drift, and passes after `harness sync`.
 
+Progress: the drift gate is proven locally for one consumer (hand edit → exit 1; `sync` → exit 0) and is wired into its `run_harness.sh` and a GitHub Actions workflow. The hosted job cannot run until that repository has a remote.
+
 ### M2 — pinned base distribution
 
 Replace relative base paths with a declared base version and a locked hash. `harness sync` fetches that exact base; `check` fails when the fetched base differs from the pin.
 
 Done when: a consumer on a different checkout path resolves the same base, and a tampered base fails the hash check.
+
+Progress: `harness release` writes `base@<version>/` with per-file hashes, the lock records them, and `base:` sources resolve inside the pinned release. Both done conditions are covered by tests (`a relocated consumer resolves the same pinned base`, `check fails when the fetched base is tampered`). Remaining: fetch the registry from a remote source instead of a local directory.
 
 ### M3 — governance mechanics
 

@@ -108,6 +108,8 @@ Every harness change traces to an observed failure: a repeated mistake, an incid
 
 ## Versioning and upgrade
 
-A repository pins one base version in `harness.manifest.json`. `harness check` fails when a composed output no longer matches the pin.
+The base is a versioned, hashed release: `harness release` writes `base@<version>/` with a `release.json` per-file hash map. A repository pins one base version and one release registry (`base.source`) in `harness.manifest.json`; composition sources prefixed `base:` resolve inside the fetched release.
 
-An upgrade is explicit. `harness upgrade --to <version>` re-syncs the base, and the repository's own checks must pass before the bump merges.
+`harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
+
+An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-syncs, and the repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.

@@ -33,7 +33,7 @@ node bin/harness.mjs sync     --manifest examples/consumer/harness.manifest.json
 node bin/harness.mjs check    --manifest examples/consumer/harness.manifest.json
 ```
 
-`sync` writes the composed `AGENTS.md` and `REVIEW.md` and records their hashes in the manifest's `lock`. `check` recomposes in memory and fails on any difference.
+A consumer manifest declares `"base": { "source": "<release registry>" }` and pins a base version; composition sources prefixed `base:` resolve inside the fetched `base@<version>`. `sync` writes the composed `AGENTS.md` and `REVIEW.md` and records the base's per-file hashes and the outputs' hashes in the manifest's `lock`. `check` recomposes in memory and fails when an output drifts or a fetched base file no longer matches the lock.
 
 To add the harness to an existing repository:
 
@@ -48,6 +48,7 @@ docs/reference.md              the normative reference
 docs/governance.md             ownership, change sources, versioning, proof, pruning
 docs/roadmap.md                next actions, milestones, and what to adapt
 schema/                        JSON schema for the manifest
+dist/base@<version>/           released, hashed base a consumer pulls
 base/                          the shared layer repositories pin
   AGENTS.base.md               composed into each repository's AGENTS.md
   REVIEW.base.md               review passes and severity thresholds
@@ -67,6 +68,7 @@ test/                          node:test suites
 | `check --manifest <path>` | Fail when a composed output drifted from `base@version + delta` |
 | `init --dir <path>` | Scaffold a repository delta and manifest |
 | `upgrade --manifest <path> --to <version>` | Pin a new base version and re-sync |
+| `release --base <dir> --out <dir>` | Build a versioned, hashed base release under `<out>/base@<version>/` |
 
 ## Make the harness evolve
 
