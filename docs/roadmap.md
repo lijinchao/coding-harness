@@ -52,7 +52,7 @@ Make adoption one command: `harness init` writes the manifest, the lock, and the
 
 Done when: a new repository reaches a green `harness check` from `init` alone.
 
-Progress: `harness init` scaffolds the delta, manifest, bootstrap, `.gitignore`, and a CI workflow, then composes the repository (green when the base source resolves). `harness diff` previews a base upgrade. `harness gates` supports `--jobs` and `--timeout`, and `--report` feeds `harness metrics` (first-pass rate). Remaining: YAML manifest support.
+Progress: `harness init` scaffolds the delta, manifest, bootstrap, `.gitignore`, and a CI workflow, then composes the repository (green when the base source resolves). `harness diff` previews a base upgrade. `harness gates` supports `--jobs` and `--timeout`, and `--report` feeds `harness metrics` (first-pass rate). Remaining: YAML manifest support, and a freshness contract for generated scaffolding — `init` writes the bootstrap once, so a fixed bootstrap never reaches an already-initialized repository; `sync` should materialize it and `check` should flag it stale.
 
 ## What to adapt from DeepSeek Harness
 
