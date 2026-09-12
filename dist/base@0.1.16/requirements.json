@@ -1,0 +1,24 @@
+{
+  "requiredGates": [
+    "harness-drift",
+    "doctor"
+  ],
+  "requiredGovernance": [
+    "owners",
+    "ci"
+  ],
+  "recommendedGovernance": [
+    "version",
+    "decisions",
+    "changes",
+    "manualVerification"
+  ],
+  "recommendedPhases": [
+    "release"
+  ],
+  "requiredCiCommands": [
+    "harness gates",
+    "harness prove"
+  ],
+  "requireOutputAssertions": true
+}

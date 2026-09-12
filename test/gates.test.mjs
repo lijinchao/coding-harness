@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -54,6 +54,30 @@ test('upgrade rewrites a stale base version in gate text', () => {
   assert.ok(after.gates[0].protects.includes('base@0.2.0'))
   assert.ok(!after.gates[0].protects.includes('base@0.1.0'))
   assert.ok(after.gates[0].prove_fires.includes('base@0.2.0'))
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('gates fails for an unknown gate id', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-gates-'))
+  writeManifest(dir, [gate('pass', 'true', 'blocking')])
+  assert.throws(() => run(['gates', '--manifest', manifestPath(dir), '--gate', 'nope']))
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('gates fails when a phase selects no gate', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-gates-'))
+  writeManifest(dir, [{ ...gate('full', 'true', 'blocking'), phase: 'full' }])
+  assert.throws(() => run(['gates', '--manifest', manifestPath(dir), '--phase', 'fast']))
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('a timed-out gate has its whole process tree killed', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-tree-'))
+  const marker = join(dir, 'late.txt')
+  writeManifest(dir, [gate('slow', `( sleep 2; printf late > '${marker}' ) & sleep 30`, 'blocking')])
+  assert.throws(() => run(['gates', '--manifest', manifestPath(dir), '--timeout', '1']))
+  execFileSync('sleep', ['3'])
+  assert.ok(!existsSync(marker), 'the background child should not survive the timeout')
   rmSync(dir, { recursive: true, force: true })
 })
 

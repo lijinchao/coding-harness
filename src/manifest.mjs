@@ -10,19 +10,21 @@ export function loadManifest(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
 }
 
-const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
-const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
-const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'lock']
-const COMPOSITION_KEYS = ['output', 'sources']
-const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase']
-const EXPECT_KEYS = ['forbid', 'allow']
-const BASE_KEYS = ['source', 'registry', 'cache']
-const TOOL_KEYS = ['version', 'commit', 'source']
-const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
-const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
-const LOCK_BASE_KEYS = ['version', 'files']
-const GOVERNANCE_KEYS = ['version', 'decisions', 'owners', 'ci', 'changes', 'manualVerification']
+// Exported so a test can hold the JSON schema and this validator to one
+// contract; the schema alone is not executable and drifted once already.
+export const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
+export const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
+export const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'lock']
+export const COMPOSITION_KEYS = ['output', 'sources']
+export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
+export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase']
+export const EXPECT_KEYS = ['forbid', 'allow']
+export const BASE_KEYS = ['source', 'registry', 'cache']
+export const TOOL_KEYS = ['version', 'commit', 'source']
+export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
+export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
+export const LOCK_BASE_KEYS = ['version', 'files']
+export const GOVERNANCE_KEYS = ['version', 'decisions', 'owners', 'ci', 'changes', 'manualVerification']
 
 function requireString(errors, value, where) {
   if (typeof value !== 'string' || value.length === 0) errors.push(where + ': required non-empty string')

@@ -13,6 +13,7 @@ import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
 import { toolCommit, toolVersion } from '../src/tool.mjs'
 import { SHIM } from '../src/shim.mjs'
+import { WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { proveGate } from '../src/prove.mjs'
@@ -120,7 +121,6 @@ function cmdCheck(options) {
   console.log(`check: ${result.detail}`)
 }
 
-const WORKFLOW = "name: harness\n\non:\n  push:\n    branches: [main]\n  pull_request:\n\njobs:\n  harness:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v5\n      - uses: actions/setup-node@v5\n        with:\n          node-version: '22'\n      - name: Run every declared gate\n        run: ./harness gates --manifest harness.manifest.json\n      - name: Prove every gate still fires\n        run: ./harness prove --manifest harness.manifest.json\n"
 
 function cmdInit(options) {
   const dir = resolve(requireOption(options, 'dir'))
@@ -139,9 +139,12 @@ function cmdInit(options) {
 
   const manifestPath = resolve(dir, 'harness.manifest.json')
   if (!existsSync(manifestPath)) {
+    const tool = { version: toolVersion(), source: toolSource }
+    const commit = toolCommit()
+    if (commit !== undefined) tool.commit = commit
     const manifest = {
       version,
-      tool: { version: toolVersion(), source: toolSource },
+      tool,
       base: { source, registry: 'dist', cache: '.harness' },
       governance: { owners: ['@owner'], ci: ['.github/workflows/harness.yml'] },
       compositions: [
@@ -217,18 +220,23 @@ async function cmdGates(options) {
   const root = dirname(path)
   const only = options.gate
   const phase = options.phase
+  if (only !== undefined && !manifest.gates.some((gate) => gate.id === only)) throw new Error('gate not found: ' + only)
   const gates = manifest.gates.filter((gate) => (only === undefined || gate.id === only) && (phase === undefined || gate.phase === undefined || gate.phase === phase))
+  if (gates.length === 0) throw new Error('no gates selected' + (phase === undefined ? '' : ' for phase ' + phase))
   const results = await runGates(root, gates, { timeoutMs: options.timeout === undefined ? 0 : Number(options.timeout) * 1000, jobs: options.jobs === undefined ? 1 : Number(options.jobs) })
   let blocking = 0
   for (const result of results) {
     const status = result.ok ? 'ok' : result.severity === 'advisory' ? 'warn' : 'fail'
     if (!result.ok && result.severity !== 'advisory') blocking += 1
     if (result.output.trim() !== '') process.stdout.write(result.output.endsWith('\n') ? result.output : result.output + '\n')
-    const note = result.timedOut ? ' (timeout)' : result.violations.length > 0 ? ` (forbidden output: ${result.violations.join(', ')})` : ''
-    console.log(`${status}\t${result.id}${note}`)
+    const notes = []
+    if (result.timedOut) notes.push('timeout')
+    if (result.signal !== null) notes.push('signal ' + result.signal)
+    if (result.violations.length > 0) notes.push('forbidden output: ' + result.violations.join(', '))
+    console.log(`${status}\t${result.id}${notes.length === 0 ? '' : ' (' + notes.join('; ') + ')'}`)
   }
   if (typeof options.report === 'string') {
-    const entry = { at: new Date().toISOString(), version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok })) }
+    const entry = { at: new Date().toISOString(), version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, timedOut: result.timedOut, ms: result.ms })) }
     appendFileSync(resolve(options.report), `${JSON.stringify(entry)}\n`)
   }
   if (blocking > 0) process.exit(1)

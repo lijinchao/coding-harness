@@ -23,7 +23,10 @@
       "properties": {
         "version": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "decisions": { "type": "string", "minLength": 1 },
-        "owners": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        "owners": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "ci": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "changes": { "type": "string", "minLength": 1 },
+        "manualVerification": { "type": "string", "minLength": 1 }
       }
     },
     "base": {

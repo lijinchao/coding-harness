@@ -41,7 +41,7 @@ Start with the weakest carrier that works. Promote a rule when it has to hold, n
 
 ## Artifact contracts
 
-Each artifact type has a required skeleton. `harness validate` rejects a manifest whose gates or skills omit a required field.
+Each artifact type has a required skeleton. `harness validate` rejects a manifest whose gates or skills omit a required field. The JSON schema in `schema/` and the validator in `src/manifest.mjs` are one contract: the validator exports its key groups, and `npm test` asserts each equals the schema's properties and required lists, so a field added to one without the other fails the tests.
 
 ### Skill
 
@@ -72,6 +72,8 @@ A gate without `prove_fires` is not admissible. A blocking gate must also declar
 A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless the line also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
 
 A gate may declare a `phase`. `harness gates --phase <name>` runs the unphased gates plus the gates in that phase, and `harness gates` without `--phase` runs every gate. Tag a slow gate `full` so a local `--phase fast` run skips it while CI, which passes no phase, still runs it.
+
+A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM` and escalates to `SIGKILL` after five seconds, and it forwards `SIGINT` and `SIGTERM` to the group before exiting, so a timed-out gate leaves no children behind. A result reports exit code, signal, timeout, and duration separately; `harness gates` prints the signal beside the timeout, and `--report` records the timeout and duration per gate.
 
 ### Guide section
 
@@ -148,7 +150,7 @@ The base is a versioned, hashed release: `harness release` writes `base@<version
 
 A source may be a local registry directory or a git URL prefixed `git:`. For a git source, `sync` and `check` fetch the tag `v<version>` into the consumer's cache and verify it against the lock.
 
-A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag `v<version>` and runs it; the lock records the tool version and a SHA-256 per tool source file, and a running tool that differs from either fails. CI needs no checkout of the tool repository.
+A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag `v<version>` and runs it; the lock records the tool version and a SHA-256 per tool source file, and a running tool that differs from either fails. CI needs no checkout of the tool repository. `harness init` writes `tool.commit` from the running tool, so a scaffolded repository pins the commit as well as the version and the bootstrap rejects a moved tag.
 
 `harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
 
