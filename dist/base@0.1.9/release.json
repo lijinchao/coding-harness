@@ -1,0 +1,14 @@
+{
+  "name": "base",
+  "version": "0.1.9",
+  "files": {
+    "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
+    "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
+    "VERSION": "e358d84552808a5c0bd6679d690c283b938ebe15c2bd843c898681d093213107",
+    "requirements.json": "d928bcf20577c144fe30e1d8f60d0f37299b7a2a0f96bb3534f6bb78f625ae63",
+    "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
+    "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
+    "templates/decision-record.md": "9495d9b30f1276da7c0c448d98c3c153f8b7b7d012dc55dee6a85d828b7182a4",
+    "templates/postmortem.md": "80af444609639a827e383450b682b93f59dc0b08279b519a1342e708dc65d1ee"
+  }
+}

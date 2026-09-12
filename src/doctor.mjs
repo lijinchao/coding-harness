@@ -1,21 +1,30 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { adoptionProblems } from './adopt.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
 const CODEOWNERS = ['CODEOWNERS', '.github/CODEOWNERS', 'docs/CODEOWNERS']
 
 /**
- * Governance facts the manifest declares and a program can check.
- *
- * This detects "governance fact drift": a README that names an old version, a
- * decision record missing a required section, or an owner nobody routes to.
+ * Governance facts the manifest declares and a program can check, plus the
+ * capability gap against the pinned base's requirements.
  *
  * @param {string} root - Directory the manifest lives in.
  * @param {object} manifest - A valid manifest.
+ * @param {object} [requirements] - The pinned base's declared requirements.
  * @returns {string[]} One message per problem; empty means consistent.
  */
-export function doctorProblems(root, manifest) {
+export function doctorProblems(root, manifest, requirements) {
   const problems = []
+  problems.push(...adoptionProblems(manifest, requirements).problems)
+
+  if (manifest.lock?.proofs !== undefined) {
+    const ids = new Set(manifest.gates.map((gate) => gate.id))
+    for (const id of Object.keys(manifest.lock.proofs)) {
+      if (!ids.has(id)) problems.push('lock.proofs references unknown gate ' + id)
+    }
+  }
+
   const governance = manifest.governance
   if (governance === undefined) return problems
 
@@ -45,13 +54,6 @@ export function doctorProblems(root, manifest) {
     } else {
       const text = found.map((path) => readFileSync(path, 'utf8')).join('\n')
       for (const owner of governance.owners) if (!text.includes(owner)) problems.push('CODEOWNERS does not route to ' + owner)
-    }
-  }
-
-  if (manifest.lock?.proofs !== undefined) {
-    const ids = new Set(manifest.gates.map((gate) => gate.id))
-    for (const id of Object.keys(manifest.lock.proofs)) {
-      if (!ids.has(id)) problems.push('lock.proofs references unknown gate ' + id)
     }
   }
 

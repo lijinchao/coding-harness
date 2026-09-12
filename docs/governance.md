@@ -61,6 +61,8 @@ There is no default revert: `harness prove` refuses to guess, so it cannot disca
 
 ## Check the governance facts
 
+A base release declares its required gates and governance keys in `requirements.json`; `harness check` fails until a consumer adopts them, so a version pin implies the base's contract, not only its content.
+
 A harness can pass every gate and still be wrong about itself: a README naming an old version, a decision record missing an alternative, an owner nobody routes to. `harness doctor --manifest <path>` checks the facts the manifest declares under `governance` — version files, decision-record sections, and owner routing — so governance-fact drift fails a gate instead of surviving on trust. The [writing-a-gate](../base/skills/writing-a-gate/SKILL.md) skill owns the procedure.
 
 ## Pruning

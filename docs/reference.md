@@ -127,6 +127,8 @@ An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-sy
 
 `harness diff --manifest <path> --to <version>` previews the base files and compositions an upgrade changes. `harness gates` accepts `--jobs` and `--timeout`, and `--report` appends a JSON run summary that `harness metrics --log` reads into a first-pass rate.
 
-`harness doctor --manifest <path>` checks the governance facts the manifest declares under `governance`: files that must name the pinned version, the sections of each decision record, and a CODEOWNERS route for each declared owner. It is a no-op when the manifest declares no governance section.
+A base release ships `requirements.json` declaring `requiredGates`, `requiredGovernance`, and `recommendedGovernance`. `harness check` loads the pinned release's requirements and fails when a required gate or governance key is missing, so adoption is enforced by the drift gate a consumer already runs. `harness diff` previews the capability delta of an upgrade.
+
+`harness doctor --manifest <path>` checks the governance facts the manifest declares under `governance`: files that must name the pinned version, the sections of each decision record, and a CODEOWNERS route for each declared owner. It also reports the adoption gap against the pinned release.
 
 `harness gates --manifest <path>` runs every gate the manifest declares, so one list drives local runs and CI and the two cannot drift. A blocking failure exits non-zero; an advisory failure only warns. `harness scan --root <dir>` reports every manifest under a tree as ok, stale, diverged, or error. `harness prove --manifest <path>` runs a gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; a gate whose action no longer fires exits non-zero.

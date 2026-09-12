@@ -1,0 +1,13 @@
+{
+  "requiredGates": [
+    "harness-drift",
+    "doctor"
+  ],
+  "requiredGovernance": [
+    "owners"
+  ],
+  "recommendedGovernance": [
+    "version",
+    "decisions"
+  ]
+}

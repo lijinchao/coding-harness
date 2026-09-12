@@ -4,6 +4,7 @@ import { composeText, sha256 } from './compose.mjs'
 import { loadRelease, verifyRelease } from './release.mjs'
 import { ensureGitCheckout, isGitSource } from './fetch.mjs'
 import { toolCommit, toolFiles, toolVersion } from './tool.mjs'
+import { adoptionProblems, loadRequirements } from './adopt.mjs'
 
 function writeAtomic(path, text) {
   const tmp = path + '.tmp'
@@ -97,6 +98,9 @@ export function inspect(root, manifest) {
       if (locked.base.files?.[rel] !== hash) return { status: 'diverged', detail: 'base file ' + rel + ' differs from the lock' }
     }
   }
+  const requirements = base === null ? undefined : loadRequirements(base.dir)
+  const adoption = adoptionProblems(manifest, requirements).problems
+  if (adoption.length > 0) return { status: 'stale', detail: adoption[0] }
   let outputs
   try {
     outputs = composedOutputs(root, manifest, base === null ? undefined : base.dir)

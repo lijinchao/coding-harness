@@ -19,6 +19,7 @@ import { proveGate } from '../src/prove.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
 import { doctorProblems } from '../src/doctor.mjs'
+import { loadRequirements } from '../src/adopt.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -142,6 +143,7 @@ function cmdInit(options) {
       version,
       tool: { version: toolVersion(), source: toolSource },
       base: { source, registry: 'dist', cache: '.harness' },
+      governance: { owners: ['@owner'] },
       compositions: [
         { output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] },
         { output: 'REVIEW.md', sources: ['base:REVIEW.base.md'] },
@@ -153,6 +155,7 @@ function cmdInit(options) {
       gates: [
         { id: 'harness-drift', command: './harness check --manifest harness.manifest.json', protects: `composed files match base@${version} plus this delta`, prove_fires: 'hand-edit AGENTS.md, then run ./harness check; expect exit 1', prove_fires_command: "printf '<!-- prove -->' >> AGENTS.md", revert_command: './harness sync --manifest harness.manifest.json', severity: 'blocking' },
         { id: 'validate', command: './harness validate --manifest harness.manifest.json', protects: 'declared skills and gates carry their required sections', prove_fires: 'corrupt the manifest, then run ./harness validate; expect exit 1', prove_fires_command: "printf '{' >> harness.manifest.json", revert_command: 'git checkout -- harness.manifest.json', severity: 'blocking' },
+        { id: 'doctor', command: './harness doctor --manifest harness.manifest.json', protects: 'declared governance facts stay consistent', prove_fires: 'empty CODEOWNERS, then run ./harness doctor; expect exit 1', prove_fires_command: "printf '' > .github/CODEOWNERS", revert_command: 'git checkout -- .github/CODEOWNERS', severity: 'blocking' },
       ],
     }
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
@@ -170,6 +173,12 @@ function cmdInit(options) {
   if (!existsSync(workflowPath)) {
     mkdirSync(dirname(workflowPath), { recursive: true })
     writeFileSync(workflowPath, WORKFLOW)
+  }
+
+  const codeowners = resolve(dir, '.github/CODEOWNERS')
+  if (!existsSync(codeowners)) {
+    mkdirSync(dirname(codeowners), { recursive: true })
+    writeFileSync(codeowners, '# Base owner: base changes are reviewed here.\n* @owner\n')
   }
 
   try {
@@ -240,6 +249,11 @@ function cmdDiff(options) {
     const after = composeText(root, composition.sources, toBase === null ? undefined : toBase.dir)
     console.log(`  ${before === after ? '=' : '!'} ${composition.output}`)
   }
+  const fromReq = fromBase === null ? undefined : loadRequirements(fromBase.dir)
+  const toReq = toBase === null ? undefined : loadRequirements(toBase.dir)
+  for (const id of toReq?.requiredGates ?? []) if (!(fromReq?.requiredGates ?? []).includes(id)) console.log(`  + required gate: ${id}`)
+  for (const id of fromReq?.requiredGates ?? []) if (!(toReq?.requiredGates ?? []).includes(id)) console.log(`  - required gate: ${id}`)
+  for (const key of toReq?.requiredGovernance ?? []) if (!(fromReq?.requiredGovernance ?? []).includes(key)) console.log(`  + required governance: ${key}`)
 }
 
 function cmdMetrics(options) {
@@ -293,7 +307,10 @@ function cmdProve(options) {
 function cmdDoctor(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
-  const problems = doctorProblems(dirname(path), manifest)
+  const root = dirname(path)
+  const base = manifest.base === undefined ? null : resolveBase(root, manifest)
+  const requirements = base === null ? undefined : loadRequirements(base.dir)
+  const problems = doctorProblems(root, manifest, requirements)
   if (problems.length > 0) {
     for (const problem of problems) console.error(`doctor: ${problem}`)
     process.exit(1)

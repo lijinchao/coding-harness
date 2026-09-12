@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.8 — base and tool are versioned, hashed, commit-pinned releases; validation enforces the schema and requires executable proofs; a doctor gate catches governance-fact drift; init reaches green; upgrades can be previewed; gates run with jobs, timeouts, and reports.
+Status: v0.1.9 — base and tool are versioned, hashed, commit-pinned releases; a base release declares required gates and governance, and `check`/`doctor` fail until a consumer adopts them; validation enforces the schema and executable proofs; init reaches green.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
