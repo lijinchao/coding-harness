@@ -15,6 +15,8 @@ import { ensureGitCheckout, isGitSource } from '../src/fetch.mjs'
 import { toolFiles, toolVersion } from '../src/tool.mjs'
 import { SHIM } from '../src/shim.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
+import { scan } from '../src/scan.mjs'
+import { proveGate } from '../src/prove.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -26,7 +28,10 @@ commands:
                                          scaffold a delta, manifest, and bootstrap
   upgrade    --manifest <path> --to <v>  pin a new base version and re-sync
   release    --base <dir> --out <dir> [--version <v>]
-                                         build a versioned, hashed base release`
+                                         build a versioned, hashed base release
+  scan       --root <dir>                list consumers whose harness is stale or diverged
+  prove      --manifest <path> [--gate <id>]
+                                         run the three-step proof for each gate action`
 
 function parseOptions(argv) {
   const options = {}
@@ -229,7 +234,34 @@ function cmdUpgrade(options) {
   cmdSync(options)
 }
 
-const COMMANDS = { validate: cmdValidate, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease }
+function cmdScan(options) {
+  const root = resolve(requireOption(options, 'root'))
+  const results = scan(root)
+  let bad = 0
+  for (const result of results) {
+    if (result.status !== 'ok') bad += 1
+    console.log(`${result.status}\t${result.path}\t${result.detail}`)
+  }
+  console.log(`scan: ${results.length} manifest(s), ${bad} not ok`)
+  if (bad > 0) process.exit(1)
+}
+
+function cmdProve(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const manifest = readValidManifest(path)
+  const root = dirname(path)
+  const only = options.gate
+  let bad = 0
+  for (const gate of manifest.gates) {
+    if (only !== undefined && gate.id !== only) continue
+    const result = proveGate(root, gate)
+    if (result.status !== 'ok' && result.status !== 'skip') bad += 1
+    console.log(`${result.status}\t${gate.id}\t${result.detail}`)
+  }
+  if (bad > 0) process.exit(1)
+}
+
+const COMMANDS = { validate: cmdValidate, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

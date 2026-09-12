@@ -119,3 +119,5 @@ A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag
 `harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
 
 An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-syncs, and the repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
+
+`harness scan --root <dir>` reports every manifest under a tree as ok, stale, diverged, or error. `harness prove --manifest <path>` runs a gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; a gate whose action no longer fires exits non-zero.

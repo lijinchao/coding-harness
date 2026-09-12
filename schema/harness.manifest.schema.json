@@ -68,6 +68,8 @@
           "command": { "type": "string", "minLength": 1 },
           "protects": { "type": "string", "minLength": 1 },
           "prove_fires": { "type": "string", "minLength": 1 },
+          "prove_fires_command": { "type": "string", "minLength": 1 },
+          "revert_command": { "type": "string", "minLength": 1 },
           "severity": { "enum": ["blocking", "advisory"] }
         }
       }

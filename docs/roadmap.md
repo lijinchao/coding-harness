@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.3 — the base and the tool are versioned, hashed releases fetched from git, and validation reaches the declared artifacts, one consumer is pinned to it, and its hosted CI drift gate is proven.
+Status: v0.1.4 — the base and the tool are versioned, hashed releases fetched from git, validation reaches the declared artifacts, and the fleet can be scanned and gates proved, one consumer is pinned to it, and its hosted CI drift gate is proven.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -35,6 +35,8 @@ Progress: `harness release` writes `base@<version>/` with per-file hashes; the l
 Add the artifact types governance refers to: decision records under `docs/decisions/`, a cross-repository drift scan, and a `harness prove` command that automates the three-step gate proof.
 
 Done when: `harness scan --root <dir>` lists every consumer whose harness is stale or diverged, and `harness prove` exits non-zero for a gate whose action no longer fires.
+
+Progress: `harness scan --root <dir>` walks the tree for manifests and reports ok / stale / diverged / error, exiting non-zero when any is not ok. `harness prove --manifest <path> [--gate <id>]` runs each gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; it exits non-zero when a gate no longer fires. Both are covered by tests. Decision records live in `docs/decisions/` with the base template.
 
 ### M4 — artifact and check coverage
 
