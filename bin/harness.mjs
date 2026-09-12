@@ -17,6 +17,7 @@ import { scan } from '../src/scan.mjs'
 import { proveGate } from '../src/prove.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
+import { doctorProblems } from '../src/doctor.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -24,6 +25,7 @@ commands:
   validate   --manifest <path>           validate manifest structure
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
+  doctor     --manifest <path>           fail when declared governance facts drift
   init       --dir <path> [--base-source <dir>] [--version <v>]
                                          scaffold a delta, manifest, and bootstrap
   upgrade    --manifest <path> --to <v>  pin a new base version and re-sync
@@ -221,7 +223,18 @@ function cmdProve(options) {
   }
 }
 
-const COMMANDS = { validate: cmdValidate, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates }
+function cmdDoctor(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const manifest = readValidManifest(path)
+  const problems = doctorProblems(dirname(path), manifest)
+  if (problems.length > 0) {
+    for (const problem of problems) console.error(`doctor: ${problem}`)
+    process.exit(1)
+  }
+  console.log('doctor: ok')
+}
+
+const COMMANDS = { validate: cmdValidate, doctor: cmdDoctor, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

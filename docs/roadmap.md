@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.6 — base and tool are versioned, hashed, commit-pinned releases fetched from git; validation enforces the schema and requires executable proofs; one gate list drives local and CI; the fleet can be scanned and gates proved.
+Status: v0.1.7 — base and tool are versioned, hashed, commit-pinned releases fetched from git; validation enforces the schema and requires executable proofs; a doctor gate catches governance-fact drift; one gate list drives local and CI.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 

@@ -1,0 +1,38 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { doctorProblems } from '../src/doctor.mjs'
+
+function manifest(governance) {
+  return { version: '1.2.3', governance, gates: [], lock: {} }
+}
+
+test('doctor passes when declared facts are consistent', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
+  writeFileSync(join(root, 'README.md'), 'Status: v1.2.3\n')
+  mkdirSync(join(root, 'docs', 'decisions'), { recursive: true })
+  writeFileSync(join(root, 'docs', 'decisions', '0001.md'), '## Problem\n## Decision\n## Alternatives\n## Consequences\n')
+  writeFileSync(join(root, 'CODEOWNERS'), '* @owner\n')
+  assert.deepEqual(doctorProblems(root, manifest({ version: ['README.md'], decisions: 'docs/decisions', owners: ['@owner'] })), [])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('doctor reports a stale version reference', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
+  writeFileSync(join(root, 'README.md'), 'Status: v0.0.0\n')
+  const problems = doctorProblems(root, manifest({ version: ['README.md'] }))
+  assert.ok(problems.some((problem) => problem.includes('v1.2.3')))
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('doctor reports a decision record missing a section and a missing owner route', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
+  mkdirSync(join(root, 'docs', 'decisions'), { recursive: true })
+  writeFileSync(join(root, 'docs', 'decisions', '0001.md'), '## Problem\n## Decision\n')
+  const problems = doctorProblems(root, manifest({ decisions: 'docs/decisions', owners: ['@owner'] }))
+  assert.ok(problems.some((problem) => problem.includes('## Alternatives')))
+  assert.ok(problems.some((problem) => problem.includes('CODEOWNERS')))
+  rmSync(root, { recursive: true, force: true })
+})

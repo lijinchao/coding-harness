@@ -1,7 +1,7 @@
 {
-  "version": "0.1.6",
+  "version": "0.1.7",
   "tool": {
-    "version": "0.1.6"
+    "version": "0.1.7"
   },
   "base": {
     "source": "../../dist"
@@ -39,7 +39,7 @@
     {
       "id": "harness-drift",
       "command": "harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.6 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.7 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->' >> AGENTS.md",
@@ -56,36 +56,37 @@
     }
   ],
   "lock": {
-    "version": "0.1.6",
+    "version": "0.1.7",
     "tool": {
-      "version": "0.1.6",
+      "version": "0.1.7",
       "files": {
-        "bin/harness.mjs": "7480408e3a8108c032d0a5bb6f2a9f23ff09120e52bc0f49c69d2b79ee7e73db",
+        "bin/harness.mjs": "7816f2c492955adff21ee5018e935bbedef01774f2e59d9686ba6961f9bb74f5",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
+        "src/doctor.mjs": "021a2488e4fab8b9b4f15c49199f65c81b88633b0cd7309d5e8c1f63154c7395",
         "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
         "src/gates.mjs": "bbc9b4d365dec9feb769089fd92e208aa1bb2407fbaa4f3234902332b2cb8a20",
-        "src/manifest.mjs": "040395b53643692c1d376a6baa1d5193583053592635936da91cb46adde8d01d",
+        "src/manifest.mjs": "3bd33b63f1d46e070fc382f079a1e89188c1124f6923b0f8f59a281d5634dc54",
         "src/prove.mjs": "17578fbdfda0611dba46b42cbbcdf9dd9499177b4a27f378e33c77da2fb00e63",
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/shim.mjs": "4d76db69eb8e822308d0ad983989d22222684ac7d6710cd92678c7b4bc6b167e",
         "src/state.mjs": "fedc5c098112fb4f43df513337a7f080addbfbb8d88a61f217273af94f3f0626",
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
-        "package.json": "8d4eaba92844e2aa699f723f7b163579b4fc813d3d507ee398b9583f2720cd80"
+        "package.json": "3db0e2e2f28d65e84ef000d3ab4f40fcfe9d3ea83ceed44b0075f1ca6277d003"
       },
-      "commit": "9e332ffdca82a598783b146d4cea52c883465709"
+      "commit": "b46c277099cb2691af0097c6bff908ba7867b0a8"
     },
     "outputs": {
       "AGENTS.md": "b3ef42e8d0585a74d2f470dbd4bc04fe76432de56f7b00e03e465ce2469ff656",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.6",
+      "version": "0.1.7",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "1f2110568627307becae713f8b808f3d9d912d4b2a24ed6a78605f03f7437d3c",
+        "VERSION": "ba57e7c7f71876d645bcdd9fb070f2dea8e6db5ed284a7e3d85c6b7d2409fef1",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
         "templates/decision-record.md": "9495d9b30f1276da7c0c448d98c3c153f8b7b7d012dc55dee6a85d828b7182a4",

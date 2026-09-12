@@ -125,4 +125,6 @@ An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-sy
 
 `harness release` refuses to overwrite an existing `base@<version>`; bump `base/VERSION` or pass `--force`. `harness sync` and `harness upgrade` resolve, verify, and compose before writing anything, and commit each file by rename, so a failed upgrade leaves the previous state intact.
 
+`harness doctor --manifest <path>` checks the governance facts the manifest declares under `governance`: files that must name the pinned version, the sections of each decision record, and a CODEOWNERS route for each declared owner. It is a no-op when the manifest declares no governance section.
+
 `harness gates --manifest <path>` runs every gate the manifest declares, so one list drives local runs and CI and the two cannot drift. A blocking failure exits non-zero; an advisory failure only warns. `harness scan --root <dir>` reports every manifest under a tree as ok, stale, diverged, or error. `harness prove --manifest <path>` runs a gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; a gate whose action no longer fires exits non-zero.

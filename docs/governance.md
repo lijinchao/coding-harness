@@ -57,7 +57,11 @@ A blocking gate must declare `prove_fires_command` (introduce the failure) and `
 2. Run the gate's `command` and confirm it exits non-zero.
 3. Run `revert_command` and confirm the gate exits zero again.
 
-There is no default revert: `harness prove` refuses to guess, so it cannot discard unrelated work. `harness prove --record` stores the last proof time and commit in the lock. A gate whose `prove_fires_command` has not been run recently is treated as broken until proven otherwise. The [writing-a-gate](../base/skills/writing-a-gate/SKILL.md) skill owns the procedure.
+There is no default revert: `harness prove` refuses to guess, so it cannot discard unrelated work. `harness prove --record` stores the last proof time and commit in the lock. A gate whose `prove_fires_command` has not been run recently is treated as broken until proven otherwise.
+
+## Check the governance facts
+
+A harness can pass every gate and still be wrong about itself: a README naming an old version, a decision record missing an alternative, an owner nobody routes to. `harness doctor --manifest <path>` checks the facts the manifest declares under `governance` — version files, decision-record sections, and owner routing — so governance-fact drift fails a gate instead of surviving on trust. The [writing-a-gate](../base/skills/writing-a-gate/SKILL.md) skill owns the procedure.
 
 ## Pruning
 

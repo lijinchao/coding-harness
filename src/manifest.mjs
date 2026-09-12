@@ -12,7 +12,7 @@ export function loadManifest(path) {
 
 const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
 const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
-const ROOT_KEYS = ['version', 'tool', 'base', 'compositions', 'skills', 'gates', 'lock']
+const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'lock']
 const COMPOSITION_KEYS = ['output', 'sources']
 const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
 const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity']
@@ -21,6 +21,7 @@ const TOOL_KEYS = ['version', 'commit', 'source']
 const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 const LOCK_BASE_KEYS = ['version', 'files']
+const GOVERNANCE_KEYS = ['version', 'decisions', 'owners']
 
 function requireString(errors, value, where) {
   if (typeof value !== 'string' || value.length === 0) errors.push(where + ': required non-empty string')
@@ -71,6 +72,22 @@ function validateTool(errors, tool) {
   if (tool.source !== undefined) requireString(errors, tool.source, 'tool.source')
 }
 
+function validateGovernance(errors, governance) {
+  if (governance === undefined) return
+  requireObject(errors, governance, 'governance')
+  rejectUnknown(errors, governance, GOVERNANCE_KEYS, 'governance')
+  if (!isObject(governance)) return
+  if (governance.version !== undefined) {
+    if (!Array.isArray(governance.version)) errors.push('governance.version: required array')
+    else governance.version.forEach((entry, index) => requireString(errors, entry, 'governance.version[' + index + ']'))
+  }
+  if (governance.decisions !== undefined) requireString(errors, governance.decisions, 'governance.decisions')
+  if (governance.owners !== undefined) {
+    if (!Array.isArray(governance.owners)) errors.push('governance.owners: required array')
+    else governance.owners.forEach((entry, index) => requireString(errors, entry, 'governance.owners[' + index + ']'))
+  }
+}
+
 function validateLockTool(errors, tool) {
   requireObject(errors, tool, 'lock.tool')
   rejectUnknown(errors, tool, LOCK_TOOL_KEYS, 'lock.tool')
@@ -116,6 +133,7 @@ export function validateManifest(manifest) {
   requireString(errors, manifest.version, 'version')
   validateBase(errors, manifest.base)
   validateTool(errors, manifest.tool)
+  validateGovernance(errors, manifest.governance)
 
   if (!Array.isArray(manifest.compositions) || manifest.compositions.length === 0) {
     errors.push('compositions: required non-empty array')
