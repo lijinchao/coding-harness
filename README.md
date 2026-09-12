@@ -46,6 +46,7 @@ node bin/harness.mjs init --dir path/to/repo
 ```text
 docs/reference.md              the normative reference
 docs/governance.md             ownership, change sources, versioning, proof, pruning
+docs/roadmap.md                next actions, milestones, and what to adapt
 schema/                        JSON schema for the manifest
 base/                          the shared layer repositories pin
   AGENTS.base.md               composed into each repository's AGENTS.md
@@ -75,7 +76,7 @@ Every harness change traces to an observed failure, and a rule is promoted only 
 observed failure -> skill -> hook -> CI check -> structural test -> shared base
 ```
 
-A gate is admitted only with a `prove_fires` action you have actually run. A gate nobody has watched fail is not known to work. [docs/governance.md](docs/governance.md) owns ownership, upgrade policy, effectiveness signals, and pruning.
+A gate is admitted only with a `prove_fires` action you have actually run. A gate nobody has watched fail is not known to work. [docs/governance.md](docs/governance.md) owns ownership, upgrade policy, effectiveness signals, and pruning; [docs/roadmap.md](docs/roadmap.md) owns what is not built yet.
 
 ## Status
 
