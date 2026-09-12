@@ -14,6 +14,15 @@ jobs:
         with:
           node-version: '22'
       - name: Run every declared gate
-        run: ./harness gates --manifest harness.manifest.json
+        run: ./harness gates --manifest harness.manifest.json --report .harness/gates.jsonl
+      - name: Report the first-pass rate
+        if: always()
+        run: ./harness metrics --log .harness/gates.jsonl
       - name: Prove every gate still fires
         run: ./harness prove --manifest harness.manifest.json
+      - name: Archive the gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-report
+          path: .harness/gates.jsonl
