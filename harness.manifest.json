@@ -10,6 +10,15 @@
     "registry": "dist",
     "cache": ".harness"
   },
+  "product": {
+    "version": {
+      "path": "base/VERSION"
+    },
+    "mentions": [
+      "README.md",
+      "docs/roadmap.md"
+    ]
+  },
   "compositions": [
     {
       "output": "AGENTS.md",
@@ -153,10 +162,6 @@
     }
   ],
   "governance": {
-    "version": [
-      "README.md",
-      "docs/roadmap.md"
-    ],
     "decisions": "docs/decisions",
     "owners": [
       "@lijinchao"

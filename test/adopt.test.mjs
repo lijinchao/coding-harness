@@ -20,7 +20,7 @@ test('adoption reports missing required gates and governance', () => {
 
 test('adoption is silent without requirements or when adopted', () => {
   assert.deepEqual(adoptionProblems({ gates: [] }, undefined), { problems: [], warnings: [] })
-  const gap = adoptionProblems({ gates: [{ id: 'harness-drift' }, { id: 'doctor' }], governance: { owners: ['@x'], version: ['README.md'] } }, REQ)
+  const gap = adoptionProblems({ gates: [{ id: 'harness-drift' }, { id: 'doctor' }], governance: { owners: ['@x'], decisions: 'docs/decisions' } }, REQ)
   assert.deepEqual(gap.problems, [])
 })
 

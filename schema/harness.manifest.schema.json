@@ -17,11 +17,27 @@
         "source": { "type": "string", "minLength": 1 }
       }
     },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version"],
+      "properties": {
+        "version": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 },
+            "pattern": { "type": "string", "minLength": 1 }
+          }
+        },
+        "mentions": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
     "governance": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "version": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "decisions": { "type": "string", "minLength": 1 },
         "owners": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "ci": { "type": "array", "items": { "type": "string", "minLength": 1 } },

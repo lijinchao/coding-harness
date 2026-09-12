@@ -1,10 +1,11 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { adoptionProblems } from './adopt.mjs'
-import { documentProblems, instructionProblems } from './documents.mjs'
+import { decisionProblems, documentProblems, instructionProblems } from './documents.mjs'
+import { productProblems } from './product.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
-const CHANGE_SECTIONS = ['Problem', 'Approach', 'Verification']
+const CHANGE_SECTIONS = ['Verification']
 const CODEOWNERS = ['CODEOWNERS', '.github/CODEOWNERS', 'docs/CODEOWNERS']
 
 /**
@@ -28,6 +29,8 @@ export function doctorReport(root, manifest, requirements) {
     }
   }
 
+  if (manifest.product !== undefined) problems.push(...productProblems(root, manifest.product))
+
   const governance = manifest.governance
   if (governance === undefined) return { problems, warnings }
 
@@ -46,6 +49,7 @@ export function doctorReport(root, manifest, requirements) {
         for (const section of DECISION_SECTIONS) {
           if (!new RegExp('^## ' + section + '\\b', 'm').test(text)) problems.push(governance.decisions + '/' + name + ': missing section ## ' + section)
         }
+        problems.push(...decisionProblems(root, governance.decisions + '/' + name, text))
       }
     }
   }
@@ -61,6 +65,8 @@ export function doctorReport(root, manifest, requirements) {
         for (const section of CHANGE_SECTIONS) {
           if (!new RegExp('^## ' + section + '\\b', 'm').test(text)) problems.push(governance.changes + '/' + name + ': missing section ## ' + section)
         }
+        const reference = text.match(/^decision:\s*(\S+)/im)
+        if (reference !== null && !existsSync(resolve(root, reference[1]))) problems.push(governance.changes + '/' + name + ': decision reference not found: ' + reference[1])
       }
     }
   }

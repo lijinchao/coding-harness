@@ -1,6 +1,6 @@
 # 0006 — Adoption and feedback ergonomics
 
-Status: accepted
+Status: implemented
 Date: 2026-09-12
 
 ## Problem

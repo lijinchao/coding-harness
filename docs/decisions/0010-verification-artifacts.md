@@ -1,5 +1,7 @@
 # 0010 — Verification artifacts: change records required, manual verification recommended
 
+Status: implemented
+
 ## Problem
 
 The base says "one change, one plan" and requires decision records, but it has no artifact contract for a change plan or for the manual product validation that automated checks cannot perform. Without one, the plan lives only in a conversation, and product-experience findings live nowhere.

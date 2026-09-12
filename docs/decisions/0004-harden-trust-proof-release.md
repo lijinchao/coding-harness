@@ -1,6 +1,6 @@
 # 0004 — Harden the trust, proof, and release chain
 
-Status: accepted
+Status: implemented
 Date: 2026-09-12
 
 ## Problem

@@ -1,5 +1,7 @@
 # 0011 — Gate phases: one list, a fast local subset
 
+Status: implemented
+
 ## Problem
 
 A repository declares one gate list for local runs and CI, but the heavy gates (integration, end-to-end, engine runs) make the list too slow to run on every local change. The usual response is a second, hand-maintained quick-check list, which drifts from the gate list and stops being trustworthy.

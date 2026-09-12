@@ -1,5 +1,7 @@
 # 0016 — Evidence surfaces select the smallest sufficient gate set
 
+Status: implemented
+
 ## Problem
 
 One gate list drives local runs and CI, but nothing connects a changed file to the evidence it needs. An agent either runs every gate (slow) or guesses which ones matter (unsound), and a gate added later is invisible until someone remembers to run it. A second, hand-maintained quick-check list would drift from the gate list.

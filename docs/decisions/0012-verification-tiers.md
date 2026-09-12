@@ -1,5 +1,7 @@
 # 0012 — Verification tiers: unit, integration, end-to-end
 
+Status: implemented
+
 ## Problem
 
 The base required a `## Verification` section in every change record but said nothing about what belongs there. Verification drifted toward whatever was convenient: a manual click-through reported as verification, or an end-to-end run for a change a unit test would cover.

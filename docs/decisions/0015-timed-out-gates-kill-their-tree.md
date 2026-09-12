@@ -1,5 +1,7 @@
 # 0015 — A timed-out gate kills its process tree
 
+Status: implemented
+
 ## Problem
 
 A gate runs its command under a shell. On timeout the runner sent `SIGTERM` to the shell only, so a gate that had spawned children — an engine run, a test server, a pipeline — could leave them running past the timeout and past the CI job. The result reported only an exit code and a timeout flag, so a gate killed by a signal could look like a clean run.

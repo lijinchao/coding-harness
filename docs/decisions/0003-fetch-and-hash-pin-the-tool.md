@@ -1,6 +1,6 @@
 # 0003 — Fetch and hash-pin the tool
 
-Status: accepted
+Status: implemented
 Date: 2026-09-12
 
 ## Problem

@@ -1,5 +1,7 @@
 # 0017 — Gate dependencies: needs, after, and skipped results
 
+Status: implemented
+
 ## Problem
 
 Gates ran as a flat list. A gate that consumes another's output could run before it, or run after the other failed and produce a second, confusing failure. Nothing recorded that a gate was deliberately not run, and a failing gate did not stop a long run that could no longer succeed.

@@ -1,5 +1,7 @@
 # 0014 — The schema and the validator are one contract
 
+Status: implemented
+
 ## Problem
 
 `schema/harness.manifest.schema.json` is the declared normative manifest contract, but nothing executes it: `harness validate` implements its own key lists in `src/manifest.mjs`. The two drifted. The validator accepted `governance.ci`, `governance.changes`, and `governance.manualVerification` while the schema, with `additionalProperties: false`, rejected them, so a manifest the tool generated and accepted could violate the published contract without any check failing.

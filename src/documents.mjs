@@ -88,6 +88,50 @@ export function documentProblems(root, docs) {
   return problems
 }
 
+const DECISION_STATUSES = new Set(['proposed', 'accepted', 'implemented', 'superseded', 'rejected'])
+
+function sectionBody(text, title) {
+  const lines = text.split('\n')
+  const start = lines.findIndex((line) => line.trim() === '## ' + title)
+  if (start === -1) return null
+  const body = []
+  for (let index = start + 1; index < lines.length; index += 1) {
+    if (/^##\s/.test(lines[index])) break
+    body.push(lines[index])
+  }
+  return body
+}
+
+/**
+ * Problems with a decision record's lifecycle.
+ *
+ * A record states where it stands — proposed, accepted, implemented, superseded,
+ * or rejected — and a superseded record names its replacement, which must exist.
+ *
+ * @param {string} root - Directory the manifest lives in.
+ * @param {string} rel - Decision record path, repository-relative.
+ * @param {string} text - Record contents.
+ * @returns {string[]}
+ */
+export function decisionProblems(root, rel, text) {
+  const problems = []
+  const body = sectionBody(text, 'Status')
+  const line = text.match(/^status:\s*(\S+)/im)
+  const raw = body !== null ? (body.find((item) => item.trim() !== '') ?? '') : (line === null ? undefined : line[1])
+  const status = raw === undefined ? undefined : raw.trim().toLowerCase()
+  if (status === undefined || status === '') return [rel + ': missing status (## Status or Status: <value>)']
+  if (!DECISION_STATUSES.has(status)) {
+    problems.push(rel + ': status must be one of ' + [...DECISION_STATUSES].join(', '))
+    return problems
+  }
+  for (const label of ['superseded-by', 'supersedes']) {
+    const match = text.match(new RegExp('^' + label + ':\\s*(\\S+)', 'im'))
+    if (match !== null && !existsSync(resolve(root, dirname(rel), match[1]))) problems.push(rel + ': ' + label + ' target not found: ' + match[1])
+  }
+  if (status === 'superseded' && !/^superseded-by:\s*\S+/im.test(text)) problems.push(rel + ': a superseded record must declare Superseded-by: <path>')
+  return problems
+}
+
 /**
  * Every instruction file an agent can read, repository-relative.
  *

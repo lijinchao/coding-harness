@@ -41,7 +41,7 @@ Start with the weakest carrier that works. Promote a rule when it has to hold, n
 
 ## Artifact contracts
 
-Each artifact type has a required skeleton. `harness validate` rejects a manifest whose gates or skills omit a required field. The JSON schema in `schema/` and the validator in `src/manifest.mjs` are one contract: the validator exports its key groups, and `npm test` asserts each equals the schema's properties and required lists, so a field added to one without the other fails the tests.
+Each artifact type has a required skeleton. `harness validate` rejects a manifest whose gates or skills omit a required field; `npm test` holds the JSON schema and the validator to one contract.
 
 ### Skill
 
@@ -78,7 +78,7 @@ A gate may declare a `phase`. `harness gates --phase <name>` runs the unphased g
 
 A gate whose `needs` dependency fails or is skipped is itself skipped and reported `skip`, so a broken prerequisite never looks like a passing check; `after` orders gates without propagating failure. `harness validate` rejects an unknown dependency and a dependency cycle, `harness gates --fail-fast` starts no new gate after a blocking gate fails, and `harness select` includes the dependencies of every gate it selects.
 
-A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM` and escalates to `SIGKILL` after five seconds, and it forwards `SIGINT` and `SIGTERM` to the group before exiting, so a timed-out gate leaves no children behind. A result reports exit code, signal, timeout, and duration separately; `harness gates` prints the signal beside the timeout, and `--report` records the timeout and duration per gate.
+A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM`, then `SIGKILL` after five seconds, and forwards `SIGINT` and `SIGTERM` before exiting, so a timed-out gate leaves no children. A result reports exit code, signal, timeout, and duration separately; `--report` records the timeout and duration per gate.
 
 ### Evidence surface
 
@@ -97,7 +97,7 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 | `governance.docs` | Documents whose links and word budget are checked |
 | `governance.instructions` | Globs for every instruction file an agent can read |
 
-`harness doctor` checks that each declared document exists, that its relative Markdown links resolve (a fragment must name a heading in the target file), and that it stays within its optional `maxWords` budget. It also walks the repository for `AGENTS.md` and `AGENTS.delta.md`, and fails when a file is not matched by `governance.instructions` or when a declared glob matches no file. A budget forces relocation instead of accumulation; an unmanaged instruction file is a rule nobody governs. Both keys are recommended, not required.
+`harness doctor` checks that each declared document exists, that its relative Markdown links resolve (a fragment must name a heading in the target), and that it stays within its `maxWords` budget. It also walks the repository for `AGENTS.md` and `AGENTS.delta.md`, and fails when a file is not matched by `governance.instructions` or when a declared glob matches no file. A budget forces relocation instead of accumulation, and an unmanaged instruction file is a rule nobody governs; both keys are recommended.
 
 ### Guide section
 
@@ -111,10 +111,13 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 
 | Field | Meaning |
 |---|---|
+| `status` | `proposed`, `accepted`, `implemented`, `superseded`, or `rejected` |
 | `problem` | The motivation, written to stand alone |
 | `decision` | What was decided |
 | `alternatives` | Each real alternative and why it lost |
 | `consequences` | What the decision cost and bought |
+
+A record declares its status as a `Status: <value>` line or a `## Status` section. `proposed` is a plan not yet authorized, so an in-repository plan is a proposed decision rather than a separate document; `accepted` is decided but not built; `implemented` is the current mechanism; `rejected` was considered and declined. A `superseded` record names its replacement with `Superseded-by: <path>`, which must exist, and `Supersedes:` is checked the same way. A decision records a choice that outlives the change; what changed lives in git.
 
 `harness validate` loads each declared skill file and rejects it when the frontmatter lacks `name` or `description`, or when it lacks any of `## Inputs`, `## Steps`, `## Verification`, `## Failure`. A gate's `command` must be non-empty and a single line. The base ships `templates/decision-record.md` and `templates/postmortem.md` for the two record types.
 
@@ -122,11 +125,11 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 
 | Field | Meaning |
 |---|---|
-| `problem` | The change's motivation |
-| `approach` | The plan, committed before the implementation |
-| `verification` | The unit, integration, or end-to-end checks that show it worked |
+| `verification` | The command and the output that show the change worked |
+| `context` | Optional: what the change is and why now |
+| `decision` | Optional `Decision: <path>` naming the record this change implements |
 
-A repository that declares `governance.changes` keeps one record per change under that directory. `harness doctor` rejects a record that lacks `## Problem`, `## Approach`, or `## Verification`. The base ships `templates/change-record.md`.
+A repository that declares `governance.changes` keeps one record per change under that directory. `harness doctor` requires `## Verification` and resolves a `Decision:` line when it is present. The record carries the evidence git cannot: what was decided lives in `docs/decisions/`, and what changed lives in git. The base ships `templates/change-record.md`.
 
 ### Manual verification
 
@@ -141,7 +144,7 @@ Automated verification stays at the unit, integration, and end-to-end tiers. A m
 
 ## Verification tiers
 
-Automated verification has three tiers. **Unit** covers a pure function or a single module with no I/O. **Integration** covers two or more real components together. **End-to-end** exercises the shipped artifact the way a user reaches it. Pick the cheapest tier that fails when the change is reverted; the base ships `skills/verification-tiers/SKILL.md` for the procedure. Manual verification is not a fourth tier: it records the product experience no check asserts, and it is recommended rather than required.
+Unit, integration, and end-to-end: pick the cheapest tier that fails when the change is reverted. `skills/verification-tiers/SKILL.md` owns the procedure. Manual verification is not a fourth tier; it records the product experience no check asserts.
 
 ## Vocabulary
 
@@ -174,11 +177,13 @@ The base is a versioned, hashed release: `harness release` writes `base@<version
 
 A source may be a local registry directory or a git URL prefixed `git:`. For a git source, `sync` and `check` fetch the tag `v<version>` into the consumer's cache and verify it against the lock.
 
-A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag `v<version>` and runs it; the lock records the tool version and a SHA-256 per tool source file, and a running tool that differs from either fails. CI needs no checkout of the tool repository. `harness init` writes `tool.commit` from the running tool, so a scaffolded repository pins the commit as well as the version and the bootstrap rejects a moved tag. `harness init --base-source <dir>` accepts a local release registry and then pins `tool.source` to the running tool's checkout, so a local scaffold needs no network fetch. A local `tool.source` names a directory that contains `bin/harness.mjs`; the bootstrap also accepts a path below that directory.
+A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag `v<version>` and runs it; the lock records the tool version and a SHA-256 per tool source file, and a running tool that differs from either fails. CI needs no checkout of the tool repository. A repository's own version is separate from the base pin. `product.version.path` names the one file that holds it, with an optional `pattern` whose first capture group is the version; without a pattern the whole file must be exactly one version. `product.mentions` lists the documents that must agree with it, and `harness doctor` fails a mention that does not. The base pin lives only in the manifest and the lock: it is a dependency, and prose never restates it.
+
+`harness init` writes `tool.commit` from the running tool, so a scaffolded repository pins the commit as well as the version and the bootstrap rejects a moved tag. `harness init --base-source <dir>` accepts a local release registry and then pins `tool.source` to the running tool's checkout, so a local scaffold needs no network fetch. A local `tool.source` names a directory that contains `bin/harness.mjs`; the bootstrap also accepts a path below that directory.
 
 `harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
 
-An upgrade is explicit. `harness upgrade --to <version> [--tool-commit <sha>]` moves the base pin and the tool pin, rewrites every `base@` reference in gate text and every `v<old>` reference in the files declared under `governance.version`, re-syncs the lock, and then runs the governance checks; it exits non-zero when a declared version-reference file still does not name the new version. The repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
+An upgrade is explicit. `harness upgrade --to <version> [--tool-commit <sha>]` moves the base pin and the tool pin, rewrites every `base@` reference in gate text and every occurrence of the previous base version in the documents declared under `product.mentions`, re-syncs the lock, and then runs the governance checks; it exits non-zero when a declared mention still disagrees with the product version source. The repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
 
 `harness release` refuses to overwrite an existing `base@<version>`; bump `base/VERSION` or pass `--force`. `harness sync` and `harness upgrade` resolve, verify, and compose before writing anything, and commit each file by rename, so a failed upgrade leaves the previous state intact.
 
@@ -190,6 +195,6 @@ A base release ships `requirements.json` declaring `requiredGates`, `requiredGov
 
 The `release` phase is the convention for an application's own packaging check. The base recommends it but does not know the command: the repository declares a gate with `phase: "release"`, supplies its `prove_fires_command`, and `harness gates --phase release` runs it. A library without a packaging step is not forced to invent one.
 
-`harness doctor --manifest <path>` checks the governance facts the manifest declares under `governance`: files that must name the pinned version, the sections of each decision record, a CODEOWNERS route for each declared owner, and each declared CI file's required commands. It also reports the adoption gap against the pinned release.
+`harness doctor --manifest <path>` checks the facts the manifest declares: the product version source and the documents that must agree with it, the sections and lifecycle status of each decision record, the sections and `Decision:` reference of each change record, a CODEOWNERS route for each declared owner, and each declared CI file's required commands. It also reports the adoption gap against the pinned release.
 
 `harness gates --manifest <path>` runs every gate the manifest declares, so one list drives local runs and CI and the two cannot drift. A blocking failure exits non-zero; an advisory failure only warns. `harness scan --root <dir>` reports every manifest under a tree as ok, stale, diverged, or error. `harness prove --manifest <path>` runs a gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; a gate whose action no longer fires exits non-zero.

@@ -1,5 +1,7 @@
 # 0009 — Require the CI to run the gates and prove them
 
+Status: implemented
+
 ## Problem
 
 A consumer can pass every gate locally and in CI while its CI workflow runs only `harness check`, or a subset of the gates. The manifest is then the real gate list and the workflow is a second, drifting list. A gate added after the workflow was written never runs in CI, and a gate that stopped firing is never noticed.

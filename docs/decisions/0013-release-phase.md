@@ -1,5 +1,7 @@
 # 0013 — The release phase is declared, not built in
 
+Status: implemented
+
 ## Problem
 
 Automated tests can pass while the artifact cannot be packaged or released. A harness should be able to ask for a packaging check, but a packaging command is application-specific — Godot export, `npm pack`, `docker build`, a JVM jar — and the base must not carry any one of them.

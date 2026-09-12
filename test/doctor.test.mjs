@@ -5,25 +5,27 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { doctorProblems, doctorReport } from '../src/doctor.mjs'
 
-function manifest(governance) {
-  return { version: '1.2.3', governance, gates: [], lock: {} }
+function manifest(governance, product) {
+  return { version: '1.2.3', governance, product, gates: [], lock: {} }
 }
 
 test('doctor passes when declared facts are consistent', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
-  writeFileSync(join(root, 'README.md'), 'Status: v1.2.3\n')
+  writeFileSync(join(root, 'VERSION'), '2.0.0\n')
+  writeFileSync(join(root, 'README.md'), 'Status: 2.0.0\n')
   mkdirSync(join(root, 'docs', 'decisions'), { recursive: true })
-  writeFileSync(join(root, 'docs', 'decisions', '0001.md'), '## Problem\n## Decision\n## Alternatives\n## Consequences\n')
+  writeFileSync(join(root, 'docs', 'decisions', '0001.md'), 'Status: implemented\n\n## Problem\n## Decision\n## Alternatives\n## Consequences\n')
   writeFileSync(join(root, 'CODEOWNERS'), '* @owner\n')
-  assert.deepEqual(doctorProblems(root, manifest({ version: ['README.md'], decisions: 'docs/decisions', owners: ['@owner'] })), [])
+  assert.deepEqual(doctorProblems(root, manifest({ decisions: 'docs/decisions', owners: ['@owner'] }, { version: { path: 'VERSION' }, mentions: ['README.md'] })), [])
   rmSync(root, { recursive: true, force: true })
 })
 
-test('doctor reports a stale version reference', () => {
+test('doctor reports a product mention that disagrees with the version source', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
-  writeFileSync(join(root, 'README.md'), 'Status: v0.0.0\n')
-  const problems = doctorProblems(root, manifest({ version: ['README.md'] }))
-  assert.ok(problems.some((problem) => problem.includes('v1.2.3')))
+  writeFileSync(join(root, 'VERSION'), '2.0.0\n')
+  writeFileSync(join(root, 'README.md'), 'Status: 1.0.0\n')
+  const problems = doctorProblems(root, manifest({}, { version: { path: 'VERSION' }, mentions: ['README.md'] }))
+  assert.ok(problems.some((problem) => problem.includes('does not mention the product version 2.0.0')))
   rmSync(root, { recursive: true, force: true })
 })
 

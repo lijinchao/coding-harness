@@ -1,6 +1,6 @@
 # 0008 — A green gate must also have clean output
 
-Status: accepted
+Status: implemented
 Date: 2026-09-12
 
 ## Problem

@@ -14,7 +14,7 @@ export function loadManifest(path) {
 // contract; the schema alone is not executable and drifted once already.
 export const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
 export const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
-export const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'lock']
+export const ROOT_KEYS = ['version', 'tool', 'base', 'product', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'lock']
 export const COMPOSITION_KEYS = ['output', 'sources']
 export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
 export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after']
@@ -24,7 +24,9 @@ export const TOOL_KEYS = ['version', 'commit', 'source']
 export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
-export const GOVERNANCE_KEYS = ['version', 'decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions']
+export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions']
+export const PRODUCT_KEYS = ['version', 'mentions']
+export const PRODUCT_VERSION_KEYS = ['path', 'pattern']
 export const DOC_KEYS = ['path', 'maxWords']
 export const SURFACE_KEYS = ['id', 'paths', 'requires']
 export const SURFACE_FIELDS = ['id', 'paths', 'requires']
@@ -87,6 +89,23 @@ function validateGateGraph(errors, gates) {
   for (const gate of gates) visit(gate.id, [])
 }
 
+function validateProduct(errors, product) {
+  if (product === undefined) return
+  requireObject(errors, product, 'product')
+  rejectUnknown(errors, product, PRODUCT_KEYS, 'product')
+  if (!isObject(product)) return
+  requireObject(errors, product.version, 'product.version')
+  if (isObject(product.version)) {
+    rejectUnknown(errors, product.version, PRODUCT_VERSION_KEYS, 'product.version')
+    requireString(errors, product.version.path, 'product.version.path')
+    if (product.version.pattern !== undefined) requireString(errors, product.version.pattern, 'product.version.pattern')
+  }
+  if (product.mentions !== undefined) {
+    if (!Array.isArray(product.mentions)) errors.push('product.mentions: required array')
+    else product.mentions.forEach((entry, index) => requireString(errors, entry, 'product.mentions[' + index + ']'))
+  }
+}
+
 function validateBase(errors, base) {
   if (base === undefined) return
   requireObject(errors, base, 'base')
@@ -112,10 +131,7 @@ function validateGovernance(errors, governance) {
   requireObject(errors, governance, 'governance')
   rejectUnknown(errors, governance, GOVERNANCE_KEYS, 'governance')
   if (!isObject(governance)) return
-  if (governance.version !== undefined) {
-    if (!Array.isArray(governance.version)) errors.push('governance.version: required array')
-    else governance.version.forEach((entry, index) => requireString(errors, entry, 'governance.version[' + index + ']'))
-  }
+  if (governance.version !== undefined) errors.push('governance.version: removed; declare product.version.path and product.mentions instead')
   if (governance.decisions !== undefined) requireString(errors, governance.decisions, 'governance.decisions')
   if (governance.owners !== undefined) {
     if (!Array.isArray(governance.owners)) errors.push('governance.owners: required array')
@@ -206,6 +222,7 @@ export function validateManifest(manifest) {
   requireString(errors, manifest.version, 'version')
   validateBase(errors, manifest.base)
   validateTool(errors, manifest.tool)
+  validateProduct(errors, manifest.product)
   validateGovernance(errors, manifest.governance)
 
   if (!Array.isArray(manifest.compositions) || manifest.compositions.length === 0) {

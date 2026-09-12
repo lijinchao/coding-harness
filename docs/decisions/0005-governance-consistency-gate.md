@@ -1,6 +1,6 @@
 # 0005 — A governance-consistency gate
 
-Status: accepted
+Status: implemented
 Date: 2026-09-12
 
 ## Problem

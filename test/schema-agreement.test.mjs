@@ -11,6 +11,8 @@ const KEY_GROUPS = [
   ['ROOT_KEYS', items],
   ['TOOL_KEYS', items.tool.properties],
   ['BASE_KEYS', items.base.properties],
+  ['PRODUCT_KEYS', items.product.properties],
+  ['PRODUCT_VERSION_KEYS', items.product.properties.version.properties],
   ['GOVERNANCE_KEYS', items.governance.properties],
   ['COMPOSITION_KEYS', items.compositions.items.properties],
   ['SKILL_KEYS', items.skills.items.properties],

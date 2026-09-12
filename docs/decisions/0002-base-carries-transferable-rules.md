@@ -1,6 +1,6 @@
 # 0002 — The base carries transferable rules only
 
-Status: accepted
+Status: implemented
 Date: 2026-09-12
 
 ## Problem

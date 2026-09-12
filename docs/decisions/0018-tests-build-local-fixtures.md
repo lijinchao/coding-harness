@@ -1,5 +1,7 @@
 # 0018 — Tests build local release fixtures
 
+Status: implemented
+
 ## Problem
 
 The `init` tests ran the command with its default source, the GitHub URL, so every run fetched the released base tag. Before a tag was pushed the suite failed, and every release had a chicken-and-egg window where code was finished but tests were red. The suite also depended on the network in CI, where a transient `git clone` failure looks like a code failure.

@@ -1,6 +1,6 @@
 # 0001 — Base distribution and governance boundaries
 
-Status: accepted
+Status: implemented
 Date: 2026-09-12
 
 ## Problem

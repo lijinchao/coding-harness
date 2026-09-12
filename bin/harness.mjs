@@ -223,11 +223,12 @@ function cmdUpgrade(options) {
   delete manifest.lock
   const outputs = applySync(root, path, manifest)
   for (const item of outputs) console.log(`synced ${item.output}`)
-  // A declared version-reference file must name the new pin; rewriting the old
-  // tag here is what stops a version move from shipping a stale status line.
+  // A declared product mention that tracks the base pin must name the new one;
+  // rewriting the old tag here is what stops a version move from shipping a
+  // stale status line. A mention of an independent product version is a no-op.
   if (from !== to) {
     const oldTag = new RegExp('v' + from.replace(/\./g, '\\.'), 'g')
-    for (const rel of manifest.governance?.version ?? []) {
+    for (const rel of manifest.product?.mentions ?? []) {
       const file = resolve(root, rel)
       if (!existsSync(file)) continue
       const text = readFileSync(file, 'utf8')

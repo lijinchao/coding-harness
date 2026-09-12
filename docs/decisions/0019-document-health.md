@@ -1,5 +1,7 @@
 # 0019 — Document health and the instruction tree are checked
 
+Status: implemented
+
 ## Problem
 
 The base governed composed files and a few governance facts, but not the documents themselves. Nothing caught a link to a renamed file, a document that grows without bound, or a nested `AGENTS.md` that an agent reads and nobody owns. In a growing repository the first drift is documents disagreeing with each other, not code drift.
