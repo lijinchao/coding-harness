@@ -135,7 +135,7 @@
         "src/workflow.mjs": "4a1eafc069abc3150b7950b70c5725127d04b7afbb65706fe6516a2152d5d92d",
         "package.json": "514b9971d8a71c599bf3cc9f1957e4e169aaec1277d50c9ddcefe44ea551069f"
       },
-      "commit": "83d950b89e4d6908504d22bc40194c44ddcc2b62"
+      "commit": "bf8fe23bf5fda9f8769cd5922bd8638c11eb2f5d"
     },
     "outputs": {
       "AGENTS.md": "b3ef42e8d0585a74d2f470dbd4bc04fe76432de56f7b00e03e465ce2469ff656",
