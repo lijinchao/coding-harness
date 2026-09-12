@@ -24,6 +24,17 @@ test('adoption is silent without requirements or when adopted', () => {
   assert.deepEqual(gap.problems, [])
 })
 
+test('adoption warns about a missing recommended phase and fails a required one', () => {
+  const manifest = { gates: [{ id: 'g', phase: 'fast' }] }
+  const recommended = adoptionProblems(manifest, { recommendedPhases: ['release'] })
+  assert.deepEqual(recommended.problems, [])
+  assert.ok(recommended.warnings.some((warning) => warning.includes('release')))
+  const required = adoptionProblems(manifest, { requiredPhases: ['release'] })
+  assert.ok(required.problems.some((problem) => problem.includes('release')))
+  const adopted = adoptionProblems({ gates: [{ id: 'g', phase: 'release' }] }, { requiredPhases: ['release'] })
+  assert.deepEqual(adopted.problems, [])
+})
+
 test('check fails when the consumer has not adopted the base requirements', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-adopt-'))
   const base = join(root, 'base')

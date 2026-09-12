@@ -113,6 +113,10 @@ A repository that declares `governance.changes` keeps one record per change unde
 
 Automated verification stays at the unit, integration, and end-to-end tiers. A manual verification record is the product-experience counterpart for what no test asserts. `governance.manualVerification` is recommended, not required: `harness doctor` checks only that the declared path exists and emits a warning when the key is absent, so the gap is visible without blocking unrelated work. The base ships `templates/manual-verification.md`.
 
+## Verification tiers
+
+Automated verification has three tiers. **Unit** covers a pure function or a single module with no I/O. **Integration** covers two or more real components together. **End-to-end** exercises the shipped artifact the way a user reaches it. Pick the cheapest tier that fails when the change is reverted; the base ships `skills/verification-tiers/SKILL.md` for the procedure. Manual verification is not a fourth tier: it records the product experience no check asserts, and it is recommended rather than required.
+
 ## Vocabulary
 
 One term per concept. Do not rotate synonyms.
@@ -156,7 +160,9 @@ The bootstrap resolves `harness.manifest.json` and the tool cache next to the sc
 
 `harness diff --manifest <path> --to <version>` previews the base files and compositions an upgrade changes. `harness gates` accepts `--jobs` and `--timeout`, and `--report` appends a JSON run summary that `harness metrics --log` reads into a first-pass rate.
 
-A base release ships `requirements.json` declaring `requiredGates`, `requiredGovernance`, `recommendedGovernance`, and `requiredCiCommands`. `harness check` loads the pinned release's requirements and fails when a required gate or governance key is missing, so adoption is enforced by the drift gate a consumer already runs. A declared `governance.ci` file must contain each `requiredCiCommands` entry, so a consumer's CI runs the gates and proves them instead of keeping a second, drifting list. `harness diff` previews the capability delta of an upgrade.
+A base release ships `requirements.json` declaring `requiredGates`, `requiredGovernance`, `recommendedGovernance`, `requiredPhases`, `recommendedPhases`, `requiredCiCommands`, and `requireOutputAssertions`. `harness check` loads the pinned release's requirements and fails when a required gate, governance key, or phase is missing; a recommended one is a `doctor` warning. A declared `governance.ci` file must contain each `requiredCiCommands` entry, so a consumer's CI runs the gates and proves them instead of keeping a second, drifting list. `harness diff` previews the capability delta of an upgrade.
+
+The `release` phase is the convention for an application's own packaging check. The base recommends it but does not know the command: the repository declares a gate with `phase: "release"`, supplies its `prove_fires_command`, and `harness gates --phase release` runs it. A library without a packaging step is not forced to invent one.
 
 `harness doctor --manifest <path>` checks the governance facts the manifest declares under `governance`: files that must name the pinned version, the sections of each decision record, a CODEOWNERS route for each declared owner, and each declared CI file's required commands. It also reports the adoption gap against the pinned release.
 

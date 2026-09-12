@@ -151,6 +151,7 @@ function cmdInit(options) {
       skills: [
         { id: 'test-driven-development', path: 'base:skills/test-driven-development/SKILL.md', trigger: 'before writing implementation code', owner: '@owner' },
         { id: 'writing-a-gate', path: 'base:skills/writing-a-gate/SKILL.md', trigger: 'before adding a gate', owner: '@owner' },
+        { id: 'verification-tiers', path: 'base:skills/verification-tiers/SKILL.md', trigger: 'before deciding which check proves a change', owner: '@owner' },
       ],
       gates: [
         { id: 'harness-drift', command: './harness check --manifest harness.manifest.json', protects: `composed files match base@${version} plus this delta`, prove_fires: 'hand-edit AGENTS.md, then run ./harness check; expect exit 1', prove_fires_command: "printf '<!-- prove -->' >> AGENTS.md", revert_command: './harness sync --manifest harness.manifest.json', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },

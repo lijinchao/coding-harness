@@ -49,5 +49,12 @@ export function adoptionProblems(manifest, requirements) {
   for (const key of requirements.recommendedGovernance ?? []) {
     if (governance[key] === undefined) warnings.push('missing recommended governance: ' + key)
   }
+  const phases = new Set((manifest.gates ?? []).map((gate) => gate.phase).filter((phase) => typeof phase === 'string'))
+  for (const phase of requirements.requiredPhases ?? []) {
+    if (!phases.has(phase)) problems.push('missing required gate phase: ' + phase)
+  }
+  for (const phase of requirements.recommendedPhases ?? []) {
+    if (!phases.has(phase)) warnings.push('missing recommended gate phase: ' + phase)
+  }
   return { problems, warnings }
 }
