@@ -66,12 +66,14 @@ test/                          node:test suites
 | `validate --manifest <path>` | Fail on any missing required field |
 | `sync --manifest <path>` | Compose outputs and rewrite the lock |
 | `check --manifest <path>` | Fail when a composed output drifted from `base@version + delta` |
-| `init --dir <path>` | Scaffold a repository delta and manifest |
+| `init --dir <path>` | Scaffold a delta, manifest, bootstrap, and CI, then compose it |
 | `upgrade --manifest <path> --to <version>` | Pin a new base version and re-sync |
 | `release --base <dir> --out <dir>` | Build a versioned, hashed base release under `<out>/base@<version>/` |
 | `gates --manifest <path>` | Run every declared gate; one list drives local and CI |
 | `scan --root <dir>` | List consumers whose harness is stale or diverged |
 | `prove --manifest <path>` | Run the three-step proof for each gate action |
+| `diff --manifest <path> --to <version>` | Preview what a base upgrade changes |
+| `metrics --log <file>` | First-pass rate and per-gate failures from gate reports |
 
 ## Make the harness evolve
 
@@ -85,4 +87,4 @@ A gate is admitted only with a `prove_fires` action you have actually run. A gat
 
 ## Status
 
-v0.1.7. The manifest is JSON to keep the CLI dependency-free; YAML support is deliberately deferred.
+v0.1.8. The manifest is JSON to keep the CLI dependency-free; YAML support is deliberately deferred.

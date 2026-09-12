@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.7 — base and tool are versioned, hashed, commit-pinned releases fetched from git; validation enforces the schema and requires executable proofs; a doctor gate catches governance-fact drift; one gate list drives local and CI.
+Status: v0.1.8 — base and tool are versioned, hashed, commit-pinned releases; validation enforces the schema and requires executable proofs; a doctor gate catches governance-fact drift; init reaches green; upgrades can be previewed; gates run with jobs, timeouts, and reports.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -10,7 +10,7 @@ Three things, in order.
 
 1. **Adopt it in one real repository.** Run `node bin/harness.mjs init --dir <repo>`, author that repository's `AGENTS.delta.md`, and add `harness check` to its CI. Then hand-edit the composed `AGENTS.md` once and watch the job fail; that failure is the gate's proof.
 2. **Make the base distributable.** The base is a released version plus per-file hashes and a commit pin; a consumer fetches it from a git tag and the bootstrap verifies the commit before running. What remains is signed releases.
-3. **Collect the first effectiveness signals.** Record the first-pass check rate and every review finding that cites a policy already covered by a guide. Two weeks of those two numbers tell you which guide is not working.
+3. **Collect the first effectiveness signals.** `harness gates --report <file>` appends a run summary and `harness metrics --log <file>` turns those into a first-pass rate and per-gate failures; a CI step passes `--report`. Record every review finding that cites a policy already covered by a guide; two weeks of those two numbers tell you which guide is not working.
 
 ## Milestones
 
@@ -51,6 +51,8 @@ Progress: `harness validate` loads each declared skill and requires the frontmat
 Make adoption one command: `harness init` writes the manifest, the lock, and the CI snippet; `harness diff` previews what a base upgrade changes before it lands. Add YAML manifest support once adoption matters more than the zero-dependency constraint.
 
 Done when: a new repository reaches a green `harness check` from `init` alone.
+
+Progress: `harness init` scaffolds the delta, manifest, bootstrap, `.gitignore`, and a CI workflow, then composes the repository (green when the base source resolves). `harness diff` previews a base upgrade. `harness gates` supports `--jobs` and `--timeout`, and `--report` feeds `harness metrics` (first-pass rate). Remaining: YAML manifest support.
 
 ## What to adapt from DeepSeek Harness
 
