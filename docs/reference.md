@@ -120,4 +120,4 @@ A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag
 
 An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-syncs, and the repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
 
-`harness scan --root <dir>` reports every manifest under a tree as ok, stale, diverged, or error. `harness prove --manifest <path>` runs a gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; a gate whose action no longer fires exits non-zero.
+`harness gates --manifest <path>` runs every gate the manifest declares, so one list drives local runs and CI and the two cannot drift. A blocking failure exits non-zero; an advisory failure only warns. `harness scan --root <dir>` reports every manifest under a tree as ok, stale, diverged, or error. `harness prove --manifest <path>` runs a gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; a gate whose action no longer fires exits non-zero.

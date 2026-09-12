@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.4 — the base and the tool are versioned, hashed releases fetched from git, validation reaches the declared artifacts, and the fleet can be scanned and gates proved, one consumer is pinned to it, and its hosted CI drift gate is proven.
+Status: v0.1.5 — the base and the tool are versioned, hashed releases fetched from git, validation reaches the declared artifacts, one gate list drives local and CI, and the fleet can be scanned and gates proved, one consumer is pinned to it, and its hosted CI drift gate is proven.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -60,7 +60,7 @@ The DeepSeek Harness checkout on this machine runs a mature version of this harn
 
 | Item | Source | Why it transfers |
 |---|---|---|
-| Gate aggregator with a worker pool | `scripts/run-gates.ts` | One named list drives local runs and CI, so the two lists cannot drift |
+| Gate aggregator with a worker pool | `scripts/run-gates.ts` | One named list drives local runs and CI, so the two lists cannot drift. Adapted as `harness gates`. |
 | Prove the check fails | `docs/testing.md` | "A guard only guards if the regression actually fails it" — the discipline behind this project's `prove_fires` |
 | Smallest-check selector | `.agents/skills/dsh-pre-push-checks/SKILL.md` | Maps a changed surface to the smallest covering check set, instead of rerunning everything |
 | Markdown wrap and link gates | `scripts/verify-md-wrap*`, `scripts/verify-md-links*` | Cheap, deterministic, and this project's Markdown grows with it |

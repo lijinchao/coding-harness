@@ -69,6 +69,7 @@ test/                          node:test suites
 | `init --dir <path>` | Scaffold a repository delta and manifest |
 | `upgrade --manifest <path> --to <version>` | Pin a new base version and re-sync |
 | `release --base <dir> --out <dir>` | Build a versioned, hashed base release under `<out>/base@<version>/` |
+| `gates --manifest <path>` | Run every declared gate; one list drives local and CI |
 | `scan --root <dir>` | List consumers whose harness is stale or diverged |
 | `prove --manifest <path>` | Run the three-step proof for each gate action |
 

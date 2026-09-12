@@ -1,0 +1,58 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
+
+const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
+
+function run(args) {
+  return execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8' })
+}
+
+function manifestPath(dir) {
+  return join(dir, 'harness.manifest.json')
+}
+
+function gate(id, command, severity) {
+  return { id, command, protects: 'p', prove_fires: 'f', severity }
+}
+
+function writeManifest(dir, gates) {
+  writeFileSync(join(dir, 'AGENTS.delta.md'), '# D\n')
+  writeFileSync(manifestPath(dir), JSON.stringify({ version: '0.1.0', compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }], skills: [], gates }, null, 2) + '\n')
+}
+
+test('gates fails when a blocking gate fails', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-gates-'))
+  writeManifest(dir, [gate('pass', 'true', 'blocking'), gate('fail', 'false', 'blocking')])
+  assert.throws(() => run(['gates', '--manifest', manifestPath(dir)]))
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('gates tolerates an advisory failure', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-gates-'))
+  writeManifest(dir, [gate('pass', 'true', 'blocking'), gate('warn', 'false', 'advisory')])
+  run(['gates', '--manifest', manifestPath(dir)])
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('upgrade rewrites a stale base version in gate text', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-upgrade-'))
+  const base = join(dir, 'base')
+  mkdirSync(base)
+  writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n')
+  writeManifest(dir, [{ id: 'drift', command: 'true', protects: 'match base@0.1.0 plus delta', prove_fires: 'edit base@0.1.0', severity: 'blocking' }])
+  run(['release', '--base', base, '--out', join(dir, 'dist'), '--version', '0.2.0'])
+  const m = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  m.base = { source: './dist' }
+  m.compositions = [{ output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] }]
+  writeFileSync(manifestPath(dir), JSON.stringify(m, null, 2) + '\n')
+  run(['upgrade', '--manifest', manifestPath(dir), '--to', '0.2.0'])
+  const after = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  assert.ok(after.gates[0].protects.includes('base@0.2.0'))
+  assert.ok(!after.gates[0].protects.includes('base@0.1.0'))
+  assert.ok(after.gates[0].prove_fires.includes('base@0.2.0'))
+  rmSync(dir, { recursive: true, force: true })
+})

@@ -17,6 +17,7 @@ import { SHIM } from '../src/shim.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { proveGate } from '../src/prove.mjs'
+import { runGates } from '../src/gates.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -29,6 +30,8 @@ commands:
   upgrade    --manifest <path> --to <v>  pin a new base version and re-sync
   release    --base <dir> --out <dir> [--version <v>]
                                          build a versioned, hashed base release
+  gates      --manifest <path> [--gate <id>]
+                                         run every declared gate (one list for local and CI)
   scan       --root <dir>                list consumers whose harness is stale or diverged
   prove      --manifest <path> [--gate <id>]
                                          run the three-step proof for each gate action`
@@ -228,10 +231,34 @@ function cmdUpgrade(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const to = requireOption(options, 'to')
   const manifest = readValidManifest(path)
+  const newPin = `base@${to}`
+  const stale = /base@\d+\.\d+\.\d+/g
+  const rewrite = (value) => (typeof value === 'string' ? value.replace(stale, newPin) : value)
   manifest.version = to
+  for (const gate of manifest.gates) {
+    gate.protects = rewrite(gate.protects)
+    gate.prove_fires = rewrite(gate.prove_fires)
+  }
   delete manifest.lock
   writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`)
   cmdSync(options)
+}
+
+function cmdGates(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const manifest = readValidManifest(path)
+  const root = dirname(path)
+  const only = options.gate
+  const gates = manifest.gates.filter((gate) => only === undefined || gate.id === only)
+  const results = runGates(root, gates)
+  let blocking = 0
+  for (const result of results) {
+    const ok = result.ok
+    const status = ok ? 'ok' : result.severity === 'advisory' ? 'warn' : 'fail'
+    if (!ok && result.severity !== 'advisory') blocking += 1
+    console.log(`${status}\t${result.id}`)
+  }
+  if (blocking > 0) process.exit(1)
 }
 
 function cmdScan(options) {
@@ -261,7 +288,7 @@ function cmdProve(options) {
   if (bad > 0) process.exit(1)
 }
 
-const COMMANDS = { validate: cmdValidate, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve }
+const COMMANDS = { validate: cmdValidate, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates }
 
 try {
   const [command, ...rest] = process.argv.slice(2)
