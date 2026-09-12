@@ -13,9 +13,5 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - name: Fail on drift
-        run: ./harness check --manifest harness.manifest.json
-      - name: Validate declared artifacts
-        run: ./harness validate --manifest harness.manifest.json
-      - name: Test
-        run: npm test
+      - name: Run every declared gate
+        run: ./harness gates --manifest harness.manifest.json
