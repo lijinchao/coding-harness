@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.0 — the base is a versioned, hashed release fetchable from git, one consumer is pinned to it, and its hosted CI drift gate is proven.
+Status: v0.1.1 — the base is a versioned, hashed release fetchable from git, one consumer is pinned to it, and its hosted CI drift gate is proven.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 

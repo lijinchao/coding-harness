@@ -82,4 +82,4 @@ A gate is admitted only with a `prove_fires` action you have actually run. A gat
 
 ## Status
 
-v0.1.0. The manifest is JSON to keep the CLI dependency-free; YAML support is deliberately deferred.
+v0.1.1. The manifest is JSON to keep the CLI dependency-free; YAML support is deliberately deferred.

@@ -1,7 +1,7 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "tool": {
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "base": {
     "source": "../../dist"
@@ -52,20 +52,20 @@
     }
   ],
   "lock": {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "tool": {
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     "outputs": {
-      "AGENTS.md": "49e47ec4f18592f77ca6569dea34d5c5ad14c7ee394b92cff7c2e669a880a9fc",
+      "AGENTS.md": "b3ef42e8d0585a74d2f470dbd4bc04fe76432de56f7b00e03e465ce2469ff656",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.0",
+      "version": "0.1.1",
       "files": {
-        "AGENTS.base.md": "98e3bc918d9459a6111a4814bc3673152bac4c89435fb4e7f5062e2b274129c1",
+        "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
+        "VERSION": "80447316529fc62014fbaa047fb67c51ac30e32830cda370405349d8d66d196c",
         "skills/test-driven-development/SKILL.md": "06ebb705e6b7806c6b86b8639c279671683b46d2f831f7f572522df0354d18cf",
         "skills/writing-a-gate/SKILL.md": "d0ea2cde58332a2da2280adc69d691e86f735d108c1ce18726d2adfd7ee53539"
       }

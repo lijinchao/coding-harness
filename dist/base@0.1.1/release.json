@@ -1,0 +1,11 @@
+{
+  "name": "base",
+  "version": "0.1.1",
+  "files": {
+    "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
+    "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
+    "VERSION": "80447316529fc62014fbaa047fb67c51ac30e32830cda370405349d8d66d196c",
+    "skills/test-driven-development/SKILL.md": "06ebb705e6b7806c6b86b8639c279671683b46d2f831f7f572522df0354d18cf",
+    "skills/writing-a-gate/SKILL.md": "d0ea2cde58332a2da2280adc69d691e86f735d108c1ce18726d2adfd7ee53539"
+  }
+}
