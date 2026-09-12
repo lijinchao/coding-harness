@@ -18,7 +18,7 @@ import { scan } from '../src/scan.mjs'
 import { proveGate } from '../src/prove.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
-import { doctorProblems } from '../src/doctor.mjs'
+import { doctorReport } from '../src/doctor.mjs'
 import { loadRequirements } from '../src/adopt.mjs'
 
 const USAGE = `usage: harness <command> [options]
@@ -311,7 +311,8 @@ function cmdDoctor(options) {
   const root = dirname(path)
   const base = manifest.base === undefined ? null : resolveBase(root, manifest)
   const requirements = base === null ? undefined : loadRequirements(base.dir)
-  const problems = doctorProblems(root, manifest, requirements)
+  const { problems, warnings } = doctorReport(root, manifest, requirements)
+  for (const warning of warnings) console.log(`doctor: warning: ${warning}`)
   if (problems.length > 0) {
     for (const problem of problems) console.error(`doctor: ${problem}`)
     process.exit(1)

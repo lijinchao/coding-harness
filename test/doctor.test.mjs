@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { doctorProblems } from '../src/doctor.mjs'
+import { doctorProblems, doctorReport } from '../src/doctor.mjs'
 
 function manifest(governance) {
   return { version: '1.2.3', governance, gates: [], lock: {} }
@@ -53,5 +53,23 @@ test('doctor accepts a CI file that runs every required command', () => {
   writeFileSync(join(root, '.github', 'workflows', 'harness.yml'), 'run: ./harness gates --manifest harness.manifest.json\nrun: ./harness prove --manifest harness.manifest.json\n')
   const requirements = { requiredCiCommands: ['harness gates', 'harness prove'] }
   assert.deepEqual(doctorProblems(root, manifest({ ci: ['.github/workflows/harness.yml'] }), requirements), [])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('doctor reports an incomplete change record and a missing manual-verification path', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
+  mkdirSync(join(root, 'docs', 'changes'), { recursive: true })
+  writeFileSync(join(root, 'docs', 'changes', '0001-x.md'), '## Problem\n## Approach\n')
+  const problems = doctorProblems(root, manifest({ changes: 'docs/changes', manualVerification: 'docs/validation' }))
+  assert.ok(problems.some((problem) => problem.includes('## Verification')))
+  assert.ok(problems.some((problem) => problem.includes('manual verification path not found')))
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('doctor warns about a missing recommended governance key without failing', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
+  const { problems, warnings } = doctorReport(root, manifest({}), { recommendedGovernance: ['manualVerification'] })
+  assert.deepEqual(problems, [])
+  assert.ok(warnings.some((warning) => warning.includes('manualVerification')))
   rmSync(root, { recursive: true, force: true })
 })
