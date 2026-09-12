@@ -1,7 +1,7 @@
 {
-  "version": "0.1.10",
+  "version": "0.1.11",
   "tool": {
-    "version": "0.1.10"
+    "version": "0.1.11"
   },
   "base": {
     "source": "../../dist"
@@ -39,7 +39,7 @@
     {
       "id": "harness-drift",
       "command": "harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.10 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.11 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->' >> AGENTS.md",
@@ -85,9 +85,9 @@
     ]
   },
   "lock": {
-    "version": "0.1.10",
+    "version": "0.1.11",
     "tool": {
-      "version": "0.1.10",
+      "version": "0.1.11",
       "files": {
         "bin/harness.mjs": "f8e4dd5e1d1e4fa9d1d90ebd89522ada31bf0ddcd2653b65a954b8f8393ec821",
         "src/adopt.mjs": "92e78022e153ff150458c0c1767004128f195e41d4ddc8ea1266335e625f910e",
@@ -101,22 +101,22 @@
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/shim.mjs": "b58e8c97a868bfa3b80a47938ff1fda29bd5d573c76d72f5e7ea1b83e2eb8543",
-        "src/state.mjs": "78ea42566a8f9b3a55a3e27bd60fff061a6191b40f4eba34e220732350c61bdf",
+        "src/state.mjs": "fadea7f4ea94f7523e7b0ff67f02201d7bf74acf825ce993e31365cd84b1c1be",
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
-        "package.json": "78173102dc7b3781cb46c350185dc05a0534607d5c400b6fa50649148ef63708"
+        "package.json": "91393dfea1e708e641b73b96fa8a3fda8c10eec59d449954a3ca6143cc3ae8ed"
       },
-      "commit": "96aaf131f1ff95e5ebb0e3cc7da37fa47af0428f"
+      "commit": "542ab05ee2a22281fc4e7ec6be2c2a3f98627adf"
     },
     "outputs": {
       "AGENTS.md": "b3ef42e8d0585a74d2f470dbd4bc04fe76432de56f7b00e03e465ce2469ff656",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.10",
+      "version": "0.1.11",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "fecf23c4b3c2c29381d4c14cacb998939eb53f5791b99ab7e4e0bc7972c44524",
+        "VERSION": "66d60356172ccafdd334fca9bf33243c8409216a733dcde0d66a24fd70ee8132",
         "requirements.json": "8c5e8ceab8cbe4aadf1cdbb6f8cf781d724ab7e44ba8219266c15c96b1203bf2",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",

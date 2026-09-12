@@ -128,7 +128,7 @@ An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-sy
 
 `harness release` refuses to overwrite an existing `base@<version>`; bump `base/VERSION` or pass `--force`. `harness sync` and `harness upgrade` resolve, verify, and compose before writing anything, and commit each file by rename, so a failed upgrade leaves the previous state intact.
 
-The bootstrap resolves `harness.manifest.json` and the tool cache next to the script and runs the tool from that directory, so invoking it by absolute path from any working directory pins the same tool.
+The bootstrap resolves `harness.manifest.json` and the tool cache next to the script and runs the tool from that directory, so invoking it by absolute path from any working directory pins the same tool. `harness sync` writes the bootstrap from the running tool and `harness check` fails when it is missing or differs, so a bootstrap fix reaches a repository that was already initialized.
 
 `harness diff --manifest <path> --to <version>` previews the base files and compositions an upgrade changes. `harness gates` accepts `--jobs` and `--timeout`, and `--report` appends a JSON run summary that `harness metrics --log` reads into a first-pass rate.
 

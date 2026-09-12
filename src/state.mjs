@@ -1,10 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { composeText, sha256 } from './compose.mjs'
 import { loadRelease, verifyRelease } from './release.mjs'
 import { ensureGitCheckout, isGitSource } from './fetch.mjs'
 import { toolCommit, toolFiles, toolVersion } from './tool.mjs'
 import { adoptionProblems, loadRequirements } from './adopt.mjs'
+import { SHIM } from './shim.mjs'
 
 function writeAtomic(path, text) {
   const tmp = path + '.tmp'
@@ -85,6 +86,9 @@ export function inspect(root, manifest) {
   if (pin.length > 0) return { status: 'stale', detail: pin[0] }
   const files = toolFileProblems(manifest)
   if (files.length > 0) return { status: 'diverged', detail: files[0] }
+  const bootstrapPath = resolve(root, 'harness')
+  if (!existsSync(bootstrapPath)) return { status: 'diverged', detail: 'harness: bootstrap missing; run harness sync' }
+  if (readFileSync(bootstrapPath, 'utf8') !== SHIM) return { status: 'diverged', detail: 'harness: bootstrap is stale; run harness sync' }
   let base
   try {
     base = resolveBase(root, manifest)
@@ -145,6 +149,9 @@ export function applySync(root, path, manifest) {
     writeAtomic(item.path, item.text)
     lock.outputs[item.output] = item.hash
   }
+  const bootstrapPath = resolve(root, 'harness')
+  writeAtomic(bootstrapPath, SHIM)
+  chmodSync(bootstrapPath, 0o755)
   if (base !== null) lock.base = { version: base.release.version, files: base.release.files }
   manifest.lock = lock
   writeAtomic(path, JSON.stringify(manifest, null, 2) + '\n')

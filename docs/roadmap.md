@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.10 — base and tool are versioned, hashed, commit-pinned releases; a base release declares required gates, governance, and output assertions, and `check`/`doctor` fail until a consumer adopts them; a gate passes only when its output is clean.
+Status: v0.1.11 — base and tool are versioned, hashed, commit-pinned releases; a base release declares required gates, governance, and output assertions, and `check`/`doctor` fail until a consumer adopts them; a gate passes only when its output is clean; `sync` materializes the bootstrap and `check` fails when it is stale.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -52,7 +52,7 @@ Make adoption one command: `harness init` writes the manifest, the lock, and the
 
 Done when: a new repository reaches a green `harness check` from `init` alone.
 
-Progress: `harness init` scaffolds the delta, manifest, bootstrap, `.gitignore`, and a CI workflow, then composes the repository (green when the base source resolves). `harness diff` previews a base upgrade. `harness gates` supports `--jobs` and `--timeout`, and `--report` feeds `harness metrics` (first-pass rate). Remaining: YAML manifest support, and a freshness contract for generated scaffolding — `init` writes the bootstrap once, so a fixed bootstrap never reaches an already-initialized repository; `sync` should materialize it and `check` should flag it stale.
+Progress: `harness init` scaffolds the delta, manifest, bootstrap, `.gitignore`, and a CI workflow, then composes the repository (green when the base source resolves). `harness diff` previews a base upgrade. `harness gates` supports `--jobs` and `--timeout`, and `--report` feeds `harness metrics` (first-pass rate). Remaining: YAML manifest support.
 
 ## What to adapt from DeepSeek Harness
 
