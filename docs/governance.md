@@ -51,13 +51,13 @@ A gate that never fires is ambiguous: either the code is clean, or the sensor is
 
 ## Prove a gate still fires
 
-Every gate carries a `prove_fires` action. Run it whenever the gate changes, and on a fixed cadence otherwise:
+A blocking gate must declare `prove_fires_command` (introduce the failure) and `revert_command` (undo it). `harness validate` rejects a blocking gate without both, and `harness prove` runs the three steps and exits non-zero when the gate does not fire:
 
-1. Introduce the failure the gate protects against.
-2. Run the gate and confirm it exits non-zero.
-3. Revert, and confirm it exits zero.
+1. Run `prove_fires_command` to introduce the failure.
+2. Run the gate's `command` and confirm it exits non-zero.
+3. Run `revert_command` and confirm the gate exits zero again.
 
-A gate whose `prove_fires` action has not been run recently is treated as broken until proven otherwise. The [writing-a-gate](../base/skills/writing-a-gate/SKILL.md) skill owns the procedure.
+There is no default revert: `harness prove` refuses to guess, so it cannot discard unrelated work. `harness prove --record` stores the last proof time and commit in the lock. A gate whose `prove_fires_command` has not been run recently is treated as broken until proven otherwise. The [writing-a-gate](../base/skills/writing-a-gate/SKILL.md) skill owns the procedure.
 
 ## Pruning
 

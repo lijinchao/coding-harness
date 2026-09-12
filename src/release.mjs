@@ -41,10 +41,14 @@ export function declaredVersion(baseDir) {
  * @param {string} baseDir - Directory holding the base files.
  * @param {string} outDir - Release registry directory.
  * @param {string} version - Released base version.
+ * @param {{ force?: boolean }} [options] - Force overwrite of an existing release.
  * @returns {{ dir: string, release: { name: string, version: string, files: Record<string, string> } }}
  */
-export function createRelease(baseDir, outDir, version) {
+export function createRelease(baseDir, outDir, version, options = {}) {
   const dir = resolve(outDir, `base@${version}`)
+  if (existsSync(dir) && options.force !== true) {
+    throw new Error(`base@${version} already exists at ${dir}; bump base/VERSION or pass --force`)
+  }
   const files = collectFiles(baseDir)
   const hashes = {}
   rmSync(dir, { recursive: true, force: true })

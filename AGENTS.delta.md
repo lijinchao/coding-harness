@@ -23,7 +23,7 @@ Run the tests and the example check before reporting any task complete, and past
 
 ## Adding a gate
 
-Read `base/skills/writing-a-gate/SKILL.md` first. A gate without a `prove_fires` action that you have actually run is rejected by `./harness validate`, and by review.
+Read `base/skills/writing-a-gate/SKILL.md` first. `./harness validate` rejects a blocking gate that does not declare both `prove_fires_command` and `revert_command`, and `./harness prove` refuses to guess a revert. A gate nobody has watched fail is a dead gate.
 
 ## Things the agent gets wrong
 

@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -18,14 +19,25 @@ export function toolRoot() {
 /**
  * The version of the tool that is running.
  *
- * Consumers pin this in `manifest.tool.version`; sync and check fail when the
- * running tool is a different version, so the program that verifies a base is as
- * reproducible as the base itself.
- *
  * @returns {string} The version from this package's package.json.
  */
 export function toolVersion() {
   return JSON.parse(readFileSync(resolve(toolRoot(), 'package.json'), 'utf8')).version
+}
+
+/**
+ * The git commit of the running tool's checkout, when it is one.
+ *
+ * Consumers pin this so a moved tag or branch is detected before trust.
+ *
+ * @returns {string|undefined}
+ */
+export function toolCommit() {
+  try {
+    return execFileSync('git', ['-C', toolRoot(), 'rev-parse', 'HEAD'], { stdio: 'pipe' }).toString().trim()
+  } catch {
+    return undefined
+  }
 }
 
 function sha256File(path) {
@@ -34,10 +46,6 @@ function sha256File(path) {
 
 /**
  * SHA-256 of every tool source file, keyed by repository-relative path.
- *
- * Consumers record this map in the lock; check fails when the running tool no
- * longer matches it, so the program that verifies a base is pinned by content,
- * not only by a version string.
  *
  * @returns {Record<string, string>}
  */

@@ -18,7 +18,7 @@ function manifestPath(dir) {
 }
 
 function gate() {
-  return { id: 'drift', command: 'harness check', protects: 'composition', prove_fires: 'edit AGENTS.md', severity: 'blocking' }
+  return { id: 'drift', command: 'harness check', protects: 'composition', prove_fires: 'edit AGENTS.md', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true' }
 }
 
 function makeRepo() {
@@ -69,7 +69,7 @@ test('validate rejects a gate without prove_fires', () => {
     version: '1',
     compositions: [{ output: 'a', sources: ['b'] }],
     skills: [],
-    gates: [{ id: 'x', command: 'c', protects: 'p', severity: 'blocking' }],
+    gates: [{ id: 'x', command: 'c', protects: 'p', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true' }],
   })
   assert.ok(errors.some((error) => error.includes('prove_fires')))
 })
@@ -144,7 +144,7 @@ test('sync refuses a base that differs from the pinned lock', () => {
   const manifest = manifestPath(consumer)
   run(['sync', '--manifest', manifest])
   writeFileSync(join(base, 'AGENTS.base.md'), '# Base v2\n\nChanged.\n')
-  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0'])
+  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0', '--force'])
   assert.throws(() => run(['sync', '--manifest', manifest]))
   rmSync(root, { recursive: true, force: true })
 })
@@ -164,7 +164,7 @@ test('upgrade moves the pin to a new base version', () => {
   const manifest = manifestPath(consumer)
   run(['sync', '--manifest', manifest])
   writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n\nShared rules v2.\n')
-  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.2.0'])
+  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.2.0', '--force'])
   run(['upgrade', '--manifest', manifest, '--to', '0.2.0'])
   assert.match(readFileSync(join(consumer, 'AGENTS.md'), 'utf8'), /Shared rules v2/)
   run(['check', '--manifest', manifest])

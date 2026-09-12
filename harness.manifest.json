@@ -1,7 +1,7 @@
 {
-  "version": "0.1.5",
+  "version": "0.1.6",
   "tool": {
-    "version": "0.1.5",
+    "version": "0.1.6",
     "source": "git:https://github.com/lijinchao/coding-harness.git"
   },
   "base": {
@@ -42,7 +42,7 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.5 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.6 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
@@ -53,50 +53,18 @@
       "command": "./harness validate --manifest harness.manifest.json",
       "protects": "declared skills and gates carry their required sections",
       "prove_fires": "remove ## Verification from a declared skill; expect exit 1",
-      "severity": "blocking"
+      "severity": "blocking",
+      "prove_fires_command": "node -e \"const fs=require('fs');const p='harness.manifest.json';const m=JSON.parse(fs.readFileSync(p));m.__prove=true;fs.writeFileSync(p,JSON.stringify(m,null,2)+'\\n')\"",
+      "revert_command": "node -e \"const fs=require('fs');const p='harness.manifest.json';const m=JSON.parse(fs.readFileSync(p));delete m.__prove;fs.writeFileSync(p,JSON.stringify(m,null,2)+'\\n')\""
     },
     {
       "id": "tests",
       "command": "npm test",
       "protects": "the CLI and its checks stay green",
       "prove_fires": "break a test expectation; expect exit 1",
-      "severity": "blocking"
+      "severity": "blocking",
+      "prove_fires_command": "node -e \"require('fs').writeFileSync('test/__prove.test.mjs','throw new Error()')\"",
+      "revert_command": "node -e \"require('fs').rmSync('test/__prove.test.mjs',{force:true})\""
     }
-  ],
-  "lock": {
-    "version": "0.1.5",
-    "tool": {
-      "version": "0.1.5",
-      "files": {
-        "bin/harness.mjs": "b307dfd65622d9c7f02c68fbf9b107b9ced37980faf77d7f575aa59a447945fd",
-        "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
-        "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
-        "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
-        "src/gates.mjs": "bbc9b4d365dec9feb769089fd92e208aa1bb2407fbaa4f3234902332b2cb8a20",
-        "src/manifest.mjs": "623ad5f8937499bd5d50de7fa45a3f8a86cda75b4b285420603d16a7c61bf57f",
-        "src/prove.mjs": "b0c31848347aa6af6ad35d82dc8e4d8233f848c12048e92ecb6a5b0fd94306c6",
-        "src/release.mjs": "50bb0389aef26b2eab86899dbaecc178ea6f5af5b8774d20d775b20b32ed631f",
-        "src/scan.mjs": "b519f8e46d65fe8dde1ce5fd1a4cbe9f5e26f19bb5e6d39dfab3a6c5827799a7",
-        "src/shim.mjs": "c61d60287873ce5a1de28dada91c6d26d6907ace986b8aeaec8c3221ebecad30",
-        "src/tool.mjs": "64cd4f71abba77ccf3e730499517e24aa5ce79a0d71681cfd0f23d2bd1b4fdfd",
-        "package.json": "85a4698c923a037c5fe8303734d40414cce892ff8ddd03c3aae93da10d998277"
-      }
-    },
-    "outputs": {
-      "AGENTS.md": "78ede410cf99faf8c2449df89b23ca296492ad70d8bf9b808b5547d3e8e794b1",
-      "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
-    },
-    "base": {
-      "version": "0.1.5",
-      "files": {
-        "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
-        "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "800cf1c0392b24de7c0a1c6ea6778ecb433dec71c49a150bce96a98477527b2f",
-        "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
-        "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
-        "templates/decision-record.md": "9495d9b30f1276da7c0c448d98c3c153f8b7b7d012dc55dee6a85d828b7182a4",
-        "templates/postmortem.md": "80af444609639a827e383450b682b93f59dc0b08279b519a1342e708dc65d1ee"
-      }
-    }
-  }
+  ]
 }

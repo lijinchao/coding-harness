@@ -17,7 +17,7 @@ function manifestPath(dir) {
 }
 
 function gate(overrides) {
-  return { id: 'g', command: 'harness check', protects: 'p', prove_fires: 'f', severity: 'blocking', ...overrides }
+  return { id: 'g', command: 'harness check', protects: 'p', prove_fires: 'f', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true', ...overrides }
 }
 
 function makeConsumer(root, name) {
@@ -26,7 +26,7 @@ function makeConsumer(root, name) {
   mkdirSync(base, { recursive: true })
   mkdirSync(consumer, { recursive: true })
   writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n\nShared.\n')
-  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0'])
+  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0', '--force'])
   writeFileSync(join(consumer, 'AGENTS.delta.md'), '# Delta\n')
   writeFileSync(manifestPath(consumer), JSON.stringify({
     version: '0.1.0',

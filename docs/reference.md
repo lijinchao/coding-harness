@@ -61,9 +61,11 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `command` | The command that runs the check |
 | `protects` | The invariant the gate protects |
 | `prove_fires` | The action that must make the gate fail |
+| `prove_fires_command` | The command that introduces the failure (required for a blocking gate) |
+| `revert_command` | The command that undoes the failure (required for a blocking gate) |
 | `severity` | `blocking` or `advisory` |
 
-A gate without `prove_fires` is not admissible. A gate nobody has watched fail is not known to work.
+A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work.
 
 ### Guide section
 
@@ -103,6 +105,7 @@ Every harness change traces to an observed failure: a repeated mistake, an incid
 ## Prohibitions
 
 - **Dead gate.** A gate whose `prove_fires` action was never run. Run it, fix it, or delete it.
+- **Unproven blocking gate.** A blocking gate without a `prove_fires_command` and `revert_command`. Prove it, fix it, or demote it to `advisory`.
 - **Prose-carried invariant.** A rule that must always hold but lives only in prose. Promote it to a gate.
 - **Dual source of truth.** Two systems that both claim authority over one artifact. Name one and link the other.
 - **Speculative rule.** A guide or gate added for a failure that has not happened.
@@ -119,5 +122,7 @@ A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag
 `harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
 
 An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-syncs, and the repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
+
+`harness release` refuses to overwrite an existing `base@<version>`; bump `base/VERSION` or pass `--force`. `harness sync` and `harness upgrade` resolve, verify, and compose before writing anything, and commit each file by rename, so a failed upgrade leaves the previous state intact.
 
 `harness gates --manifest <path>` runs every gate the manifest declares, so one list drives local runs and CI and the two cannot drift. A blocking failure exits non-zero; an advisory failure only warns. `harness scan --root <dir>` reports every manifest under a tree as ok, stale, diverged, or error. `harness prove --manifest <path>` runs a gate's `prove_fires_command`, requires the gate to fail, reverts, and requires it to pass; a gate whose action no longer fires exits non-zero.

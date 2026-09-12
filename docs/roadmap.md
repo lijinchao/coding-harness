@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.5 — the base and the tool are versioned, hashed releases fetched from git, validation reaches the declared artifacts, one gate list drives local and CI, and the fleet can be scanned and gates proved, one consumer is pinned to it, and its hosted CI drift gate is proven.
+Status: v0.1.6 — base and tool are versioned, hashed, commit-pinned releases fetched from git; validation enforces the schema and requires executable proofs; one gate list drives local and CI; the fleet can be scanned and gates proved.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -9,7 +9,7 @@ This page carries the forward plan: the next three actions, the milestones ahead
 Three things, in order.
 
 1. **Adopt it in one real repository.** Run `node bin/harness.mjs init --dir <repo>`, author that repository's `AGENTS.delta.md`, and add `harness check` to its CI. Then hand-edit the composed `AGENTS.md` once and watch the job fail; that failure is the gate's proof.
-2. **Make the base distributable.** The base is now a released version plus per-file hashes in `harness.lock`; a consumer resolves `base@0.1.0` from a registry. What remains is fetching that registry from a remote instead of a local directory.
+2. **Make the base distributable.** The base is a released version plus per-file hashes and a commit pin; a consumer fetches it from a git tag and the bootstrap verifies the commit before running. What remains is signed releases.
 3. **Collect the first effectiveness signals.** Record the first-pass check rate and every review finding that cites a policy already covered by a guide. Two weeks of those two numbers tell you which guide is not working.
 
 ## Milestones

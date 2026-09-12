@@ -13,6 +13,7 @@
       "required": ["version"],
       "properties": {
         "version": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 },
         "source": { "type": "string", "minLength": 1 }
       }
     },
@@ -86,6 +87,7 @@
           "required": ["version"],
           "properties": {
             "version": { "type": "string" },
+            "commit": { "type": "string" },
             "files": { "type": "object", "additionalProperties": { "type": "string" } }
           }
         },
@@ -98,7 +100,8 @@
             "files": { "type": "object", "additionalProperties": { "type": "string" } }
           }
         },
-        "outputs": { "type": "object", "additionalProperties": { "type": "string" } }
+        "outputs": { "type": "object", "additionalProperties": { "type": "string" } },
+        "proofs": { "type": "object", "additionalProperties": { "type": "string" } }
       }
     }
   }

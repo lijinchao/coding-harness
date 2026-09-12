@@ -12,50 +12,87 @@ export function loadManifest(path) {
 
 const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
 const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
+const ROOT_KEYS = ['version', 'tool', 'base', 'compositions', 'skills', 'gates', 'lock']
+const COMPOSITION_KEYS = ['output', 'sources']
+const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
+const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity']
+const BASE_KEYS = ['source', 'registry', 'cache']
+const TOOL_KEYS = ['version', 'commit', 'source']
+const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
+const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
+const LOCK_BASE_KEYS = ['version', 'files']
 
 function requireString(errors, value, where) {
-  if (typeof value !== 'string' || value.length === 0) errors.push(`${where}: required non-empty string`)
+  if (typeof value !== 'string' || value.length === 0) errors.push(where + ': required non-empty string')
 }
 
 function requireObject(errors, value, where) {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) errors.push(`${where}: required object`)
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) errors.push(where + ': required object')
+}
+
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function rejectUnknown(errors, value, allowed, where) {
+  if (!isObject(value)) return
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key)) errors.push(where + '.' + key + ': unknown field')
+  }
+}
+
+function requireUniqueIds(errors, items, where) {
+  const seen = new Set()
+  items.forEach((item, index) => {
+    const id = item?.id
+    if (typeof id !== 'string') return
+    if (seen.has(id)) errors.push(where + '[' + index + '].id: duplicate id ' + id)
+    seen.add(id)
+  })
 }
 
 function validateBase(errors, base) {
   if (base === undefined) return
   requireObject(errors, base, 'base')
-  if (base !== null && typeof base === 'object' && !Array.isArray(base)) {
-    requireString(errors, base.source, 'base.source')
-    if (base.registry !== undefined) requireString(errors, base.registry, 'base.registry')
-    if (base.cache !== undefined) requireString(errors, base.cache, 'base.cache')
-  }
+  rejectUnknown(errors, base, BASE_KEYS, 'base')
+  if (!isObject(base)) return
+  requireString(errors, base.source, 'base.source')
+  if (base.registry !== undefined) requireString(errors, base.registry, 'base.registry')
+  if (base.cache !== undefined) requireString(errors, base.cache, 'base.cache')
 }
 
 function validateTool(errors, tool) {
   if (tool === undefined) return
   requireObject(errors, tool, 'tool')
-  if (tool !== null && typeof tool === 'object' && !Array.isArray(tool)) {
-    requireString(errors, tool.version, 'tool.version')
-    if (tool.source !== undefined) requireString(errors, tool.source, 'tool.source')
-  }
+  rejectUnknown(errors, tool, TOOL_KEYS, 'tool')
+  if (!isObject(tool)) return
+  requireString(errors, tool.version, 'tool.version')
+  if (tool.commit !== undefined) requireString(errors, tool.commit, 'tool.commit')
+  if (tool.source !== undefined) requireString(errors, tool.source, 'tool.source')
+}
+
+function validateLockTool(errors, tool) {
+  requireObject(errors, tool, 'lock.tool')
+  rejectUnknown(errors, tool, LOCK_TOOL_KEYS, 'lock.tool')
+  if (!isObject(tool)) return
+  requireString(errors, tool.version, 'lock.tool.version')
+  if (tool.commit !== undefined) requireString(errors, tool.commit, 'lock.tool.commit')
+  if (tool.files !== undefined) requireObject(errors, tool.files, 'lock.tool.files')
 }
 
 function validateLock(errors, lock) {
   if (lock === undefined) return
   requireObject(errors, lock, 'lock')
-  if (lock === null || typeof lock !== 'object' || Array.isArray(lock)) return
+  rejectUnknown(errors, lock, LOCK_KEYS, 'lock')
+  if (!isObject(lock)) return
   requireString(errors, lock.version, 'lock.version')
   requireObject(errors, lock.outputs, 'lock.outputs')
-  if (lock.tool !== undefined) {
-    requireObject(errors, lock.tool, 'lock.tool')
-    if (lock.tool !== null && typeof lock.tool === 'object' && !Array.isArray(lock.tool)) {
-      requireString(errors, lock.tool.version, 'lock.tool.version')
-      if (lock.tool.files !== undefined) requireObject(errors, lock.tool.files, 'lock.tool.files')
-    }
-  }
+  if (lock.proofs !== undefined) requireObject(errors, lock.proofs, 'lock.proofs')
+  if (lock.tool !== undefined) validateLockTool(errors, lock.tool)
   if (lock.base !== undefined) {
     requireObject(errors, lock.base, 'lock.base')
-    if (lock.base !== null && typeof lock.base === 'object' && !Array.isArray(lock.base)) {
+    rejectUnknown(errors, lock.base, LOCK_BASE_KEYS, 'lock.base')
+    if (isObject(lock.base)) {
       requireString(errors, lock.base.version, 'lock.base.version')
       requireObject(errors, lock.base.files, 'lock.base.files')
     }
@@ -66,25 +103,32 @@ function validateLock(errors, lock) {
  * Return the structural errors in a manifest.
  *
  * The JSON schema in `schema/` is the normative contract; this function
- * implements the required-field checks the CLI enforces.
+ * implements it, including unknown fields, duplicate ids, and the rule that a
+ * blocking gate must declare a runnable proof.
  *
  * @param {unknown} manifest - A parsed manifest.
  * @returns {string[]} One message per violation; empty means valid.
  */
 export function validateManifest(manifest) {
   const errors = []
-  if (manifest === null || typeof manifest !== 'object' || Array.isArray(manifest)) return ['root: required object']
+  if (!isObject(manifest)) return ['root: required object']
+  rejectUnknown(errors, manifest, ROOT_KEYS, 'root')
   requireString(errors, manifest.version, 'version')
+  validateBase(errors, manifest.base)
+  validateTool(errors, manifest.tool)
 
   if (!Array.isArray(manifest.compositions) || manifest.compositions.length === 0) {
     errors.push('compositions: required non-empty array')
   } else {
     manifest.compositions.forEach((composition, index) => {
-      requireString(errors, composition?.output, `compositions[${index}].output`)
+      const where = 'compositions[' + index + ']'
+      requireObject(errors, composition, where)
+      rejectUnknown(errors, composition, COMPOSITION_KEYS, where)
+      requireString(errors, composition?.output, where + '.output')
       if (!Array.isArray(composition?.sources) || composition.sources.length === 0) {
-        errors.push(`compositions[${index}].sources: required non-empty array`)
+        errors.push(where + '.sources: required non-empty array')
       } else {
-        composition.sources.forEach((source, sourceIndex) => requireString(errors, source, `compositions[${index}].sources[${sourceIndex}]`))
+        composition.sources.forEach((source, sourceIndex) => requireString(errors, source, where + '.sources[' + sourceIndex + ']'))
       }
     })
   }
@@ -92,22 +136,34 @@ export function validateManifest(manifest) {
   if (!Array.isArray(manifest.skills)) {
     errors.push('skills: required array')
   } else {
-    manifest.skills.forEach((skill, index) => SKILL_FIELDS.forEach((field) => requireString(errors, skill?.[field], `skills[${index}].${field}`)))
+    manifest.skills.forEach((skill, index) => {
+      const where = 'skills[' + index + ']'
+      requireObject(errors, skill, where)
+      rejectUnknown(errors, skill, SKILL_KEYS, where)
+      SKILL_FIELDS.forEach((field) => requireString(errors, skill?.[field], where + '.' + field))
+    })
+    requireUniqueIds(errors, manifest.skills, 'skills')
   }
 
   if (!Array.isArray(manifest.gates)) {
     errors.push('gates: required array')
   } else {
     manifest.gates.forEach((gate, index) => {
-      GATE_FIELDS.forEach((field) => requireString(errors, gate?.[field], `gates[${index}].${field}`))
+      const where = 'gates[' + index + ']'
+      requireObject(errors, gate, where)
+      rejectUnknown(errors, gate, GATE_KEYS, where)
+      GATE_FIELDS.forEach((field) => requireString(errors, gate?.[field], where + '.' + field))
       if (gate?.severity !== undefined && !['blocking', 'advisory'].includes(gate.severity)) {
-        errors.push(`gates[${index}].severity: must be blocking or advisory`)
+        errors.push(where + '.severity: must be blocking or advisory')
+      }
+      if (gate?.severity === 'blocking') {
+        requireString(errors, gate.prove_fires_command, where + '.prove_fires_command')
+        requireString(errors, gate.revert_command, where + '.revert_command')
       }
     })
+    requireUniqueIds(errors, manifest.gates, 'gates')
   }
 
-  validateBase(errors, manifest.base)
-  validateTool(errors, manifest.tool)
   validateLock(errors, manifest.lock)
   return errors
 }

@@ -16,7 +16,7 @@ function manifestPath(dir) {
 }
 
 function gate(id, command, severity) {
-  return { id, command, protects: 'p', prove_fires: 'f', severity }
+  return { id, command, protects: 'p', prove_fires: 'f', severity, prove_fires_command: 'true', revert_command: 'true' }
 }
 
 function writeManifest(dir, gates) {
@@ -43,8 +43,8 @@ test('upgrade rewrites a stale base version in gate text', () => {
   const base = join(dir, 'base')
   mkdirSync(base)
   writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n')
-  writeManifest(dir, [{ id: 'drift', command: 'true', protects: 'match base@0.1.0 plus delta', prove_fires: 'edit base@0.1.0', severity: 'blocking' }])
-  run(['release', '--base', base, '--out', join(dir, 'dist'), '--version', '0.2.0'])
+  writeManifest(dir, [{ id: 'drift', command: 'true', protects: 'match base@0.1.0 plus delta', prove_fires: 'edit base@0.1.0', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true' }])
+  run(['release', '--base', base, '--out', join(dir, 'dist'), '--version', '0.2.0', '--force'])
   const m = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
   m.base = { source: './dist' }
   m.compositions = [{ output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] }]

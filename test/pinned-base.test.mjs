@@ -17,7 +17,7 @@ function manifestPath(dir) {
 }
 
 function gate() {
-  return { id: 'drift', command: 'harness check', protects: 'composition', prove_fires: 'edit AGENTS.md', severity: 'blocking' }
+  return { id: 'drift', command: 'harness check', protects: 'composition', prove_fires: 'edit AGENTS.md', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true' }
 }
 
 let gitAvailable = true
@@ -81,7 +81,7 @@ test('sync rejects a mismatched pinned tool version', () => {
   mkdirSync(base)
   mkdirSync(consumer)
   writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n')
-  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0'])
+  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0', '--force'])
   writeFileSync(join(consumer, 'AGENTS.delta.md'), '# Delta\n')
   writeFileSync(manifestPath(consumer), JSON.stringify({
     version: '0.1.0',
