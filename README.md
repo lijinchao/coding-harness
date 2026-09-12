@@ -1,0 +1,82 @@
+# Coding Harness
+
+A base framework, a generator, and drift checks for the outer harness a team builds around a coding agent.
+
+The **outer harness** is everything a team builds for its own codebase so the agent writes correct code. It does not include the agent's own runtime: the agent loop, its tools, its sandbox, and its session state are a dependency you choose.
+
+The harness has four concerns:
+
+| Concern | Role |
+|---|---|
+| Guides | Steer the agent before it acts |
+| Sensors | Observe after it acts, so it can self-correct |
+| Gates | Enforce a rule without judgment, or route the decision to a person |
+| Artifacts | Carry state between stages and record decisions |
+
+This project gives you three things:
+
+- **[docs/reference.md](docs/reference.md)** — the vocabulary, carrier rules, and artifact contracts.
+- **A base layer and a manifest** — `base/` declares the shared layer; each repository's `harness.manifest.json` declares what it pins and how the result is verified.
+- **A zero-dependency CLI** — `harness validate | sync | check | init | upgrade`.
+
+## Why a shared base
+
+Copy-paste is how a harness drifts. Each repository pins one base version and keeps only its own delta. `harness sync` composes the two; `harness check` fails when the composed result no longer matches `base@version + delta`, which catches a hand edit that silently diverges from the shared version.
+
+## Quick start
+
+The CLI runs on Node.js 20.11 or later with no install step.
+
+```sh
+node bin/harness.mjs validate --manifest examples/consumer/harness.manifest.json
+node bin/harness.mjs sync     --manifest examples/consumer/harness.manifest.json
+node bin/harness.mjs check    --manifest examples/consumer/harness.manifest.json
+```
+
+`sync` writes the composed `AGENTS.md` and `REVIEW.md` and records their hashes in the manifest's `lock`. `check` recomposes in memory and fails on any difference.
+
+To add the harness to an existing repository:
+
+```sh
+node bin/harness.mjs init --dir path/to/repo
+```
+
+## Repository layout
+
+```text
+docs/reference.md              the normative reference
+docs/governance.md             ownership, change sources, versioning, proof, pruning
+schema/                        JSON schema for the manifest
+base/                          the shared layer repositories pin
+  AGENTS.base.md               composed into each repository's AGENTS.md
+  REVIEW.base.md               review passes and severity thresholds
+  skills/<name>/SKILL.md       procedures that must run consistently
+examples/consumer/             a runnable consuming repository
+bin/harness.mjs                the CLI
+src/                           manifest loading and composition
+test/                          node:test suites
+```
+
+## CLI
+
+| Command | Effect |
+|---|---|
+| `validate --manifest <path>` | Fail on any missing required field |
+| `sync --manifest <path>` | Compose outputs and rewrite the lock |
+| `check --manifest <path>` | Fail when a composed output drifted from `base@version + delta` |
+| `init --dir <path>` | Scaffold a repository delta and manifest |
+| `upgrade --manifest <path> --to <version>` | Pin a new base version and re-sync |
+
+## Make the harness evolve
+
+Every harness change traces to an observed failure, and a rule is promoted only as evidence accumulates:
+
+```text
+observed failure -> skill -> hook -> CI check -> structural test -> shared base
+```
+
+A gate is admitted only with a `prove_fires` action you have actually run. A gate nobody has watched fail is not known to work. [docs/governance.md](docs/governance.md) owns ownership, upgrade policy, effectiveness signals, and pruning.
+
+## Status
+
+v0.1.0. The manifest is JSON to keep the CLI dependency-free; YAML support is deliberately deferred.

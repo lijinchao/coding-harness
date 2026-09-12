@@ -1,0 +1,55 @@
+{
+  "version": "0.1.0",
+  "compositions": [
+    {
+      "output": "AGENTS.md",
+      "sources": [
+        "../../base/AGENTS.base.md",
+        "AGENTS.delta.md"
+      ]
+    },
+    {
+      "output": "REVIEW.md",
+      "sources": [
+        "../../base/REVIEW.base.md"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "id": "test-driven-development",
+      "path": "../../base/skills/test-driven-development/SKILL.md",
+      "trigger": "before writing implementation code",
+      "owner": "@platform"
+    },
+    {
+      "id": "writing-a-gate",
+      "path": "../../base/skills/writing-a-gate/SKILL.md",
+      "trigger": "before adding a gate",
+      "owner": "@platform"
+    }
+  ],
+  "gates": [
+    {
+      "id": "harness-drift",
+      "command": "harness check --manifest harness.manifest.json",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.0 plus this delta",
+      "prove_fires": "hand-edit AGENTS.md, then run harness check; expect exit 1",
+      "severity": "blocking"
+    },
+    {
+      "id": "lint",
+      "command": "make lint",
+      "protects": "zero warnings in the committed change",
+      "prove_fires": "introduce an unused import; expect exit 1",
+      "severity": "blocking"
+    }
+  ],
+  "lock": {
+    "version": "0.1.0",
+    "outputs": {
+      "AGENTS.md": "49e47ec4f18592f77ca6569dea34d5c5ad14c7ee394b92cff7c2e669a880a9fc",
+      "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
+    }
+  }
+}
