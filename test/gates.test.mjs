@@ -56,3 +56,19 @@ test('upgrade rewrites a stale base version in gate text', () => {
   assert.ok(after.gates[0].prove_fires.includes('base@0.2.0'))
   rmSync(dir, { recursive: true, force: true })
 })
+
+test('gates --phase runs the unphased gates plus that phase only', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-phase-'))
+  const mark = (name) => `printf '${name}\\n' >> '${join(dir, 'ran.txt')}'`
+  writeManifest(dir, [
+    gate('always', mark('always'), 'blocking'),
+    { ...gate('fast', mark('fast'), 'blocking'), phase: 'fast' },
+    { ...gate('full', mark('full'), 'blocking'), phase: 'full' },
+  ])
+  run(['gates', '--manifest', manifestPath(dir), '--phase', 'fast'])
+  const ran = readFileSync(join(dir, 'ran.txt'), 'utf8')
+  assert.ok(ran.includes('always'))
+  assert.ok(ran.includes('fast'))
+  assert.ok(!ran.includes('full'))
+  rmSync(dir, { recursive: true, force: true })
+})

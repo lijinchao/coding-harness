@@ -88,7 +88,8 @@
               "allow": { "type": "array", "items": { "type": "string", "minLength": 1 } }
             }
           },
-          "severity": { "enum": ["blocking", "advisory"] }
+          "severity": { "enum": ["blocking", "advisory"] },
+          "phase": { "type": "string", "minLength": 1 }
         }
       }
     },

@@ -15,7 +15,7 @@ const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
 const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'lock']
 const COMPOSITION_KEYS = ['output', 'sources']
 const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect']
+const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase']
 const EXPECT_KEYS = ['forbid', 'allow']
 const BASE_KEYS = ['source', 'registry', 'cache']
 const TOOL_KEYS = ['version', 'commit', 'source']
@@ -196,6 +196,7 @@ export function validateManifest(manifest) {
       if (gate?.severity !== undefined && !['blocking', 'advisory'].includes(gate.severity)) {
         errors.push(where + '.severity: must be blocking or advisory')
       }
+      if (gate?.phase !== undefined) requireString(errors, gate.phase, where + '.phase')
       if (gate?.severity === 'blocking') {
         requireString(errors, gate.prove_fires_command, where + '.prove_fires_command')
         requireString(errors, gate.revert_command, where + '.revert_command')

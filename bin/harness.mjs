@@ -33,8 +33,8 @@ commands:
   upgrade    --manifest <path> --to <v>  pin a new base version and re-sync
   release    --base <dir> --out <dir> [--version <v>] [--force]
                                          build a versioned, hashed base release
-  gates      --manifest <path> [--gate <id>] [--jobs <n>] [--timeout <s>] [--report <file>]
-                                         run every declared gate (one list for local and CI)
+  gates      --manifest <path> [--gate <id>] [--phase <name>] [--jobs <n>] [--timeout <s>] [--report <file>]
+                                         run the declared gates, or one gate or phase (one list for local and CI)
   diff       --manifest <path> --to <v> preview what a base upgrade changes
   metrics    --log <file>                first-pass rate from gate reports
   scan       --root <dir>                list consumers whose harness is stale or diverged
@@ -215,7 +215,8 @@ async function cmdGates(options) {
   const manifest = readValidManifest(path)
   const root = dirname(path)
   const only = options.gate
-  const gates = manifest.gates.filter((gate) => only === undefined || gate.id === only)
+  const phase = options.phase
+  const gates = manifest.gates.filter((gate) => (only === undefined || gate.id === only) && (phase === undefined || gate.phase === undefined || gate.phase === phase))
   const results = await runGates(root, gates, { timeoutMs: options.timeout === undefined ? 0 : Number(options.timeout) * 1000, jobs: options.jobs === undefined ? 1 : Number(options.jobs) })
   let blocking = 0
   for (const result of results) {

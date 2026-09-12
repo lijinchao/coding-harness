@@ -65,10 +65,13 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `revert_command` | The command that undoes the failure (required for a blocking gate) |
 | `expect` | `forbid` output patterns and the `allow` lines that are benign |
 | `severity` | `blocking` or `advisory` |
+| `phase` | Optional label; an unphased gate runs in every phase |
 
 A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work.
 
 A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless the line also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
+
+A gate may declare a `phase`. `harness gates --phase <name>` runs the unphased gates plus the gates in that phase, and `harness gates` without `--phase` runs every gate. Tag a slow gate `full` so a local `--phase fast` run skips it while CI, which passes no phase, still runs it.
 
 ### Guide section
 
