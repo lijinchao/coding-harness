@@ -1,0 +1,22 @@
+# Drift gate for the example consumer.
+# The base and tool are released at tag v<version> and fetched by ./harness;
+# one gate list (harness.manifest.json) drives local runs and CI.
+name: harness
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Run every declared gate
+        run: ./harness gates --manifest harness.manifest.json
+      - name: Prove every gate still fires
+        run: ./harness prove --manifest harness.manifest.json

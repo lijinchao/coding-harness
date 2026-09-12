@@ -36,3 +36,22 @@ test('doctor reports a decision record missing a section and a missing owner rou
   assert.ok(problems.some((problem) => problem.includes('CODEOWNERS')))
   rmSync(root, { recursive: true, force: true })
 })
+
+test('doctor requires the declared CI file to run every required command', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
+  mkdirSync(join(root, '.github', 'workflows'), { recursive: true })
+  writeFileSync(join(root, '.github', 'workflows', 'harness.yml'), 'run: ./harness gates --manifest harness.manifest.json\n')
+  const requirements = { requiredCiCommands: ['harness gates', 'harness prove'] }
+  const problems = doctorProblems(root, manifest({ ci: ['.github/workflows/harness.yml'] }), requirements)
+  assert.ok(problems.some((problem) => problem.includes('harness prove')))
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('doctor accepts a CI file that runs every required command', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-'))
+  mkdirSync(join(root, '.github', 'workflows'), { recursive: true })
+  writeFileSync(join(root, '.github', 'workflows', 'harness.yml'), 'run: ./harness gates --manifest harness.manifest.json\nrun: ./harness prove --manifest harness.manifest.json\n')
+  const requirements = { requiredCiCommands: ['harness gates', 'harness prove'] }
+  assert.deepEqual(doctorProblems(root, manifest({ ci: ['.github/workflows/harness.yml'] }), requirements), [])
+  rmSync(root, { recursive: true, force: true })
+})

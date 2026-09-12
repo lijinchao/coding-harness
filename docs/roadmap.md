@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.11 — base and tool are versioned, hashed, commit-pinned releases; a base release declares required gates, governance, and output assertions, and `check`/`doctor` fail until a consumer adopts them; a gate passes only when its output is clean; `sync` materializes the bootstrap and `check` fails when it is stale.
+Status: v0.1.12 — base and tool are versioned, hashed, commit-pinned releases; a base release declares required gates, governance, required CI commands, and output assertions, and `check`/`doctor` fail until a consumer adopts them; a gate passes only when its output is clean; `sync` materializes the bootstrap and `check` fails when it is stale.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 

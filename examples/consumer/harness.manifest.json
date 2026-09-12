@@ -1,7 +1,7 @@
 {
-  "version": "0.1.11",
+  "version": "0.1.12",
   "tool": {
-    "version": "0.1.11"
+    "version": "0.1.12"
   },
   "base": {
     "source": "../../dist"
@@ -39,7 +39,7 @@
     {
       "id": "harness-drift",
       "command": "harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.11 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.12 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->' >> AGENTS.md",
@@ -82,42 +82,45 @@
   "governance": {
     "owners": [
       "@platform"
+    ],
+    "ci": [
+      ".github/workflows/harness.yml"
     ]
   },
   "lock": {
-    "version": "0.1.11",
+    "version": "0.1.12",
     "tool": {
-      "version": "0.1.11",
+      "version": "0.1.12",
       "files": {
-        "bin/harness.mjs": "f8e4dd5e1d1e4fa9d1d90ebd89522ada31bf0ddcd2653b65a954b8f8393ec821",
+        "bin/harness.mjs": "6e115b98419eb1080350d6f907af1e4ce888d95c799151303b8b296970521eea",
         "src/adopt.mjs": "92e78022e153ff150458c0c1767004128f195e41d4ddc8ea1266335e625f910e",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
-        "src/doctor.mjs": "767ffaebd03d48efa01f1fcf4c1ed2b87aec587d9923d944d9f340d4e25a6fea",
+        "src/doctor.mjs": "404dc361d719c1eb1735b329643ed3461e6fa3f27514fd8c5d85fa152def2648",
         "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
         "src/gates.mjs": "83edf511fd79cfbdb830865c31a2b66963b7ea2695d507a84e00cc9b2ac2bee9",
-        "src/manifest.mjs": "5fab67b7b68b9cd4eaef838133c6c22b8bb7f69cb4ea806e726a9bf3592ff8f5",
+        "src/manifest.mjs": "c017f28b2a58b70c9adce14115f3ec404573e7fc9943b3634d7a15aaa7a23696",
         "src/prove.mjs": "17578fbdfda0611dba46b42cbbcdf9dd9499177b4a27f378e33c77da2fb00e63",
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/shim.mjs": "b58e8c97a868bfa3b80a47938ff1fda29bd5d573c76d72f5e7ea1b83e2eb8543",
         "src/state.mjs": "fadea7f4ea94f7523e7b0ff67f02201d7bf74acf825ce993e31365cd84b1c1be",
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
-        "package.json": "91393dfea1e708e641b73b96fa8a3fda8c10eec59d449954a3ca6143cc3ae8ed"
+        "package.json": "674f6e06f4e3b9034ac75c3626cf743033fe87e173338d933444fc3447c0dd24"
       },
-      "commit": "542ab05ee2a22281fc4e7ec6be2c2a3f98627adf"
+      "commit": "f0b69f7c269967658bbaa4f11a2a1058cf7af5b6"
     },
     "outputs": {
       "AGENTS.md": "b3ef42e8d0585a74d2f470dbd4bc04fe76432de56f7b00e03e465ce2469ff656",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.11",
+      "version": "0.1.12",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "66d60356172ccafdd334fca9bf33243c8409216a733dcde0d66a24fd70ee8132",
-        "requirements.json": "8c5e8ceab8cbe4aadf1cdbb6f8cf781d724ab7e44ba8219266c15c96b1203bf2",
+        "VERSION": "0a6c8dc4148eed841498d2c2be544947a62f8f50c381b2e64bcd7ce40461cf34",
+        "requirements.json": "947ce571dd0eb806a9f840c54edb36db0b925bf45c3e11a8127146741bc65135",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
         "templates/decision-record.md": "9495d9b30f1276da7c0c448d98c3c153f8b7b7d012dc55dee6a85d828b7182a4",

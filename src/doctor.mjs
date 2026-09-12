@@ -57,5 +57,13 @@ export function doctorProblems(root, manifest, requirements) {
     }
   }
 
+  const ciCommands = requirements?.requiredCiCommands ?? []
+  for (const rel of governance.ci ?? []) {
+    const path = resolve(root, rel)
+    if (!existsSync(path)) { problems.push(rel + ': CI file not found'); continue }
+    const text = readFileSync(path, 'utf8')
+    for (const command of ciCommands) if (!text.includes(command)) problems.push(rel + ': does not run "' + command + '"')
+  }
+
   return problems
 }

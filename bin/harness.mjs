@@ -143,7 +143,7 @@ function cmdInit(options) {
       version,
       tool: { version: toolVersion(), source: toolSource },
       base: { source, registry: 'dist', cache: '.harness' },
-      governance: { owners: ['@owner'] },
+      governance: { owners: ['@owner'], ci: ['.github/workflows/harness.yml'] },
       compositions: [
         { output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] },
         { output: 'REVIEW.md', sources: ['base:REVIEW.base.md'] },

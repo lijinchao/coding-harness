@@ -22,7 +22,7 @@ const TOOL_KEYS = ['version', 'commit', 'source']
 const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 const LOCK_BASE_KEYS = ['version', 'files']
-const GOVERNANCE_KEYS = ['version', 'decisions', 'owners']
+const GOVERNANCE_KEYS = ['version', 'decisions', 'owners', 'ci']
 
 function requireString(errors, value, where) {
   if (typeof value !== 'string' || value.length === 0) errors.push(where + ': required non-empty string')
@@ -86,6 +86,10 @@ function validateGovernance(errors, governance) {
   if (governance.owners !== undefined) {
     if (!Array.isArray(governance.owners)) errors.push('governance.owners: required array')
     else governance.owners.forEach((entry, index) => requireString(errors, entry, 'governance.owners[' + index + ']'))
+  }
+  if (governance.ci !== undefined) {
+    if (!Array.isArray(governance.ci)) errors.push('governance.ci: required array')
+    else governance.ci.forEach((entry, index) => requireString(errors, entry, 'governance.ci[' + index + ']'))
   }
 }
 
