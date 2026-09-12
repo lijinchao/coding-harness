@@ -36,6 +36,12 @@ export function adoptionProblems(manifest, requirements) {
   for (const id of requirements.requiredGates ?? []) {
     if (!gateIds.has(id)) problems.push('missing required gate: ' + id)
   }
+  if (requirements.requireOutputAssertions === true) {
+    for (const gate of manifest.gates ?? []) {
+      if (gate.severity !== 'blocking') continue
+      if (!Array.isArray(gate.expect?.forbid) || gate.expect.forbid.length === 0) problems.push('blocking gate needs expect.forbid: ' + gate.id)
+    }
+  }
   const governance = manifest.governance ?? {}
   for (const key of requirements.requiredGovernance ?? []) {
     if (governance[key] === undefined) problems.push('missing required governance: ' + key)

@@ -153,9 +153,9 @@ function cmdInit(options) {
         { id: 'writing-a-gate', path: 'base:skills/writing-a-gate/SKILL.md', trigger: 'before adding a gate', owner: '@owner' },
       ],
       gates: [
-        { id: 'harness-drift', command: './harness check --manifest harness.manifest.json', protects: `composed files match base@${version} plus this delta`, prove_fires: 'hand-edit AGENTS.md, then run ./harness check; expect exit 1', prove_fires_command: "printf '<!-- prove -->' >> AGENTS.md", revert_command: './harness sync --manifest harness.manifest.json', severity: 'blocking' },
-        { id: 'validate', command: './harness validate --manifest harness.manifest.json', protects: 'declared skills and gates carry their required sections', prove_fires: 'corrupt the manifest, then run ./harness validate; expect exit 1', prove_fires_command: "printf '{' >> harness.manifest.json", revert_command: 'git checkout -- harness.manifest.json', severity: 'blocking' },
-        { id: 'doctor', command: './harness doctor --manifest harness.manifest.json', protects: 'declared governance facts stay consistent', prove_fires: 'empty CODEOWNERS, then run ./harness doctor; expect exit 1', prove_fires_command: "printf '' > .github/CODEOWNERS", revert_command: 'git checkout -- .github/CODEOWNERS', severity: 'blocking' },
+        { id: 'harness-drift', command: './harness check --manifest harness.manifest.json', protects: `composed files match base@${version} plus this delta`, prove_fires: 'hand-edit AGENTS.md, then run ./harness check; expect exit 1', prove_fires_command: "printf '<!-- prove -->' >> AGENTS.md", revert_command: './harness sync --manifest harness.manifest.json', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
+        { id: 'validate', command: './harness validate --manifest harness.manifest.json', protects: 'declared skills and gates carry their required sections', prove_fires: 'corrupt the manifest, then run ./harness validate; expect exit 1', prove_fires_command: "printf '{' >> harness.manifest.json", revert_command: 'git checkout -- harness.manifest.json', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
+        { id: 'doctor', command: './harness doctor --manifest harness.manifest.json', protects: 'declared governance facts stay consistent', prove_fires: 'empty CODEOWNERS, then run ./harness doctor; expect exit 1', prove_fires_command: "printf '' > .github/CODEOWNERS", revert_command: 'git checkout -- .github/CODEOWNERS', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
       ],
     }
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
@@ -222,7 +222,8 @@ async function cmdGates(options) {
     const status = result.ok ? 'ok' : result.severity === 'advisory' ? 'warn' : 'fail'
     if (!result.ok && result.severity !== 'advisory') blocking += 1
     if (result.output.trim() !== '') process.stdout.write(result.output.endsWith('\n') ? result.output : result.output + '\n')
-    console.log(`${status}\t${result.id}${result.timedOut ? '\t(timeout)' : ''}`)
+    const note = result.timedOut ? ' (timeout)' : result.violations.length > 0 ? ` (forbidden output: ${result.violations.join(', ')})` : ''
+    console.log(`${status}\t${result.id}${note}`)
   }
   if (typeof options.report === 'string') {
     const entry = { at: new Date().toISOString(), version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok })) }

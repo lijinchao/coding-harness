@@ -15,7 +15,8 @@ const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
 const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'lock']
 const COMPOSITION_KEYS = ['output', 'sources']
 const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity']
+const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect']
+const EXPECT_KEYS = ['forbid', 'allow']
 const BASE_KEYS = ['source', 'registry', 'cache']
 const TOOL_KEYS = ['version', 'commit', 'source']
 const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
@@ -85,6 +86,21 @@ function validateGovernance(errors, governance) {
   if (governance.owners !== undefined) {
     if (!Array.isArray(governance.owners)) errors.push('governance.owners: required array')
     else governance.owners.forEach((entry, index) => requireString(errors, entry, 'governance.owners[' + index + ']'))
+  }
+}
+
+function validateExpect(errors, expect, where) {
+  if (expect === undefined) return
+  requireObject(errors, expect, where)
+  rejectUnknown(errors, expect, EXPECT_KEYS, where)
+  if (!isObject(expect)) return
+  if (expect.forbid !== undefined) {
+    if (!Array.isArray(expect.forbid) || expect.forbid.length === 0) errors.push(where + '.forbid: required non-empty array')
+    else expect.forbid.forEach((pattern, index) => requireString(errors, pattern, where + '.forbid[' + index + ']'))
+  }
+  if (expect.allow !== undefined) {
+    if (!Array.isArray(expect.allow)) errors.push(where + '.allow: required array')
+    else expect.allow.forEach((pattern, index) => requireString(errors, pattern, where + '.allow[' + index + ']'))
   }
 }
 
@@ -178,6 +194,7 @@ export function validateManifest(manifest) {
         requireString(errors, gate.prove_fires_command, where + '.prove_fires_command')
         requireString(errors, gate.revert_command, where + '.revert_command')
       }
+      validateExpect(errors, gate?.expect, where + '.expect')
     })
     requireUniqueIds(errors, manifest.gates, 'gates')
   }

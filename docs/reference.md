@@ -63,9 +63,12 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `prove_fires` | The action that must make the gate fail |
 | `prove_fires_command` | The command that introduces the failure (required for a blocking gate) |
 | `revert_command` | The command that undoes the failure (required for a blocking gate) |
+| `expect` | `forbid` output patterns and the `allow` lines that are benign |
 | `severity` | `blocking` or `advisory` |
 
 A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work.
+
+A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless the line also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
 
 ### Guide section
 
@@ -124,6 +127,8 @@ A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag
 An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-syncs, and the repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
 
 `harness release` refuses to overwrite an existing `base@<version>`; bump `base/VERSION` or pass `--force`. `harness sync` and `harness upgrade` resolve, verify, and compose before writing anything, and commit each file by rename, so a failed upgrade leaves the previous state intact.
+
+The bootstrap resolves `harness.manifest.json` and the tool cache next to the script and runs the tool from that directory, so invoking it by absolute path from any working directory pins the same tool.
 
 `harness diff --manifest <path> --to <version>` previews the base files and compositions an upgrade changes. `harness gates` accepts `--jobs` and `--timeout`, and `--report` appends a JSON run summary that `harness metrics --log` reads into a first-pass rate.
 

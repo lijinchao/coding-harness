@@ -1,5 +1,17 @@
 import { spawn } from 'node:child_process'
 
+function outputViolations(output, expect) {
+  if (expect === undefined || expect.forbid === undefined) return []
+  const allow = expect.allow ?? []
+  const lines = output.split('\n')
+  const violations = []
+  for (const pattern of expect.forbid) {
+    const hit = lines.some((line) => line.includes(pattern) && !allow.some((benign) => line.includes(benign)))
+    if (hit) violations.push(pattern)
+  }
+  return violations
+}
+
 function runOne(root, gate, timeoutMs) {
   return new Promise((resolve) => {
     const child = spawn(gate.command, { cwd: root, shell: true, stdio: ['ignore', 'pipe', 'pipe'] })
@@ -10,7 +22,8 @@ function runOne(root, gate, timeoutMs) {
     const timer = timeoutMs > 0 ? setTimeout(() => { timedOut = true; child.kill('SIGTERM') }, timeoutMs) : null
     const finish = (code) => {
       if (timer !== null) clearTimeout(timer)
-      resolve({ id: gate.id, severity: gate.severity, ok: code === 0 && !timedOut, code: code ?? 1, timedOut, output })
+      const violations = outputViolations(output, gate.expect)
+      resolve({ id: gate.id, severity: gate.severity, ok: code === 0 && !timedOut && violations.length === 0, code: code ?? 1, timedOut, violations, output })
     }
     child.on('close', finish)
     child.on('error', (error) => { output += String(error.message); finish(1) })
@@ -20,14 +33,11 @@ function runOne(root, gate, timeoutMs) {
 /**
  * Run gates, optionally in parallel and with a per-gate timeout.
  *
- * One declared list drives local runs and CI, so the two cannot drift. A
- * blocking failure makes the caller exit non-zero; an advisory failure only
- * warns.
+ * A gate passes only when its command exits zero, does not time out, and its
+ * output does not contain a forbidden pattern (unless the matching line is
+ * allow-listed). Exit code alone is not proof of a clean run.
  *
- * @param {string} root - Directory the manifest lives in.
- * @param {object[]} gates - Gate entries.
- * @param {{ timeoutMs?: number, jobs?: number }} [options]
- * @returns {Promise<{ id: string, severity: string, ok: boolean, code: number, timedOut: boolean, output: string }[]>}
+ * @returns {Promise<{ id: string, severity: string, ok: boolean, code: number, timedOut: boolean, violations: string[], output: string }[]>}
  */
 export async function runGates(root, gates, options = {}) {
   const timeoutMs = options.timeoutMs ?? 0
