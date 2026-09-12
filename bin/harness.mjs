@@ -14,6 +14,7 @@ import { createRelease, declaredVersion, loadRelease, verifyRelease } from '../s
 import { ensureGitCheckout, isGitSource } from '../src/fetch.mjs'
 import { toolFiles, toolVersion } from '../src/tool.mjs'
 import { SHIM } from '../src/shim.mjs'
+import { artifactProblems } from '../src/artifacts.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -97,7 +98,16 @@ function composedOutputs(root, manifest, baseDir) {
 }
 
 function cmdValidate(options) {
-  readValidManifest(resolve(requireOption(options, 'manifest')))
+  const path = resolve(requireOption(options, 'manifest'))
+  const manifest = readValidManifest(path)
+  const root = dirname(path)
+  const needsBase = manifest.skills.some((skill) => typeof skill?.path === 'string' && skill.path.startsWith('base:'))
+  const base = needsBase && manifest.base !== undefined ? resolveBase(root, manifest) : null
+  const problems = artifactProblems(root, manifest, base === null ? undefined : base.dir)
+  if (problems.length > 0) {
+    for (const problem of problems) console.error(`validate: ${problem}`)
+    process.exit(1)
+  }
   console.log('manifest: ok')
 }
 

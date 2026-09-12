@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.2 — the base and the tool are versioned, hashed releases fetched from git, one consumer is pinned to it, and its hosted CI drift gate is proven.
+Status: v0.1.3 — the base and the tool are versioned, hashed releases fetched from git, and validation reaches the declared artifacts, one consumer is pinned to it, and its hosted CI drift gate is proven.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -41,6 +41,8 @@ Done when: `harness scan --root <dir>` lists every consumer whose harness is sta
 Extend `harness validate` from the manifest to the artifact files it declares: a skill must carry its required sections, and a gate must declare a runnable command.
 
 Done when: a skill missing its verification section fails validation, and the base ships decision-record and postmortem templates.
+
+Progress: `harness validate` loads each declared skill and requires the frontmatter `name`/`description` plus `## Inputs`, `## Steps`, `## Verification`, `## Failure`; a gate's command must be a single line. The base ships `templates/decision-record.md` and `templates/postmortem.md`. Both done conditions are covered by tests.
 
 ### M5 — adoption ergonomics
 

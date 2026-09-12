@@ -1,7 +1,7 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "tool": {
-    "version": "0.1.2"
+    "version": "0.1.3"
   },
   "base": {
     "source": "../../dist"
@@ -52,18 +52,19 @@
     }
   ],
   "lock": {
-    "version": "0.1.2",
+    "version": "0.1.3",
     "tool": {
-      "version": "0.1.2",
+      "version": "0.1.3",
       "files": {
-        "bin/harness.mjs": "a5cef359030baafe0f6e80632d805afd07c3679b90c58a495c389297d9bf720c",
+        "bin/harness.mjs": "8781ca1f79a0f70f29ffaa81925cefe830620c77d2c966daf041f6b69574a4e4",
+        "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
         "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
         "src/manifest.mjs": "623ad5f8937499bd5d50de7fa45a3f8a86cda75b4b285420603d16a7c61bf57f",
         "src/release.mjs": "50bb0389aef26b2eab86899dbaecc178ea6f5af5b8774d20d775b20b32ed631f",
         "src/shim.mjs": "c61d60287873ce5a1de28dada91c6d26d6907ace986b8aeaec8c3221ebecad30",
         "src/tool.mjs": "64cd4f71abba77ccf3e730499517e24aa5ce79a0d71681cfd0f23d2bd1b4fdfd",
-        "package.json": "f5bcdb2d62f51f1831ced52cc5fa8c69860030d7ddaed8aa916adf580d0ebbb3"
+        "package.json": "716655f1d66f501ce79bf9810e08e78c5f7aedb222e862b7327f7e9020cb74d2"
       }
     },
     "outputs": {
@@ -71,13 +72,15 @@
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.2",
+      "version": "0.1.3",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "297b50f08386d3521f8fdaf2f78eb8d9d0acdf452d2e61596905fba37208c792",
-        "skills/test-driven-development/SKILL.md": "06ebb705e6b7806c6b86b8639c279671683b46d2f831f7f572522df0354d18cf",
-        "skills/writing-a-gate/SKILL.md": "d0ea2cde58332a2da2280adc69d691e86f735d108c1ce18726d2adfd7ee53539"
+        "VERSION": "2d2454ef0edeb462a6ce8b25d387aaa74df08093d5cea0428a10ce55510c6326",
+        "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
+        "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
+        "templates/decision-record.md": "9495d9b30f1276da7c0c448d98c3c153f8b7b7d012dc55dee6a85d828b7182a4",
+        "templates/postmortem.md": "80af444609639a827e383450b682b93f59dc0b08279b519a1342e708dc65d1ee"
       }
     }
   }

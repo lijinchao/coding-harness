@@ -82,6 +82,8 @@ A gate without `prove_fires` is not admissible. A gate nobody has watched fail i
 | `alternatives` | Each real alternative and why it lost |
 | `consequences` | What the decision cost and bought |
 
+`harness validate` loads each declared skill file and rejects it when the frontmatter lacks `name` or `description`, or when it lacks any of `## Inputs`, `## Steps`, `## Verification`, `## Failure`. A gate's `command` must be non-empty and a single line. The base ships `templates/decision-record.md` and `templates/postmortem.md` for the two record types.
+
 ## Vocabulary
 
 One term per concept. Do not rotate synonyms.
