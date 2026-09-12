@@ -64,12 +64,15 @@ test('check fails when a recorded tool file hash is wrong', () => {
 })
 
 test('init writes an executable bootstrap and a valid manifest', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-init-'))
-  run(['init', '--dir', dir])
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-init-'))
+  const dist = join(root, 'dist')
+  run(['release', '--base', 'base', '--out', dist, '--version', toolVersion()])
+  const dir = join(root, 'consumer')
+  run(['init', '--dir', dir, '--base-source', dist, '--version', toolVersion()])
   const shim = join(dir, 'harness')
   assert.ok(existsSync(shim))
   assert.ok((statSync(shim).mode & 0o111) !== 0, 'bootstrap is executable')
   assert.match(readFileSync(shim, 'utf8'), /Bootstrap and run the pinned coding-harness tool/)
   run(['validate', '--manifest', manifestPath(dir)])
-  rmSync(dir, { recursive: true, force: true })
+  rmSync(root, { recursive: true, force: true })
 })

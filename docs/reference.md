@@ -165,7 +165,7 @@ The base is a versioned, hashed release: `harness release` writes `base@<version
 
 A source may be a local registry directory or a git URL prefixed `git:`. For a git source, `sync` and `check` fetch the tag `v<version>` into the consumer's cache and verify it against the lock.
 
-A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag `v<version>` and runs it; the lock records the tool version and a SHA-256 per tool source file, and a running tool that differs from either fails. CI needs no checkout of the tool repository. `harness init` writes `tool.commit` from the running tool, so a scaffolded repository pins the commit as well as the version and the bootstrap rejects a moved tag.
+A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag `v<version>` and runs it; the lock records the tool version and a SHA-256 per tool source file, and a running tool that differs from either fails. CI needs no checkout of the tool repository. `harness init` writes `tool.commit` from the running tool, so a scaffolded repository pins the commit as well as the version and the bootstrap rejects a moved tag. `harness init --base-source <dir>` accepts a local release registry and then pins `tool.source` to the running tool's checkout, so a local scaffold needs no network fetch. A local `tool.source` names a directory that contains `bin/harness.mjs`; the bootstrap also accepts a path below that directory.
 
 `harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
 

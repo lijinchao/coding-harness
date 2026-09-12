@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { validateManifest } from '../src/manifest.mjs'
 import { composeText } from '../src/compose.mjs'
+import { toolVersion } from '../src/tool.mjs'
 
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
@@ -110,11 +111,14 @@ test('sync composes the output, and check passes until the output drifts', () =>
 })
 
 test('init scaffolds a delta and a manifest', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-init-'))
-  run(['init', '--dir', dir])
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-init-'))
+  const dist = join(root, 'dist')
+  run(['release', '--base', 'base', '--out', dist, '--version', toolVersion()])
+  const dir = join(root, 'consumer')
+  run(['init', '--dir', dir, '--base-source', dist, '--version', toolVersion()])
   assert.match(readFileSync(join(dir, 'AGENTS.delta.md'), 'utf8'), /Repository delta/)
   run(['validate', '--manifest', manifestPath(dir)])
-  rmSync(dir, { recursive: true, force: true })
+  rmSync(root, { recursive: true, force: true })
 })
 
 test('release emits a versioned base with per-file hashes and sync pins it', () => {

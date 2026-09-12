@@ -12,7 +12,7 @@ import { dirname, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
 import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
-import { toolCommit, toolVersion } from '../src/tool.mjs'
+import { toolCommit, toolRoot, toolVersion } from '../src/tool.mjs'
 import { SHIM } from '../src/shim.mjs'
 import { WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
@@ -134,7 +134,7 @@ function cmdInit(options) {
   const dir = resolve(requireOption(options, 'dir'))
   const version = options.version ?? toolVersion()
   const source = options['base-source'] ?? 'git:https://github.com/lijinchao/coding-harness.git'
-  const toolSource = options['tool-source'] ?? source
+  const toolSource = options['tool-source'] ?? (source.startsWith('git:') ? source : toolRoot())
   mkdirSync(dir, { recursive: true })
 
   const delta = resolve(dir, 'AGENTS.delta.md')

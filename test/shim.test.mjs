@@ -23,7 +23,7 @@ test('the bootstrap resolves the manifest next to itself, not the current direct
   chmodSync(shim, 0o755)
   writeFileSync(join(dir, 'harness.manifest.json'), JSON.stringify({
     version: '0.0.0',
-    tool: { version: '0.0.0', source: join(tool, 'README.md') },
+    tool: { version: '0.0.0', source: tool },
     compositions: [],
     skills: [],
     gates: [],
