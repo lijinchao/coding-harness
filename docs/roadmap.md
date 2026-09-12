@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.0 — the base is a versioned, hashed release and one consumer is pinned to it. Hosted CI still needs a repository remote.
+Status: v0.1.0 — the base is a versioned, hashed release, one consumer is pinned to it, and its hosted CI drift gate is proven.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -20,7 +20,7 @@ Compose one repository's `AGENTS.md` from the base, run `harness check` in CI, a
 
 Done when: that repository's CI job fails on drift, and passes after `harness sync`.
 
-Progress: the drift gate is proven locally for one consumer (hand edit → exit 1; `sync` → exit 0) and is wired into its `run_harness.sh` and a GitHub Actions workflow. The hosted job cannot run until that repository has a remote.
+Progress: proven locally and in hosted CI. On GitHub the adoption push is green, a deliberate hand edit fails the "Fail on harness drift" step, and `harness sync` restores green. The same check runs in the consumer's `run_harness.sh`.
 
 ### M2 — pinned base distribution
 
