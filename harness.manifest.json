@@ -1,9 +1,9 @@
 {
-  "version": "0.1.18",
+  "version": "0.1.19",
   "tool": {
-    "version": "0.1.18",
+    "version": "0.1.19",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "ea77596a5da6cc86e78c243f4a561d98aa1d749b"
+    "commit": "ec95ce56c6f380065cb7244c65ef437177c30d09"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -49,7 +49,7 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.18 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.19 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
@@ -167,40 +167,40 @@
     "changes": "docs/changes"
   },
   "lock": {
-    "version": "0.1.18",
+    "version": "0.1.19",
     "tool": {
-      "version": "0.1.18",
+      "version": "0.1.19",
       "files": {
-        "bin/harness.mjs": "0002f414cfe13044143956a8c86d608229dd4aeca45f51e90e1acc730bd6341b",
+        "bin/harness.mjs": "06748b5f9e25301119bf760c04f8c8d6c97037f2c6a367cbca474d235816e660",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
         "src/doctor.mjs": "10813054047ebe3dc938c7bd0589685c47e9d0dda11879d9e8dd39bd85057dfd",
         "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
-        "src/gates.mjs": "0442921918eab94dd5c22984833a782e82a7b6533195ebebdc8d134ba5bfa201",
-        "src/manifest.mjs": "6604d12c3dfa7dd1205a43e02df3327f5631c53560291f3634d2f33adf009e90",
+        "src/gates.mjs": "904e06ccb409c823a7cee2e3c8da055985147265f06ad5ef9f47673295737daf",
+        "src/manifest.mjs": "70b5151e3a193c49564cc109f784bacd535a498d1f2e8baa77ae016fd284d6cc",
         "src/prove.mjs": "17578fbdfda0611dba46b42cbbcdf9dd9499177b4a27f378e33c77da2fb00e63",
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
-        "src/select.mjs": "01a7fe556b0c9b3363e18409fa4b64aed2ff7c64b46b3fe9f4f55739a13cb19d",
+        "src/select.mjs": "b4ce3dd85b30f9e3826dc54886311bc1004513124f276d7e16ad874fe6c9e94e",
         "src/shim.mjs": "b58e8c97a868bfa3b80a47938ff1fda29bd5d573c76d72f5e7ea1b83e2eb8543",
         "src/state.mjs": "fadea7f4ea94f7523e7b0ff67f02201d7bf74acf825ce993e31365cd84b1c1be",
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
         "src/workflow.mjs": "4a1eafc069abc3150b7950b70c5725127d04b7afbb65706fe6516a2152d5d92d",
-        "package.json": "73b76031abc156331e3897e4d3d40a6bca2578c0a3b3e3b507a8b60ead8b79ab"
+        "package.json": "da17022b593bc74640a3c4941c1ed1969b9e0cce8ae7ab24254adaac119d8521"
       },
-      "commit": "ea77596a5da6cc86e78c243f4a561d98aa1d749b"
+      "commit": "ec95ce56c6f380065cb7244c65ef437177c30d09"
     },
     "outputs": {
       "AGENTS.md": "b54c5c4ad01a60560dc382a61a8008c966a2bf40347b3c5b1af9044c12828530",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.18",
+      "version": "0.1.19",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "447836d46f39c5900faf74ad6a6554b8e1fafeca1f78de0416d5f05c6e09a080",
+        "VERSION": "b6961620d618f9cb3418be09f15e730af410a3e0a3e1d3a649c8892bfa7317d4",
         "requirements.json": "18d0aeb2478767c401608eb62e3f6d155b816c806017a2581cfc35763b7b87ea",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
