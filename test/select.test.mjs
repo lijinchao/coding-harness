@@ -37,6 +37,14 @@ test('selection unions the surfaces a change touches and the always gates', () =
   assert.deepEqual(selectedGateIds(MANIFEST, ['README.md']), ['lint'])
 })
 
+test('selection pulls in the dependencies of a selected gate', () => {
+  const manifest = {
+    gates: [{ id: 'build' }, { id: 'unit', needs: ['build'] }, { id: 'e2e', needs: ['unit'] }],
+    surfaces: [{ id: 'code', paths: ['src/**'], requires: ['e2e'] }],
+  }
+  assert.deepEqual(selectedGateIds(manifest, ['src/a.mjs']), ['build', 'unit', 'e2e'])
+})
+
 test('a manifest without surfaces selects every gate', () => {
   assert.deepEqual(selectedGateIds({ gates: [{ id: 'a' }, { id: 'b' }] }, ['x']), ['a', 'b'])
 })

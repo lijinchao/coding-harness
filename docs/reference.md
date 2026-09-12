@@ -66,12 +66,17 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `expect` | `forbid` output patterns and the `allow` lines that are benign |
 | `severity` | `blocking` or `advisory` |
 | `phase` | Optional label; an unphased gate runs in every phase |
+| `needs` | Gate ids that must pass before this gate runs |
+| `after` | Gate ids that must finish first; their failure does not skip this gate |
+| `always` | Select this gate in every changed-surface selection |
 
 A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work.
 
 A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless the line also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
 
 A gate may declare a `phase`. `harness gates --phase <name>` runs the unphased gates plus the gates in that phase, and `harness gates` without `--phase` runs every gate. Tag a slow gate `full` so a local `--phase fast` run skips it while CI, which passes no phase, still runs it.
+
+A gate whose `needs` dependency fails or is skipped is itself skipped and reported `skip`, so a broken prerequisite never looks like a passing check; `after` orders gates without propagating failure. `harness validate` rejects an unknown dependency and a dependency cycle, `harness gates --fail-fast` starts no new gate after a blocking gate fails, and `harness select` includes the dependencies of every gate it selects.
 
 A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM` and escalates to `SIGKILL` after five seconds, and it forwards `SIGINT` and `SIGTERM` to the group before exiting, so a timed-out gate leaves no children behind. A result reports exit code, signal, timeout, and duration separately; `harness gates` prints the signal beside the timeout, and `--report` records the timeout and duration per gate.
 

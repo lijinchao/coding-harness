@@ -81,6 +81,61 @@ test('a timed-out gate has its whole process tree killed', () => {
   rmSync(dir, { recursive: true, force: true })
 })
 
+test('a gate whose dependency failed is skipped', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-dag-'))
+  const marker = join(dir, 'ran.txt')
+  const mark = (name) => `printf '${name}\\n' >> '${marker}'`
+  writeManifest(dir, [gate('base', mark('base') + '; false', 'blocking'), gate('dependent', mark('dependent'), 'blocking')])
+  const m = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  m.gates[1].needs = ['base']
+  writeFileSync(manifestPath(dir), JSON.stringify(m, null, 2) + '\n')
+  assert.throws(() => run(['gates', '--manifest', manifestPath(dir)]))
+  const ran = readFileSync(marker, 'utf8')
+  assert.ok(ran.includes('base'))
+  assert.ok(!ran.includes('dependent'))
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('after orders a gate without skipping it', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-dag-'))
+  const marker = join(dir, 'order.txt')
+  const mark = (name) => `printf '${name}\\n' >> '${marker}'`
+  writeManifest(dir, [gate('first', mark('first') + '; false', 'blocking'), gate('second', mark('second'), 'blocking')])
+  const m = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  m.gates[1].after = ['first']
+  writeFileSync(manifestPath(dir), JSON.stringify(m, null, 2) + '\n')
+  assert.throws(() => run(['gates', '--manifest', manifestPath(dir)]))
+  assert.deepEqual(readFileSync(marker, 'utf8').trim().split('\n'), ['first', 'second'])
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('--fail-fast stops starting gates after a blocking failure', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-dag-'))
+  const marker = join(dir, 'ran.txt')
+  const mark = (name) => `printf '${name}\\n' >> '${marker}'`
+  writeManifest(dir, [gate('fails', mark('fails') + '; false', 'blocking'), gate('independent', mark('independent'), 'blocking')])
+  assert.throws(() => run(['gates', '--manifest', manifestPath(dir), '--jobs', '1', '--fail-fast']))
+  const ran = readFileSync(marker, 'utf8')
+  assert.ok(ran.includes('fails'))
+  assert.ok(!ran.includes('independent'))
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('validate rejects an unknown dependency and a dependency cycle', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-dag-'))
+  writeManifest(dir, [gate('a', 'true', 'blocking'), gate('b', 'true', 'blocking')])
+  const path = manifestPath(dir)
+  const m = JSON.parse(readFileSync(path, 'utf8'))
+  m.gates[0].needs = ['nope']
+  writeFileSync(path, JSON.stringify(m, null, 2) + '\n')
+  assert.throws(() => run(['validate', '--manifest', path]))
+  m.gates[0].needs = ['b']
+  m.gates[1].needs = ['a']
+  writeFileSync(path, JSON.stringify(m, null, 2) + '\n')
+  assert.throws(() => run(['validate', '--manifest', path]))
+  rmSync(dir, { recursive: true, force: true })
+})
+
 test('gates --changed runs only the gates a change selects', () => {
   const dir = mkdtempSync(join(tmpdir(), 'coding-harness-changed-'))
   const marker = join(dir, 'ran.txt')

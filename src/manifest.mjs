@@ -17,7 +17,7 @@ export const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severit
 export const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'lock']
 export const COMPOSITION_KEYS = ['output', 'sources']
 export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always']
+export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after']
 export const EXPECT_KEYS = ['forbid', 'allow']
 export const BASE_KEYS = ['source', 'registry', 'cache']
 export const TOOL_KEYS = ['version', 'commit', 'source']
@@ -55,6 +55,35 @@ function requireUniqueIds(errors, items, where) {
     if (seen.has(id)) errors.push(where + '[' + index + '].id: duplicate id ' + id)
     seen.add(id)
   })
+}
+
+function validateGateGraph(errors, gates) {
+  const ids = new Set(gates.map((gate) => gate.id))
+  gates.forEach((gate, index) => {
+    for (const field of ['needs', 'after']) {
+      const dependencies = gate?.[field] ?? []
+      dependencies.forEach((id, dependencyIndex) => {
+        if (typeof id === 'string' && !ids.has(id)) errors.push('gates[' + index + '].' + field + '[' + dependencyIndex + ']: unknown gate ' + id)
+      })
+    }
+  })
+  const state = new Map()
+  const reported = new Set()
+  const visit = (id, path) => {
+    const mark = state.get(id) ?? 0
+    if (mark === 2) return
+    if (mark === 1) {
+      const cycle = [...path.slice(path.indexOf(id)), id]
+      const key = cycle.join('>')
+      if (!reported.has(key)) { reported.add(key); errors.push('gates: dependency cycle: ' + cycle.join(' -> ')) }
+      return
+    }
+    state.set(id, 1)
+    const gate = gates.find((item) => item.id === id)
+    for (const dependency of [...(gate?.needs ?? []), ...(gate?.after ?? [])]) if (ids.has(dependency)) visit(dependency, [...path, id])
+    state.set(id, 2)
+  }
+  for (const gate of gates) visit(gate.id, [])
 }
 
 function validateBase(errors, base) {
@@ -202,6 +231,14 @@ export function validateManifest(manifest) {
       }
       if (gate?.phase !== undefined) requireString(errors, gate.phase, where + '.phase')
       if (gate?.always !== undefined && typeof gate.always !== 'boolean') errors.push(where + '.always: must be a boolean')
+      for (const field of ['needs', 'after']) {
+        if (gate?.[field] !== undefined && !Array.isArray(gate[field])) {
+          errors.push(where + '.' + field + ': required array')
+        } else {
+          const dependencies = gate?.[field] ?? []
+          dependencies.forEach((id, dependencyIndex) => requireString(errors, id, where + '.' + field + '[' + dependencyIndex + ']'))
+        }
+      }
       if (gate?.severity === 'blocking') {
         requireString(errors, gate.prove_fires_command, where + '.prove_fires_command')
         requireString(errors, gate.revert_command, where + '.revert_command')
@@ -209,6 +246,7 @@ export function validateManifest(manifest) {
       validateExpect(errors, gate?.expect, where + '.expect')
     })
     requireUniqueIds(errors, manifest.gates, 'gates')
+    validateGateGraph(errors, manifest.gates)
   }
 
   if (manifest.surfaces !== undefined) {

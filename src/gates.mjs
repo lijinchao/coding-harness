@@ -80,6 +80,8 @@ function runOne(root, gate, timeoutMs) {
         id: gate.id,
         severity: gate.severity,
         ok: code === 0 && !timedOut && violations.length === 0,
+        skipped: false,
+        reason: null,
         code: code ?? 1,
         signal: signal ?? null,
         timedOut,
@@ -93,36 +95,63 @@ function runOne(root, gate, timeoutMs) {
   })
 }
 
+function skippedResult(gate, reason) {
+  return { id: gate.id, severity: gate.severity, ok: false, skipped: true, reason, code: 0, signal: null, timedOut: false, violations: [], ms: 0, output: '' }
+}
+
 /**
- * Run gates, optionally in parallel and with a per-gate timeout.
+ * Run gates, honouring dependencies, with a per-gate timeout and a worker cap.
  *
- * A gate passes only when its command exits zero, does not time out, and its
- * output does not contain a forbidden pattern (unless the matching line is
- * allow-listed). A timeout kills the gate's process group: SIGTERM first, then
- * SIGKILL after a grace period. Exit code, signal, and timeout are reported
- * separately so a killed gate is never mistaken for a clean one.
+ * A gate may declare `needs` (dependencies that must pass) and `after`
+ * (ordering only). A gate whose blocking dependency failed or was skipped is
+ * itself skipped, so a broken prerequisite never looks like a passing check.
+ * With `failFast`, no new gate starts after a blocking gate fails; a timeout
+ * kills the gate's process group (SIGTERM, then SIGKILL).
  *
- * @returns {Promise<{ id: string, severity: string, ok: boolean, code: number, signal: string|null, timedOut: boolean, violations: string[], ms: number, output: string }[]>}
+ * @returns {Promise<{ id: string, severity: string, ok: boolean, skipped: boolean, reason: string|null, code: number, signal: string|null, timedOut: boolean, violations: string[], ms: number, output: string }[]>}
  */
 export async function runGates(root, gates, options = {}) {
   const timeoutMs = options.timeoutMs ?? 0
   const jobs = Math.max(1, options.jobs ?? 1)
-  const results = new Array(gates.length)
-  let next = 0
-  const worker = async () => {
-    for (;;) {
-      const index = next
-      next += 1
-      if (index >= gates.length) return
-      results[index] = await runOne(root, gates[index], timeoutMs)
-    }
-  }
+  const failFast = options.failFast === true
+  const byId = new Map(gates.map((gate) => [gate.id, gate]))
+  const results = new Map()
+  const started = new Set()
+  const running = new Map()
+  let stop = false
+
+  const upstream = (gate) => [...(gate.needs ?? []), ...(gate.after ?? [])].filter((id) => byId.has(id))
+  const blocked = (gate) => (gate.needs ?? []).filter((id) => byId.has(id)).some((id) => {
+    const dependency = results.get(id)
+    return dependency.skipped === true || (dependency.ok === false && dependency.severity !== 'advisory')
+  })
+  const ready = () => gates.filter((gate) => !started.has(gate.id) && upstream(gate).every((id) => results.has(id)))
+
   installForwarding()
   try {
-    await Promise.all(Array.from({ length: Math.min(jobs, gates.length) }, () => worker()))
+    for (;;) {
+      let progressed = false
+      for (const gate of ready()) {
+        if (running.size >= jobs) break
+        progressed = true
+        started.add(gate.id)
+        if (stop) { results.set(gate.id, skippedResult(gate, 'fail-fast')); continue }
+        if (blocked(gate)) { results.set(gate.id, skippedResult(gate, 'dependency')); continue }
+        running.set(gate.id, runOne(root, gate, timeoutMs).then((result) => {
+          results.set(gate.id, result)
+          running.delete(gate.id)
+          if (failFast && result.ok === false && gate.severity === 'blocking') stop = true
+        }))
+      }
+      if (running.size > 0) {
+        await Promise.race(running.values())
+        continue
+      }
+      if (!progressed) break
+    }
   } finally {
     removeForwarding()
     terminateAll('SIGKILL')
   }
-  return results
+  return gates.map((gate) => results.get(gate.id) ?? skippedResult(gate, 'unreachable'))
 }

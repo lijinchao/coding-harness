@@ -93,7 +93,9 @@
           },
           "severity": { "enum": ["blocking", "advisory"] },
           "phase": { "type": "string", "minLength": 1 },
-          "always": { "type": "boolean" }
+          "always": { "type": "boolean" },
+          "needs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "after": { "type": "array", "items": { "type": "string", "minLength": 1 } }
         }
       }
     },

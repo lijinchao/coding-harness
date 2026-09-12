@@ -61,5 +61,19 @@ export function selectedGateIds(manifest, changed) {
     }
   }
   for (const gate of manifest.gates) if (gate.always === true) required.add(gate.id)
+  // A selected gate pulls in its dependencies: running it without them would
+  // either fail or prove less than the gate claims.
+  const byId = new Map(manifest.gates.map((gate) => [gate.id, gate]))
+  const queue = [...required]
+  while (queue.length > 0) {
+    const gate = byId.get(queue.pop())
+    if (gate === undefined) continue
+    for (const dependency of [...(gate.needs ?? []), ...(gate.after ?? [])]) {
+      if (byId.has(dependency) && !required.has(dependency)) {
+        required.add(dependency)
+        queue.push(dependency)
+      }
+    }
+  }
   return manifest.gates.map((gate) => gate.id).filter((id) => required.has(id))
 }

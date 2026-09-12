@@ -38,7 +38,7 @@ commands:
   release    --base <dir> --out <dir> [--version <v>] [--force]
                                          build a versioned, hashed base release
   gates      --manifest <path> [--gate <id>] [--phase <name>] [--changed <path>|--since <ref>]
-                                     [--jobs <n>] [--timeout <s>] [--report <file>]
+                                     [--jobs <n>] [--timeout <s>] [--fail-fast] [--report <file>]
                                          run the declared gates, or the gates a change selects (one list for local and CI)
   select     --manifest <path> (--since <ref> | --changed <path>)
                                          print the gates a change selects, one id per line
@@ -48,7 +48,7 @@ commands:
   prove      --manifest <path> [--gate <id>] [--record]
                                          run the three-step proof for each gate action`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast'])
 const REPEATABLE_FLAGS = new Set(['changed'])
 
 function parseOptions(argv) {
@@ -284,20 +284,21 @@ async function cmdGates(options) {
     gates = manifest.gates.filter((gate) => (only === undefined || gate.id === only) && (phase === undefined || gate.phase === undefined || gate.phase === phase))
   }
   if (gates.length === 0) throw new Error('no gates selected' + (phase === undefined ? '' : ' for phase ' + phase))
-  const results = await runGates(root, gates, { timeoutMs: options.timeout === undefined ? 0 : Number(options.timeout) * 1000, jobs: options.jobs === undefined ? 1 : Number(options.jobs) })
+  const results = await runGates(root, gates, { timeoutMs: options.timeout === undefined ? 0 : Number(options.timeout) * 1000, jobs: options.jobs === undefined ? 1 : Number(options.jobs), failFast: options['fail-fast'] === true })
   let blocking = 0
   for (const result of results) {
-    const status = result.ok ? 'ok' : result.severity === 'advisory' ? 'warn' : 'fail'
-    if (!result.ok && result.severity !== 'advisory') blocking += 1
+    const status = result.skipped ? 'skip' : result.ok ? 'ok' : result.severity === 'advisory' ? 'warn' : 'fail'
+    if (!result.ok && !result.skipped && result.severity !== 'advisory') blocking += 1
     if (result.output.trim() !== '') process.stdout.write(result.output.endsWith('\n') ? result.output : result.output + '\n')
     const notes = []
+    if (result.skipped) notes.push('skipped: ' + (result.reason ?? 'dependency'))
     if (result.timedOut) notes.push('timeout')
     if (result.signal !== null) notes.push('signal ' + result.signal)
     if (result.violations.length > 0) notes.push('forbidden output: ' + result.violations.join(', '))
     console.log(`${status}\t${result.id}${notes.length === 0 ? '' : ' (' + notes.join('; ') + ')'}`)
   }
   if (typeof options.report === 'string') {
-    const entry = { at: new Date().toISOString(), version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, timedOut: result.timedOut, ms: result.ms })) }
+    const entry = { at: new Date().toISOString(), version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
     appendFileSync(resolve(options.report), `${JSON.stringify(entry)}\n`)
   }
   if (blocking > 0) process.exit(1)
