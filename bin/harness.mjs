@@ -31,7 +31,8 @@ commands:
   doctor     --manifest <path>           fail when declared governance facts drift
   init       --dir <path> [--base-source <dir>] [--version <v>]
                                          scaffold a delta, manifest, and bootstrap
-  upgrade    --manifest <path> --to <v>  pin a new base version and re-sync
+  upgrade    --manifest <path> --to <v> [--tool-commit <sha>]
+                                         move the pins, rewrite version references, re-sync, and check
   release    --base <dir> --out <dir> [--version <v>] [--force]
                                          build a versioned, hashed base release
   gates      --manifest <path> [--gate <id>] [--phase <name>] [--jobs <n>] [--timeout <s>] [--report <file>]
@@ -200,17 +201,45 @@ function cmdUpgrade(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const to = requireOption(options, 'to')
   const manifest = readValidManifest(path)
+  const root = dirname(path)
+  const from = manifest.version
   const newPin = `base@${to}`
   const stale = /base@\d+\.\d+\.\d+/g
   const rewrite = (value) => (typeof value === 'string' ? value.replace(stale, newPin) : value)
   manifest.version = to
+  if (manifest.tool !== undefined) manifest.tool.version = to
+  if (manifest.tool !== undefined && options['tool-commit'] !== undefined) manifest.tool.commit = options['tool-commit']
   for (const gate of manifest.gates) {
     gate.protects = rewrite(gate.protects)
     gate.prove_fires = rewrite(gate.prove_fires)
   }
   delete manifest.lock
-  const outputs = applySync(dirname(path), path, manifest)
+  const outputs = applySync(root, path, manifest)
   for (const item of outputs) console.log(`synced ${item.output}`)
+  // A declared version-reference file must name the new pin; rewriting the old
+  // tag here is what stops a version move from shipping a stale status line.
+  if (from !== to) {
+    const oldTag = new RegExp('v' + from.replace(/\./g, '\\.'), 'g')
+    for (const rel of manifest.governance?.version ?? []) {
+      const file = resolve(root, rel)
+      if (!existsSync(file)) continue
+      const text = readFileSync(file, 'utf8')
+      const next = text.replace(oldTag, 'v' + to)
+      if (next !== text) {
+        writeAtomic(file, next)
+        console.log(`rewrote v${from} -> v${to} in ${rel}`)
+      }
+    }
+  }
+  const base = manifest.base === undefined ? null : resolveBase(root, manifest)
+  const requirements = base === null ? undefined : loadRequirements(base.dir)
+  const { problems, warnings } = doctorReport(root, manifest, requirements)
+  for (const warning of warnings) console.log(`doctor: warning: ${warning}`)
+  if (problems.length > 0) {
+    for (const problem of problems) console.error(`doctor: ${problem}`)
+    process.exit(1)
+  }
+  console.log('doctor: ok')
   console.log(`lock: ${manifest.version}`)
 }
 

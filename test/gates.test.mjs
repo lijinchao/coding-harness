@@ -81,6 +81,24 @@ test('a timed-out gate has its whole process tree killed', () => {
   rmSync(dir, { recursive: true, force: true })
 })
 
+test('upgrade rewrites the declared version-reference files', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-upgrade-'))
+  const base = join(dir, 'base')
+  mkdirSync(base)
+  writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n')
+  writeFileSync(join(dir, 'README.md'), 'Status: v0.1.0\n')
+  writeManifest(dir, [{ id: 'drift', command: 'true', protects: 'match base@0.1.0 plus delta', prove_fires: 'edit base@0.1.0', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true' }])
+  run(['release', '--base', base, '--out', join(dir, 'dist'), '--version', '0.2.0', '--force'])
+  const m = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  m.base = { source: './dist' }
+  m.governance = { version: ['README.md'] }
+  m.compositions = [{ output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] }]
+  writeFileSync(manifestPath(dir), JSON.stringify(m, null, 2) + '\n')
+  run(['upgrade', '--manifest', manifestPath(dir), '--to', '0.2.0'])
+  assert.ok(readFileSync(join(dir, 'README.md'), 'utf8').includes('v0.2.0'))
+  rmSync(dir, { recursive: true, force: true })
+})
+
 test('gates --phase runs the unphased gates plus that phase only', () => {
   const dir = mkdtempSync(join(tmpdir(), 'coding-harness-phase-'))
   const mark = (name) => `printf '${name}\\n' >> '${join(dir, 'ran.txt')}'`

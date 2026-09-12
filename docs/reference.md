@@ -154,7 +154,7 @@ A manifest may pin `tool.version`. A committed bootstrap fetches the tool at tag
 
 `harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
 
-An upgrade is explicit. `harness upgrade --to <version>` moves the pin and re-syncs, and the repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
+An upgrade is explicit. `harness upgrade --to <version> [--tool-commit <sha>]` moves the base pin and the tool pin, rewrites every `base@` reference in gate text and every `v<old>` reference in the files declared under `governance.version`, re-syncs the lock, and then runs the governance checks; it exits non-zero when a declared version-reference file still does not name the new version. The repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
 
 `harness release` refuses to overwrite an existing `base@<version>`; bump `base/VERSION` or pass `--force`. `harness sync` and `harness upgrade` resolve, verify, and compose before writing anything, and commit each file by rename, so a failed upgrade leaves the previous state intact.
 
