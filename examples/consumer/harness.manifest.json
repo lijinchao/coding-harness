@@ -1,5 +1,8 @@
 {
   "version": "0.1.0",
+  "tool": {
+    "version": "0.1.0"
+  },
   "base": {
     "source": "../../dist"
   },
@@ -50,6 +53,9 @@
   ],
   "lock": {
     "version": "0.1.0",
+    "tool": {
+      "version": "0.1.0"
+    },
     "outputs": {
       "AGENTS.md": "49e47ec4f18592f77ca6569dea34d5c5ad14c7ee394b92cff7c2e669a880a9fc",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"

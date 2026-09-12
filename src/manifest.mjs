@@ -24,7 +24,17 @@ function requireObject(errors, value, where) {
 function validateBase(errors, base) {
   if (base === undefined) return
   requireObject(errors, base, 'base')
-  if (base !== null && typeof base === 'object' && !Array.isArray(base)) requireString(errors, base.source, 'base.source')
+  if (base !== null && typeof base === 'object' && !Array.isArray(base)) {
+    requireString(errors, base.source, 'base.source')
+    if (base.registry !== undefined) requireString(errors, base.registry, 'base.registry')
+    if (base.cache !== undefined) requireString(errors, base.cache, 'base.cache')
+  }
+}
+
+function validateTool(errors, tool) {
+  if (tool === undefined) return
+  requireObject(errors, tool, 'tool')
+  if (tool !== null && typeof tool === 'object' && !Array.isArray(tool)) requireString(errors, tool.version, 'tool.version')
 }
 
 function validateLock(errors, lock) {
@@ -33,6 +43,10 @@ function validateLock(errors, lock) {
   if (lock === null || typeof lock !== 'object' || Array.isArray(lock)) return
   requireString(errors, lock.version, 'lock.version')
   requireObject(errors, lock.outputs, 'lock.outputs')
+  if (lock.tool !== undefined) {
+    requireObject(errors, lock.tool, 'lock.tool')
+    if (lock.tool !== null && typeof lock.tool === 'object' && !Array.isArray(lock.tool)) requireString(errors, lock.tool.version, 'lock.tool.version')
+  }
   if (lock.base !== undefined) {
     requireObject(errors, lock.base, 'lock.base')
     if (lock.base !== null && typeof lock.base === 'object' && !Array.isArray(lock.base)) {
@@ -87,6 +101,7 @@ export function validateManifest(manifest) {
   }
 
   validateBase(errors, manifest.base)
+  validateTool(errors, manifest.tool)
   validateLock(errors, manifest.lock)
   return errors
 }

@@ -11,6 +11,8 @@ import { dirname, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
 import { composeText, sha256 } from '../src/compose.mjs'
 import { createRelease, declaredVersion, loadRelease, verifyRelease } from '../src/release.mjs'
+import { ensureGitCheckout, isGitSource } from '../src/fetch.mjs'
+import { toolVersion } from '../src/tool.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -56,11 +58,25 @@ function readValidManifest(path) {
  */
 function resolveBase(root, manifest) {
   if (manifest.base === undefined) return null
-  const source = resolve(root, manifest.base.source)
-  const { dir, release } = loadRelease(source, manifest.version)
+  const config = manifest.base
+  let registry
+  if (isGitSource(config.source)) {
+    const cacheRoot = resolve(root, config.cache ?? '.harness')
+    const repoDir = ensureGitCheckout(config.source, manifest.version, cacheRoot)
+    registry = resolve(repoDir, config.registry ?? 'dist')
+  } else {
+    registry = resolve(root, config.source)
+  }
+  const { dir, release } = loadRelease(registry, manifest.version)
   const problem = verifyRelease(dir, release)
   if (problem !== null) throw new Error(problem)
   return { dir, release }
+}
+
+function checkToolPin(manifest) {
+  if (manifest.tool === undefined) return
+  const running = toolVersion()
+  if (manifest.tool.version !== running) throw new Error(`tool version ${running} does not match pinned ${manifest.tool.version}`)
 }
 
 function composedOutputs(root, manifest, baseDir) {
@@ -90,6 +106,7 @@ function cmdSync(options) {
   const manifest = readValidManifest(path)
   const root = dirname(path)
   const base = resolveBase(root, manifest)
+  checkToolPin(manifest)
   if (base !== null && manifest.lock?.base !== undefined) {
     const locked = manifest.lock.base
     if (locked.version !== base.release.version) throw new Error(`base version ${base.release.version} does not match pinned lock ${locked.version}; run harness upgrade`)
@@ -104,7 +121,7 @@ function cmdSync(options) {
     outputs[item.output] = item.hash
     console.log(`synced ${item.output}`)
   }
-  manifest.lock = { version: manifest.version, outputs }
+  manifest.lock = { version: manifest.version, tool: { version: toolVersion() }, outputs }
   if (base !== null) manifest.lock.base = { version: base.release.version, files: base.release.files }
   writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`)
   console.log(`lock: ${manifest.version}`)
@@ -115,6 +132,7 @@ function cmdCheck(options) {
   const manifest = readValidManifest(path)
   const root = dirname(path)
   const base = resolveBase(root, manifest)
+  checkToolPin(manifest)
   const failures = []
   if (base !== null) {
     const locked = manifest.lock?.base
@@ -156,6 +174,7 @@ function cmdInit(options) {
   if (!existsSync(manifestPath)) {
     const manifest = {
       version,
+      tool: { version: toolVersion() },
       base: { source },
       compositions: [{ output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] }],
       skills: [],

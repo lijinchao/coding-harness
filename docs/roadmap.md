@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.0 — the base is a versioned, hashed release, one consumer is pinned to it, and its hosted CI drift gate is proven.
+Status: v0.1.0 — the base is a versioned, hashed release fetchable from git, one consumer is pinned to it, and its hosted CI drift gate is proven.
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)) and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -28,7 +28,7 @@ Replace relative base paths with a declared base version and a locked hash. `har
 
 Done when: a consumer on a different checkout path resolves the same base, and a tampered base fails the hash check.
 
-Progress: `harness release` writes `base@<version>/` with per-file hashes, the lock records them, and `base:` sources resolve inside the pinned release. Both done conditions are covered by tests (`a relocated consumer resolves the same pinned base`, `check fails when the fetched base is tampered`). Remaining: fetch the registry from a remote source instead of a local directory.
+Progress: `harness release` writes `base@<version>/` with per-file hashes; the lock records them; `base:` sources resolve inside the pinned release, whether from a local registry or a git URL fetched at tag `v<version>` into `.harness/`. Both done conditions are covered by tests. Remaining: distribute the tool itself as a fetched release rather than a checkout.
 
 ### M3 — governance mechanics
 

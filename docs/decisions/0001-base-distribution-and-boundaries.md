@@ -73,5 +73,8 @@ Three failures follow:
   `harness validate` enforces both.
 - `harness release` becomes part of the base-owner workflow; the example consumer is re-recorded
   from `dist/` rather than from a relative base path.
-- The lock records the base version and a per-file hash map. Pinning and distributing the tool
-  itself is not implemented yet; the format leaves room for a tool record without a schema break.
+- The lock records the base version, a per-file hash map, and the tool version; `sync` and `check`
+  reject a running tool that differs from `tool.version`. Fetching the tool itself is still a
+  checkout, not a release.
+- A base source may be a local registry or a git URL (`git:<url>`); for a git source, `sync` and
+  `check` fetch the tag `v<version>` into the consumer's `.harness/` cache and verify it.

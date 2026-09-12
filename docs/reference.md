@@ -108,7 +108,9 @@ Every harness change traces to an observed failure: a repeated mistake, an incid
 
 ## Versioning and upgrade
 
-The base is a versioned, hashed release: `harness release` writes `base@<version>/` with a `release.json` per-file hash map. A repository pins one base version and one release registry (`base.source`) in `harness.manifest.json`; composition sources prefixed `base:` resolve inside the fetched release.
+The base is a versioned, hashed release: `harness release` writes `base@<version>/` with a `release.json` per-file hash map. A repository pins one base version and one release source (`base.source`) in `harness.manifest.json`; composition sources prefixed `base:` resolve inside the fetched release.
+
+A source may be a local registry directory or a git URL prefixed `git:`. For a git source, `sync` and `check` fetch the tag `v<version>` into the consumer's cache and verify it against the lock. A manifest may pin `tool.version`; the lock records the tool version, and a running tool that differs from the pin fails.
 
 `harness check` fails when a composed output no longer matches the pin, when a fetched base file differs from its release record, or when it differs from the `lock.base` hashes. `harness sync` refuses to accept a base that differs from the lock.
 

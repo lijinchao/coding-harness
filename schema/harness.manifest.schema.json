@@ -7,12 +7,22 @@
   "required": ["version", "compositions", "skills", "gates"],
   "properties": {
     "version": { "type": "string", "minLength": 1 },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
     "base": {
       "type": "object",
       "additionalProperties": false,
       "required": ["source"],
       "properties": {
-        "source": { "type": "string", "minLength": 1 }
+        "source": { "type": "string", "minLength": 1 },
+        "registry": { "type": "string", "minLength": 1 },
+        "cache": { "type": "string", "minLength": 1 }
       }
     },
     "compositions": {
@@ -67,6 +77,12 @@
       "required": ["version", "outputs"],
       "properties": {
         "version": { "type": "string" },
+        "tool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version"],
+          "properties": { "version": { "type": "string" } }
+        },
         "base": {
           "type": "object",
           "additionalProperties": false,

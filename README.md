@@ -33,7 +33,7 @@ node bin/harness.mjs sync     --manifest examples/consumer/harness.manifest.json
 node bin/harness.mjs check    --manifest examples/consumer/harness.manifest.json
 ```
 
-A consumer manifest declares `"base": { "source": "<release registry>" }` and pins a base version; composition sources prefixed `base:` resolve inside the fetched `base@<version>`. `sync` writes the composed `AGENTS.md` and `REVIEW.md` and records the base's per-file hashes and the outputs' hashes in the manifest's `lock`. `check` recomposes in memory and fails when an output drifts or a fetched base file no longer matches the lock.
+A consumer manifest declares `"base": { "source": "<release registry>" }` and pins a base version; composition sources prefixed `base:` resolve inside the fetched `base@<version>`. The source may be a local registry or a git URL prefixed `git:`, in which case `sync` and `check` fetch tag `v<version>` into `.harness/` and verify it. `sync` writes the composed `AGENTS.md` and `REVIEW.md` and records the base's per-file hashes, the tool version, and the outputs' hashes in the manifest's `lock`. `check` recomposes in memory and fails when an output drifts, the tool version differs from the pin, or a fetched base file no longer matches the lock.
 
 To add the harness to an existing repository:
 
