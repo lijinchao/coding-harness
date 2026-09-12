@@ -12,7 +12,8 @@ import { loadManifest, validateManifest } from '../src/manifest.mjs'
 import { composeText, sha256 } from '../src/compose.mjs'
 import { createRelease, declaredVersion, loadRelease, verifyRelease } from '../src/release.mjs'
 import { ensureGitCheckout, isGitSource } from '../src/fetch.mjs'
-import { toolVersion } from '../src/tool.mjs'
+import { toolFiles, toolVersion } from '../src/tool.mjs'
+import { SHIM } from '../src/shim.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -21,7 +22,7 @@ commands:
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
   init       --dir <path> [--base-source <dir>] [--version <v>]
-                                         scaffold a repository delta and manifest
+                                         scaffold a delta, manifest, and bootstrap
   upgrade    --manifest <path> --to <v>  pin a new base version and re-sync
   release    --base <dir> --out <dir> [--version <v>]
                                          build a versioned, hashed base release`
@@ -79,6 +80,15 @@ function checkToolPin(manifest) {
   if (manifest.tool.version !== running) throw new Error(`tool version ${running} does not match pinned ${manifest.tool.version}`)
 }
 
+function verifyToolFiles(manifest) {
+  if (manifest.lock?.tool?.files === undefined) return null
+  const actual = toolFiles()
+  for (const [rel, hash] of Object.entries(manifest.lock.tool.files)) {
+    if (actual[rel] !== hash) return `tool file ${rel}: hash mismatch against the lock`
+  }
+  return null
+}
+
 function composedOutputs(root, manifest, baseDir) {
   return manifest.compositions.map((composition) => {
     const text = composeText(root, composition.sources, baseDir)
@@ -107,6 +117,8 @@ function cmdSync(options) {
   const root = dirname(path)
   const base = resolveBase(root, manifest)
   checkToolPin(manifest)
+  const toolProblem = verifyToolFiles(manifest)
+  if (toolProblem !== null) throw new Error(`${toolProblem}; run harness upgrade`)
   if (base !== null && manifest.lock?.base !== undefined) {
     const locked = manifest.lock.base
     if (locked.version !== base.release.version) throw new Error(`base version ${base.release.version} does not match pinned lock ${locked.version}; run harness upgrade`)
@@ -121,7 +133,7 @@ function cmdSync(options) {
     outputs[item.output] = item.hash
     console.log(`synced ${item.output}`)
   }
-  manifest.lock = { version: manifest.version, tool: { version: toolVersion() }, outputs }
+  manifest.lock = { version: manifest.version, tool: { version: toolVersion(), files: toolFiles() }, outputs }
   if (base !== null) manifest.lock.base = { version: base.release.version, files: base.release.files }
   writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`)
   console.log(`lock: ${manifest.version}`)
@@ -134,6 +146,8 @@ function cmdCheck(options) {
   const base = resolveBase(root, manifest)
   checkToolPin(manifest)
   const failures = []
+  const toolProblem = verifyToolFiles(manifest)
+  if (toolProblem !== null) failures.push(toolProblem)
   if (base !== null) {
     const locked = manifest.lock?.base
     if (locked === undefined) {
@@ -170,6 +184,10 @@ function cmdInit(options) {
   if (!existsSync(delta)) {
     writeFileSync(delta, '# Repository delta\n\nAdd repository-specific conventions here. The shared base composes above this file.\n')
   }
+  const shim = resolve(dir, 'harness')
+  if (!existsSync(shim)) {
+    writeFileSync(shim, SHIM, { mode: 0o755 })
+  }
   const manifestPath = resolve(dir, 'harness.manifest.json')
   if (!existsSync(manifestPath)) {
     const manifest = {
@@ -180,7 +198,7 @@ function cmdInit(options) {
       skills: [],
       gates: [{
         id: 'harness-drift',
-        command: 'harness check --manifest harness.manifest.json',
+        command: './harness check --manifest harness.manifest.json',
         protects: 'composed files match the pinned base release',
         prove_fires: 'hand-edit AGENTS.md, then run harness check; expect exit 1',
         severity: 'blocking',

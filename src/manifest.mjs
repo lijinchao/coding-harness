@@ -34,7 +34,10 @@ function validateBase(errors, base) {
 function validateTool(errors, tool) {
   if (tool === undefined) return
   requireObject(errors, tool, 'tool')
-  if (tool !== null && typeof tool === 'object' && !Array.isArray(tool)) requireString(errors, tool.version, 'tool.version')
+  if (tool !== null && typeof tool === 'object' && !Array.isArray(tool)) {
+    requireString(errors, tool.version, 'tool.version')
+    if (tool.source !== undefined) requireString(errors, tool.source, 'tool.source')
+  }
 }
 
 function validateLock(errors, lock) {
@@ -45,7 +48,10 @@ function validateLock(errors, lock) {
   requireObject(errors, lock.outputs, 'lock.outputs')
   if (lock.tool !== undefined) {
     requireObject(errors, lock.tool, 'lock.tool')
-    if (lock.tool !== null && typeof lock.tool === 'object' && !Array.isArray(lock.tool)) requireString(errors, lock.tool.version, 'lock.tool.version')
+    if (lock.tool !== null && typeof lock.tool === 'object' && !Array.isArray(lock.tool)) {
+      requireString(errors, lock.tool.version, 'lock.tool.version')
+      if (lock.tool.files !== undefined) requireObject(errors, lock.tool.files, 'lock.tool.files')
+    }
   }
   if (lock.base !== undefined) {
     requireObject(errors, lock.base, 'lock.base')

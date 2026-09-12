@@ -1,7 +1,7 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "tool": {
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "base": {
     "source": "../../dist"
@@ -52,20 +52,30 @@
     }
   ],
   "lock": {
-    "version": "0.1.1",
+    "version": "0.1.2",
     "tool": {
-      "version": "0.1.1"
+      "version": "0.1.2",
+      "files": {
+        "bin/harness.mjs": "a5cef359030baafe0f6e80632d805afd07c3679b90c58a495c389297d9bf720c",
+        "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
+        "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
+        "src/manifest.mjs": "623ad5f8937499bd5d50de7fa45a3f8a86cda75b4b285420603d16a7c61bf57f",
+        "src/release.mjs": "50bb0389aef26b2eab86899dbaecc178ea6f5af5b8774d20d775b20b32ed631f",
+        "src/shim.mjs": "c61d60287873ce5a1de28dada91c6d26d6907ace986b8aeaec8c3221ebecad30",
+        "src/tool.mjs": "64cd4f71abba77ccf3e730499517e24aa5ce79a0d71681cfd0f23d2bd1b4fdfd",
+        "package.json": "f5bcdb2d62f51f1831ced52cc5fa8c69860030d7ddaed8aa916adf580d0ebbb3"
+      }
     },
     "outputs": {
       "AGENTS.md": "b3ef42e8d0585a74d2f470dbd4bc04fe76432de56f7b00e03e465ce2469ff656",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.1",
+      "version": "0.1.2",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "80447316529fc62014fbaa047fb67c51ac30e32830cda370405349d8d66d196c",
+        "VERSION": "297b50f08386d3521f8fdaf2f78eb8d9d0acdf452d2e61596905fba37208c792",
         "skills/test-driven-development/SKILL.md": "06ebb705e6b7806c6b86b8639c279671683b46d2f831f7f572522df0354d18cf",
         "skills/writing-a-gate/SKILL.md": "d0ea2cde58332a2da2280adc69d691e86f735d108c1ce18726d2adfd7ee53539"
       }
