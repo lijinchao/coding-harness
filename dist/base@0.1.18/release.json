@@ -1,0 +1,17 @@
+{
+  "name": "base",
+  "version": "0.1.18",
+  "files": {
+    "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
+    "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
+    "VERSION": "447836d46f39c5900faf74ad6a6554b8e1fafeca1f78de0416d5f05c6e09a080",
+    "requirements.json": "18d0aeb2478767c401608eb62e3f6d155b816c806017a2581cfc35763b7b87ea",
+    "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
+    "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
+    "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
+    "templates/change-record.md": "665b5cede3029c9155df6bb0e12244ebd589054dfe9ba55da014aea773dc4cb6",
+    "templates/decision-record.md": "9495d9b30f1276da7c0c448d98c3c153f8b7b7d012dc55dee6a85d828b7182a4",
+    "templates/manual-verification.md": "21d347b902c54b6bcba4a7a90cef4c02f53afeb0c352f2dd6a0a316f091b044b",
+    "templates/postmortem.md": "80af444609639a827e383450b682b93f59dc0b08279b519a1342e708dc65d1ee"
+  }
+}

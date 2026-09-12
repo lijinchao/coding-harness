@@ -6,6 +6,7 @@
  * repository's harness from the pinned base plus a local delta, and detect drift
  * between the two.
  */
+import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
@@ -21,6 +22,7 @@ import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
 import { doctorReport } from '../src/doctor.mjs'
 import { loadRequirements } from '../src/adopt.mjs'
+import { selectedGateIds } from '../src/select.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -35,8 +37,11 @@ commands:
                                          move the pins, rewrite version references, re-sync, and check
   release    --base <dir> --out <dir> [--version <v>] [--force]
                                          build a versioned, hashed base release
-  gates      --manifest <path> [--gate <id>] [--phase <name>] [--jobs <n>] [--timeout <s>] [--report <file>]
-                                         run the declared gates, or one gate or phase (one list for local and CI)
+  gates      --manifest <path> [--gate <id>] [--phase <name>] [--changed <path>|--since <ref>]
+                                     [--jobs <n>] [--timeout <s>] [--report <file>]
+                                         run the declared gates, or the gates a change selects (one list for local and CI)
+  select     --manifest <path> (--since <ref> | --changed <path>)
+                                         print the gates a change selects, one id per line
   diff       --manifest <path> --to <v> preview what a base upgrade changes
   metrics    --log <file>                first-pass rate from gate reports
   scan       --root <dir>                list consumers whose harness is stale or diverged
@@ -44,6 +49,7 @@ commands:
                                          run the three-step proof for each gate action`
 
 const BOOLEAN_FLAGS = new Set(['force', 'record'])
+const REPEATABLE_FLAGS = new Set(['changed'])
 
 function parseOptions(argv) {
   const options = {}
@@ -57,7 +63,8 @@ function parseOptions(argv) {
     }
     const value = argv[index + 1]
     if (value === undefined || value.startsWith('--')) throw new Error(`missing value for ${token}`)
-    options[name] = value
+    if (REPEATABLE_FLAGS.has(name)) options[name] = [...(options[name] ?? []), value]
+    else options[name] = value
     index += 1
   }
   return options
@@ -243,6 +250,24 @@ function cmdUpgrade(options) {
   console.log(`lock: ${manifest.version}`)
 }
 
+function changedFiles(root, options) {
+  const changed = options.changed ?? []
+  if (changed.length > 0) return changed
+  if (typeof options.since === 'string') {
+    const out = execFileSync('git', ['-C', root, 'diff', '--name-only', options.since + '...HEAD'], { encoding: 'utf8' })
+    return out.split('\n').filter(Boolean)
+  }
+  throw new Error('missing --since <ref> or --changed <path>')
+}
+
+function cmdSelect(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const manifest = readValidManifest(path)
+  const root = dirname(path)
+  const changed = changedFiles(root, options)
+  for (const id of selectedGateIds(manifest, changed)) console.log(id)
+}
+
 async function cmdGates(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
@@ -250,7 +275,14 @@ async function cmdGates(options) {
   const only = options.gate
   const phase = options.phase
   if (only !== undefined && !manifest.gates.some((gate) => gate.id === only)) throw new Error('gate not found: ' + only)
-  const gates = manifest.gates.filter((gate) => (only === undefined || gate.id === only) && (phase === undefined || gate.phase === undefined || gate.phase === phase))
+  let gates
+  if (options.changed !== undefined || options.since !== undefined) {
+    if (only !== undefined || phase !== undefined) throw new Error('--changed/--since cannot be combined with --gate or --phase')
+    const ids = new Set(selectedGateIds(manifest, changedFiles(root, options)))
+    gates = manifest.gates.filter((gate) => ids.has(gate.id))
+  } else {
+    gates = manifest.gates.filter((gate) => (only === undefined || gate.id === only) && (phase === undefined || gate.phase === undefined || gate.phase === phase))
+  }
   if (gates.length === 0) throw new Error('no gates selected' + (phase === undefined ? '' : ' for phase ' + phase))
   const results = await runGates(root, gates, { timeoutMs: options.timeout === undefined ? 0 : Number(options.timeout) * 1000, jobs: options.jobs === undefined ? 1 : Number(options.jobs) })
   let blocking = 0
@@ -359,7 +391,7 @@ function cmdDoctor(options) {
   console.log('doctor: ok')
 }
 
-const COMMANDS = { validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates }
+const COMMANDS = { validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

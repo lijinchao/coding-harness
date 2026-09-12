@@ -103,6 +103,55 @@
       }
     }
   ],
+  "surfaces": [
+    {
+      "id": "base",
+      "paths": [
+        "base/**"
+      ],
+      "requires": [
+        "harness-drift",
+        "doctor",
+        "validate",
+        "tests"
+      ]
+    },
+    {
+      "id": "tool",
+      "paths": [
+        "bin/**",
+        "src/**",
+        "schema/**",
+        "package.json"
+      ],
+      "requires": [
+        "harness-drift",
+        "doctor",
+        "validate",
+        "tests"
+      ]
+    },
+    {
+      "id": "delta",
+      "paths": [
+        "AGENTS.delta.md"
+      ],
+      "requires": [
+        "harness-drift"
+      ]
+    },
+    {
+      "id": "docs",
+      "paths": [
+        "docs/**",
+        "README.md"
+      ],
+      "requires": [
+        "doctor",
+        "validate"
+      ]
+    }
+  ],
   "governance": {
     "version": [
       "README.md",

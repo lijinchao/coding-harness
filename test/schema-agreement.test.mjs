@@ -16,6 +16,7 @@ const KEY_GROUPS = [
   ['SKILL_KEYS', items.skills.items.properties],
   ['GATE_KEYS', items.gates.items.properties],
   ['EXPECT_KEYS', items.gates.items.properties.expect.properties],
+  ['SURFACE_KEYS', items.surfaces.items.properties],
   ['LOCK_KEYS', items.lock.properties],
   ['LOCK_TOOL_KEYS', items.lock.properties.tool.properties],
   ['LOCK_BASE_KEYS', items.lock.properties.base.properties],
@@ -30,6 +31,8 @@ for (const [name, properties] of KEY_GROUPS) {
 test('the schema and the validator agree on the required fields', () => {
   assert.deepEqual([...contract.SKILL_FIELDS].sort(), [...items.skills.items.required].sort())
   assert.deepEqual([...contract.GATE_FIELDS].sort(), [...items.gates.items.required].sort())
+  assert.deepEqual([...contract.SURFACE_FIELDS].sort(), [...items.surfaces.items.required].sort())
   for (const field of contract.SKILL_FIELDS) assert.ok(items.skills.items.properties[field] !== undefined)
   for (const field of contract.GATE_FIELDS) assert.ok(items.gates.items.properties[field] !== undefined)
+  for (const field of contract.SURFACE_FIELDS) assert.ok(items.surfaces.items.properties[field] !== undefined)
 })

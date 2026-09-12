@@ -75,6 +75,16 @@ A gate may declare a `phase`. `harness gates --phase <name>` runs the unphased g
 
 A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM` and escalates to `SIGKILL` after five seconds, and it forwards `SIGINT` and `SIGTERM` to the group before exiting, so a timed-out gate leaves no children behind. A result reports exit code, signal, timeout, and duration separately; `harness gates` prints the signal beside the timeout, and `--report` records the timeout and duration per gate.
 
+### Evidence surface
+
+| Field | Meaning |
+|---|---|
+| `id` | Stable identifier |
+| `paths` | Repository-relative globs this surface covers |
+| `requires` | The gate ids a change to those paths requires |
+
+A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its changed files match, plus every gate marked `always: true`. `harness gates --changed <path>` and `harness gates --since <ref>` run that set; `harness gates` without a selection runs every gate, which is what CI should do. `harness validate` rejects a surface that requires an unknown gate, and a gate that no surface requires and that is not `always`, so a new gate cannot silently fall outside the matrix. Without `surfaces`, selection is every gate.
+
 ### Guide section
 
 | Field | Meaning |

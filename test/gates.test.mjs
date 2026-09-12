@@ -81,6 +81,26 @@ test('a timed-out gate has its whole process tree killed', () => {
   rmSync(dir, { recursive: true, force: true })
 })
 
+test('gates --changed runs only the gates a change selects', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-changed-'))
+  const marker = join(dir, 'ran.txt')
+  const mark = (name) => `printf '${name}\\n' >> '${marker}'`
+  writeManifest(dir, [gate('always', mark('always'), 'blocking'), gate('tool', mark('tool'), 'blocking'), gate('engine', mark('engine'), 'blocking')])
+  const m = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  m.gates[0].always = true
+  m.surfaces = [
+    { id: 'tool', paths: ['src/**'], requires: ['tool'] },
+    { id: 'engine', paths: ['levels/**'], requires: ['engine'] },
+  ]
+  writeFileSync(manifestPath(dir), JSON.stringify(m, null, 2) + '\n')
+  run(['gates', '--manifest', manifestPath(dir), '--changed', 'src/a.mjs'])
+  const ran = readFileSync(marker, 'utf8')
+  assert.ok(ran.includes('always'))
+  assert.ok(ran.includes('tool'))
+  assert.ok(!ran.includes('engine'))
+  rmSync(dir, { recursive: true, force: true })
+})
+
 test('upgrade rewrites the declared version-reference files', () => {
   const dir = mkdtempSync(join(tmpdir(), 'coding-harness-upgrade-'))
   const base = join(dir, 'base')

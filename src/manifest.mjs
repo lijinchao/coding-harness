@@ -14,10 +14,10 @@ export function loadManifest(path) {
 // contract; the schema alone is not executable and drifted once already.
 export const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
 export const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
-export const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'lock']
+export const ROOT_KEYS = ['version', 'tool', 'base', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'lock']
 export const COMPOSITION_KEYS = ['output', 'sources']
 export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase']
+export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always']
 export const EXPECT_KEYS = ['forbid', 'allow']
 export const BASE_KEYS = ['source', 'registry', 'cache']
 export const TOOL_KEYS = ['version', 'commit', 'source']
@@ -25,6 +25,8 @@ export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
 export const GOVERNANCE_KEYS = ['version', 'decisions', 'owners', 'ci', 'changes', 'manualVerification']
+export const SURFACE_KEYS = ['id', 'paths', 'requires']
+export const SURFACE_FIELDS = ['id', 'paths', 'requires']
 
 function requireString(errors, value, where) {
   if (typeof value !== 'string' || value.length === 0) errors.push(where + ': required non-empty string')
@@ -199,6 +201,7 @@ export function validateManifest(manifest) {
         errors.push(where + '.severity: must be blocking or advisory')
       }
       if (gate?.phase !== undefined) requireString(errors, gate.phase, where + '.phase')
+      if (gate?.always !== undefined && typeof gate.always !== 'boolean') errors.push(where + '.always: must be a boolean')
       if (gate?.severity === 'blocking') {
         requireString(errors, gate.prove_fires_command, where + '.prove_fires_command')
         requireString(errors, gate.revert_command, where + '.revert_command')
@@ -206,6 +209,39 @@ export function validateManifest(manifest) {
       validateExpect(errors, gate?.expect, where + '.expect')
     })
     requireUniqueIds(errors, manifest.gates, 'gates')
+  }
+
+  if (manifest.surfaces !== undefined) {
+    if (!Array.isArray(manifest.surfaces)) {
+      errors.push('surfaces: required array')
+    } else {
+      manifest.surfaces.forEach((surface, index) => {
+        const where = 'surfaces[' + index + ']'
+        requireObject(errors, surface, where)
+        rejectUnknown(errors, surface, SURFACE_KEYS, where)
+        requireString(errors, surface?.id, where + '.id')
+        for (const field of ['paths', 'requires']) {
+          if (!Array.isArray(surface?.[field]) || surface[field].length === 0) {
+            errors.push(where + '.' + field + ': required non-empty array')
+          } else {
+            surface[field].forEach((entry, entryIndex) => requireString(errors, entry, where + '.' + field + '[' + entryIndex + ']'))
+          }
+        }
+      })
+      requireUniqueIds(errors, manifest.surfaces, 'surfaces')
+      const gateIds = new Set((manifest.gates ?? []).map((gate) => gate.id))
+      const covered = new Set()
+      manifest.surfaces.forEach((surface, index) => {
+        for (const id of surface?.requires ?? []) {
+          if (!gateIds.has(id)) errors.push('surfaces[' + index + '].requires: unknown gate ' + id)
+          covered.add(id)
+        }
+      })
+      const gates = manifest.gates ?? []
+      gates.forEach((gate, index) => {
+        if (gate?.always !== true && !covered.has(gate?.id)) errors.push('gates[' + index + '] (' + gate?.id + '): not required by any surface and not always')
+      })
+    }
   }
 
   validateLock(errors, manifest.lock)
