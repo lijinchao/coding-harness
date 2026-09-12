@@ -90,6 +90,15 @@ A gate's command runs under a shell in its own process group. On timeout the run
 
 A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its changed files match, plus every gate marked `always: true`. `harness gates --changed <path>` and `harness gates --since <ref>` run that set; `harness gates` without a selection runs every gate, which is what CI should do. `harness validate` rejects a surface that requires an unknown gate, and a gate that no surface requires and that is not `always`, so a new gate cannot silently fall outside the matrix. Without `surfaces`, selection is every gate.
 
+### Document health
+
+| Field | Meaning |
+|---|---|
+| `governance.docs` | Documents whose links and word budget are checked |
+| `governance.instructions` | Globs for every instruction file an agent can read |
+
+`harness doctor` checks that each declared document exists, that its relative Markdown links resolve (a fragment must name a heading in the target file), and that it stays within its optional `maxWords` budget. It also walks the repository for `AGENTS.md` and `AGENTS.delta.md`, and fails when a file is not matched by `governance.instructions` or when a declared glob matches no file. A budget forces relocation instead of accumulation; an unmanaged instruction file is a rule nobody governs. Both keys are recommended, not required.
+
 ### Guide section
 
 | Field | Meaning |

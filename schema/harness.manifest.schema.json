@@ -26,7 +26,20 @@
         "owners": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "ci": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "changes": { "type": "string", "minLength": 1 },
-        "manualVerification": { "type": "string", "minLength": 1 }
+        "manualVerification": { "type": "string", "minLength": 1 },
+        "docs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "maxWords": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "instructions": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       }
     },
     "base": {

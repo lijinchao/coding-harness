@@ -24,7 +24,8 @@ export const TOOL_KEYS = ['version', 'commit', 'source']
 export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
-export const GOVERNANCE_KEYS = ['version', 'decisions', 'owners', 'ci', 'changes', 'manualVerification']
+export const GOVERNANCE_KEYS = ['version', 'decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions']
+export const DOC_KEYS = ['path', 'maxWords']
 export const SURFACE_KEYS = ['id', 'paths', 'requires']
 export const SURFACE_FIELDS = ['id', 'paths', 'requires']
 
@@ -126,6 +127,23 @@ function validateGovernance(errors, governance) {
   }
   if (governance.changes !== undefined) requireString(errors, governance.changes, 'governance.changes')
   if (governance.manualVerification !== undefined) requireString(errors, governance.manualVerification, 'governance.manualVerification')
+  if (governance.docs !== undefined) {
+    if (!Array.isArray(governance.docs)) {
+      errors.push('governance.docs: required array')
+    } else {
+      governance.docs.forEach((entry, index) => {
+        const where = 'governance.docs[' + index + ']'
+        requireObject(errors, entry, where)
+        rejectUnknown(errors, entry, DOC_KEYS, where)
+        requireString(errors, entry?.path, where + '.path')
+        if (entry?.maxWords !== undefined && !Number.isInteger(entry.maxWords)) errors.push(where + '.maxWords: must be an integer')
+      })
+    }
+  }
+  if (governance.instructions !== undefined) {
+    if (!Array.isArray(governance.instructions)) errors.push('governance.instructions: required array')
+    else governance.instructions.forEach((entry, index) => requireString(errors, entry, 'governance.instructions[' + index + ']'))
+  }
 }
 
 function validateExpect(errors, expect, where) {

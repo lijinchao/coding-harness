@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { adoptionProblems } from './adopt.mjs'
+import { documentProblems, instructionProblems } from './documents.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
 const CHANGE_SECTIONS = ['Problem', 'Approach', 'Verification']
@@ -77,6 +78,9 @@ export function doctorReport(root, manifest, requirements) {
       for (const owner of governance.owners) if (!text.includes(owner)) problems.push('CODEOWNERS does not route to ' + owner)
     }
   }
+
+  if (governance.docs !== undefined) problems.push(...documentProblems(root, governance.docs))
+  if (governance.instructions !== undefined) problems.push(...instructionProblems(root, governance.instructions))
 
   const ciCommands = requirements?.requiredCiCommands ?? []
   for (const rel of governance.ci ?? []) {

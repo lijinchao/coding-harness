@@ -164,7 +164,31 @@
     "ci": [
       ".github/workflows/harness.yml"
     ],
-    "changes": "docs/changes"
+    "changes": "docs/changes",
+    "docs": [
+      {
+        "path": "README.md",
+        "maxWords": 800
+      },
+      {
+        "path": "docs/reference.md",
+        "maxWords": 2600
+      },
+      {
+        "path": "docs/governance.md",
+        "maxWords": 850
+      },
+      {
+        "path": "docs/roadmap.md",
+        "maxWords": 1600
+      }
+    ],
+    "instructions": [
+      "AGENTS.md",
+      "AGENTS.delta.md",
+      "examples/consumer/AGENTS.md",
+      "examples/consumer/AGENTS.delta.md"
+    ]
   },
   "lock": {
     "version": "0.1.20",
