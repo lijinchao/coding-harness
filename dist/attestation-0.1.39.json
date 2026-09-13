@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-13T16:34:41.393Z",
+  "at": "2026-09-13T16:36:09.290Z",
   "version": "0.1.39",
   "toolCommit": "99ef32c78c2040b294cd90631669b27dc3ac34cd",
   "tag": "99ef32c78c2040b294cd90631669b27dc3ac34cd",
@@ -8,8 +8,7 @@
     "release": "844acf0dc77cd853a9695d82ac672905bf5ea5b3380efa1747a703aca98c888c"
   },
   "locks": {
-    "self": "0c1046f88dd39e94819a09f8261b0e1afb7bd81e122278333a9f66f37ed556ca",
-    "example": "9b1e79d9b928e11dfd756d2cdc29a54dad59364679b379ea65154601224070de"
+    "self": "0c1046f88dd39e94819a09f8261b0e1afb7bd81e122278333a9f66f37ed556ca"
   },
   "proofs": {
     "harness-drift": {
@@ -44,6 +43,5 @@
       "tool": "99ef32c78c2040b294cd90631669b27dc3ac34cd",
       "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
     }
-  },
-  "example": "examples/consumer/harness.manifest.json"
+  }
 }
