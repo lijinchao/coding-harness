@@ -25,7 +25,9 @@ export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs', 'packs
 export const PACK_DECLARATION_KEYS = ['id', 'source', 'version', 'registry', 'cache']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
-export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs', 'metrics']
+export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs', 'metrics', 'legibility']
+export const LEGIBILITY_ADAPTERS = ['start', 'ready', 'observe.ui', 'observe.logs', 'observe.metrics', 'observe.traces', 'reset', 'teardown']
+export const LEGIBILITY_KEYS = ['command', 'evidence']
 export const METRICS_KEYS = ['log', 'window', 'minFirstPassRate', 'maxFlaky', 'maxTimeouts', 'exclude']
 export const PROOFS_KEYS = ['require', 'maxAgeDays']
 export const PROOF_REQUIRE = ['blocking', 'all', 'none']
@@ -147,6 +149,29 @@ function validateGovernance(errors, governance) {
   }
   if (governance.changes !== undefined) requireString(errors, governance.changes, 'governance.changes')
   if (governance.manualVerification !== undefined) requireString(errors, governance.manualVerification, 'governance.manualVerification')
+  if (governance.legibility !== undefined) {
+    requireObject(errors, governance.legibility, 'governance.legibility')
+    rejectUnknown(errors, governance.legibility, LEGIBILITY_ADAPTERS, 'governance.legibility')
+    if (isObject(governance.legibility)) {
+      for (const [adapter, value] of Object.entries(governance.legibility)) {
+        const where = 'governance.legibility.' + adapter
+        requireObject(errors, value, where)
+        rejectUnknown(errors, value, LEGIBILITY_KEYS, where)
+        if (!isObject(value)) continue
+        requireString(errors, value.command, where + '.command')
+        if (typeof value.command === 'string' && value.command.includes('\n')) errors.push(where + '.command: required single line')
+        if (value.evidence !== undefined) {
+          requireString(errors, value.evidence, where + '.evidence')
+          if (typeof value.evidence === 'string' && (value.evidence.startsWith('/') || value.evidence.split('/').includes('..'))) {
+            errors.push(where + '.evidence: must stay inside the repository')
+          }
+        }
+      }
+      if (governance.legibility.start !== undefined && governance.legibility.ready === undefined) errors.push('governance.legibility: start requires ready')
+      if (governance.legibility.ready !== undefined && governance.legibility.start === undefined) errors.push('governance.legibility: ready requires start')
+      if (governance.legibility.teardown !== undefined && governance.legibility.start === undefined) errors.push('governance.legibility: teardown requires start')
+    }
+  }
   if (governance.metrics !== undefined) {
     requireObject(errors, governance.metrics, 'governance.metrics')
     rejectUnknown(errors, governance.metrics, METRICS_KEYS, 'governance.metrics')

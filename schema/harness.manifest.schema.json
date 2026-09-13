@@ -5,6 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "compositions", "skills", "gates"],
+  "definitions": {
+    "legibilityAdapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
   "properties": {
     "version": { "type": "string", "minLength": 1 },
     "tool": {
@@ -43,6 +54,20 @@
         "ci": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "changes": { "type": "string", "minLength": 1 },
         "manualVerification": { "type": "string", "minLength": 1 },
+        "legibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": { "$ref": "#/definitions/legibilityAdapter" },
+            "ready": { "$ref": "#/definitions/legibilityAdapter" },
+            "observe.ui": { "$ref": "#/definitions/legibilityAdapter" },
+            "observe.logs": { "$ref": "#/definitions/legibilityAdapter" },
+            "observe.metrics": { "$ref": "#/definitions/legibilityAdapter" },
+            "observe.traces": { "$ref": "#/definitions/legibilityAdapter" },
+            "reset": { "$ref": "#/definitions/legibilityAdapter" },
+            "teardown": { "$ref": "#/definitions/legibilityAdapter" }
+          }
+        },
         "docs": {
           "type": "array",
           "items": {
