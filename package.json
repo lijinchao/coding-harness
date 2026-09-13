@@ -1,6 +1,6 @@
 {
   "name": "coding-harness",
-  "version": "0.1.32",
+  "version": "0.1.33",
   "private": true,
   "description": "Base framework, generator, and governance checks for an outer coding harness.",
   "type": "module",

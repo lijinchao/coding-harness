@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { toolVersion } from '../src/tool.mjs'
-import { createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
+import { carriedChanges, carriedState, createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
@@ -251,6 +251,44 @@ test('prove refuses stale evidence and --record repairs it', () => {
   assert.equal(typeof recorded.tool, 'string')
   execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qam', 'record'], { cwd: root, stdio: 'pipe' })
   run(['prove', '--manifest', manifestPath(root), '--gate', 'target'])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('carried state reports a modification, a removal, and an addition', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-carry-'))
+  mkdirSync(join(root, 'cache', 'sub'), { recursive: true })
+  mkdirSync(join(root, 'cache', '.git'), { recursive: true })
+  writeFileSync(join(root, 'cache', 'a.txt'), 'a\n')
+  writeFileSync(join(root, 'cache', 'sub', 'b.txt'), 'b\n')
+  writeFileSync(join(root, 'cache', '.git', 'ignored.txt'), 'x\n')
+  const before = carriedState(root, ['cache'])
+  assert.ok(Object.keys(before).includes('cache/a.txt'))
+  assert.ok(!Object.keys(before).some((path) => path.includes('.git')))
+  writeFileSync(join(root, 'cache', 'a.txt'), 'changed\n')
+  rmSync(join(root, 'cache', 'sub', 'b.txt'))
+  writeFileSync(join(root, 'cache', 'c.txt'), 'c\n')
+  const changes = carriedChanges(before, carriedState(root, ['cache']))
+  assert.deepEqual(changes.modified, ['cache/a.txt'])
+  assert.deepEqual(changes.removed, ['cache/sub/b.txt'])
+  assert.deepEqual(changes.added, ['cache/c.txt'])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('prove --isolated fails when a gate writes through a carried link', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-carry-proof-'))
+  writeFileSync(join(root, '.gitignore'), '.harness/\n')
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(join(root, 'marker.txt'), 'x\n')
+  mkdirSync(join(root, '.harness'), { recursive: true })
+  writeFileSync(join(root, '.harness', 'carried.txt'), 'carried\n')
+  writeFileSync(manifestPath(root), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({ id: 'writer', command: 'test -f marker.txt', prove_fires_command: 'rm -f marker.txt', revert_command: "printf 'x\\n' > marker.txt && printf 'tampered\\n' > .harness/carried.txt" })],
+  }, null, 2) + '\n')
+  gitRepo(root)
+  assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'writer', '--isolated', '--timeout', '60']))
   rmSync(root, { recursive: true, force: true })
 })
 

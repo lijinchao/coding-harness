@@ -25,4 +25,4 @@ The enforcement sits in `prove` rather than in a gate because a gate whose comma
 - The claim in [governance.md](../governance.md) is now what the code does, and `test/proofs.test.mjs` covers each rejection.
 - This repository declares `require: blocking` and `maxAgeDays: 30` and re-records all six proofs, so `lock.proofs` names the pinned tool commit and every blocking gate.
 - A proof is invalidated by a tool upgrade, so every release of this repository ends with `prove --record`; that is the cost of the binding and it is deliberate.
-- Records stay advisory for consumers until they declare the policy; the release that adds the key reports it as a recommended gap instead of a failure.
+- Records stay advisory for consumers until they declare the policy; the release that adds the key reports it as a recommended gap instead of a failure. Adoption is per repository: a project's gates may need an environment only that project has, and the harness never demands a record it cannot help a repository produce.

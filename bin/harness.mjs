@@ -19,7 +19,7 @@ import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
 import { definitionHash, proofProblems } from '../src/proof.mjs'
-import { createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
+import { DEFAULT_CARRY, carriedChanges, carriedState, createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
 import { doctorReport } from '../src/doctor.mjs'
@@ -414,6 +414,8 @@ async function cmdProve(options) {
   const isolated = options.isolated === true
   let runRoot = root
   let worktree = null
+  let carried = null
+  let carriedPaths = null
   if (isolated) {
     const dirty = dirtyPaths(root)
     if (dirty === null) throw new Error('prove --isolated requires a git working tree')
@@ -422,6 +424,8 @@ async function cmdProve(options) {
     if (typeof source === 'string' && !source.startsWith('git:') && !isAbsolute(source)) {
       throw new Error('prove --isolated needs a base source that resolves outside the repository (a git: URL or an absolute path); ' + source + ' is relative')
     }
+    carriedPaths = [...DEFAULT_CARRY, ...(manifest.governance?.proofCarry ?? [])]
+    carried = carriedState(root, carriedPaths)
     worktree = createProofWorktree(root, manifest.governance?.proofCarry ?? [])
     runRoot = worktree.dir
     console.log(`proof worktree: ${worktree.dir}`)
@@ -437,7 +441,21 @@ async function cmdProve(options) {
       console.log(`${result.status}\t${gate.id}\t${result.detail}`)
     }
   } finally {
-    if (worktree !== null) removeProofWorktree(root, worktree.dir)
+    if (worktree !== null) {
+      // The worktree shares the caches with the repository, so a gate that
+      // writes through a carried link mutates state outside the proof. Report
+      // it and fail: the evidence is about a tree the proof did not leave alone.
+      const changes = carriedChanges(carried, carriedState(root, carriedPaths))
+      const mutated = [...changes.modified, ...changes.removed]
+      for (const path of mutated.slice(0, 5)) console.error('prove: carried state changed: ' + path)
+      if (mutated.length > 0) {
+        console.error('prove: the proof modified ' + mutated.length + ' file(s) shared with the repository')
+        bad += 1
+      } else if (changes.added.length > 0) {
+        console.log('prove: carried state grew by ' + changes.added.length + ' file(s); a populated cache is expected')
+      }
+      removeProofWorktree(root, worktree.dir)
+    }
   }
   if (bad > 0) process.exit(1)
   if (options.record === true) {

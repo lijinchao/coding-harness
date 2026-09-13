@@ -47,7 +47,7 @@ A gate's command runs under a shell in its own process group. On timeout the run
 |---|---|
 | `governance.proofCarry` | Untracked paths a proof worktree must carry |
 
-`harness prove --isolated` runs the proof in a temporary `git worktree` instead of the working tree, so a proof never dirties the checkout it proves. `.harness` and `node_modules` are carried into the worktree, and each `governance.proofCarry` path with them, so a pin that resolves only from the local cache still resolves.
+`prove --isolated` runs the proof in a temporary `git worktree`, so it never dirties the checkout it proves. `.harness` and `node_modules` are carried into the worktree, and each `governance.proofCarry` path with them, so a pin that resolves only from the local cache still resolves. The proof reports the carried state it changed: a file modified or removed fails the run and is named, while added files are reported as cache growth.
 
 ### Proof record
 
@@ -57,7 +57,7 @@ A gate's command runs under a shell in its own process group. On timeout the run
 | `tool` | The tool commit that ran the proof |
 | `definition` | SHA-256 of the gate's behavioural fields |
 
-`prove --record` writes one record per proved gate into `lock.proofs`. A repository that declares `governance.proofs` — `require`: `blocking`, `all`, or `none`, and `maxAgeDays` (default 30) — has `harness prove` refuse a gate in scope whose record is missing, unbound, or no longer current; `doctor` warns instead. Rewording `protects` does not invalidate a record; changing the command, proof commands, `expect`, or dependencies does.
+`prove --record` writes one record per proved gate into `lock.proofs`. A repository that declares `governance.proofs` — `require`: `blocking`, `all`, or `none`, and `maxAgeDays` (default 30) — has `harness prove` refuse a gate in scope whose record is missing, unbound, or no longer current; `doctor` warns instead.
 
 ### Evidence surface
 

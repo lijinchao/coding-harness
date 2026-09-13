@@ -4,7 +4,81 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 /** Ignored state a proof usually needs: the tool cache and installed packages. */
-const DEFAULT_CARRY = ['.harness', 'node_modules']
+export const DEFAULT_CARRY = ['.harness', 'node_modules']
+
+/**
+ * Record the files under carried paths with the metadata a mutation changes.
+ *
+ * `.git` directories are skipped: a proof that rewrote a fetched tool's object
+ * store already fails the commit check the shim performs, and walking every
+ * object of every cached clone costs seconds where this walk costs a fraction
+ * of one.
+ *
+ * @param {string} root - Repository root.
+ * @param {string[]} paths - Repository-relative carried paths.
+ * @returns {Record<string, string>} Size and modification time per file.
+ */
+export function carriedState(root, paths) {
+  const state = {}
+  const walk = (dir, prefix) => {
+    let entries
+    try {
+      entries = readdirSync(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const entry of entries) {
+      if (entry.name === '.git') continue
+      const path = join(dir, entry.name)
+      const key = prefix + '/' + entry.name
+      if (entry.isDirectory()) {
+        walk(path, key)
+        continue
+      }
+      if (!entry.isFile()) continue
+      try {
+        const info = statSync(path)
+        state[key] = info.size + ':' + info.mtimeMs
+      } catch {
+        // A file that vanished mid-walk is reported as removed by the diff.
+      }
+    }
+  }
+  for (const rel of paths) {
+    const source = resolve(root, rel)
+    if (!existsSync(source)) continue
+    const before = state
+    if (statSync(source).isDirectory()) walk(source, rel)
+    else {
+      try {
+        const info = statSync(source)
+        before[rel] = info.size + ':' + info.mtimeMs
+      } catch {
+        // Same as above.
+      }
+    }
+  }
+  return state
+}
+
+/**
+ * What changed between two carried states.
+ *
+ * @param {Record<string, string>} before - The state before the proof.
+ * @param {Record<string, string>} after - The state after the proof.
+ * @returns {{ modified: string[], removed: string[], added: string[] }}
+ */
+export function carriedChanges(before, after) {
+  const modified = []
+  const removed = []
+  const added = []
+  for (const [path, value] of Object.entries(before)) {
+    if (!(path in after)) removed.push(path)
+    else if (after[path] !== value) modified.push(path)
+  }
+  for (const path of Object.keys(after)) if (!(path in before)) added.push(path)
+  return { modified: modified.sort(), removed: removed.sort(), added: added.sort() }
+}
 
 /**
  * Link one carried path into the worktree.
