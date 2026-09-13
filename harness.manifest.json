@@ -131,6 +131,7 @@
         "bin/**",
         "src/**",
         "schema/**",
+        "test/**",
         "package.json"
       ],
       "requires": [
@@ -138,6 +139,43 @@
         "doctor",
         "validate",
         "tests"
+      ]
+    },
+    {
+      "id": "dist",
+      "paths": [
+        "dist/**"
+      ],
+      "requires": [
+        "harness-drift",
+        "validate",
+        "tests"
+      ]
+    },
+    {
+      "id": "example",
+      "paths": [
+        "examples/consumer/**"
+      ],
+      "requires": [
+        "harness-drift",
+        "tests"
+      ]
+    },
+    {
+      "id": "output",
+      "paths": [
+        "AGENTS.md",
+        "REVIEW.md",
+        "harness",
+        "harness.manifest.json",
+        ".github/**",
+        ".gitignore"
+      ],
+      "requires": [
+        "harness-drift",
+        "doctor",
+        "validate"
       ]
     },
     {
@@ -185,7 +223,7 @@
       },
       {
         "path": "docs/governance.md",
-        "maxWords": 850
+        "maxWords": 900
       },
       {
         "path": "docs/roadmap.md",

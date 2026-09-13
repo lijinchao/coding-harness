@@ -33,7 +33,7 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `after` | Gate ids that must finish first; their failure does not skip this gate |
 | `always` | Select this gate in every changed-surface selection |
 
-A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work.
+A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work. A proof is transactional: `harness prove` refuses to start unless the git working tree is clean, refuses to report success unless it is clean again after the revert, and runs every command with `--timeout`, so a revert that loses content is visible instead of silently destroying uncommitted work.
 
 A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless the line also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
 
@@ -51,16 +51,16 @@ A gate's command runs under a shell in its own process group. On timeout the run
 | `paths` | Repository-relative globs this surface covers |
 | `requires` | The gate ids a change to those paths requires |
 
-A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its changed files match, plus every gate marked `always: true`. `harness gates --changed <path>` and `harness gates --since <ref>` run that set; `harness gates` without a selection runs every gate, which is what CI should do. `harness validate` rejects a surface that requires an unknown gate, and a gate that no surface requires and that is not `always`, so a new gate cannot silently fall outside the matrix. Without `surfaces`, selection is every gate. Name an evidence gate by its tier — `unit-*`, `integration-*`, `e2e-*` — so `requires` names the evidence rather than the tool that produces it.
+A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its changed files match, plus every gate marked `always: true`. `harness gates --changed <path>` and `harness gates --since <ref>` run that set; `harness gates` without a selection runs every gate, which is what CI should do. `harness validate` rejects a surface that requires an unknown gate, and a gate that no surface requires and that is not `always`, so a new gate cannot silently fall outside the matrix. `harness doctor` also requires every committed file to be matched by some surface, so a change to an unowned file cannot select nothing; a repository may declare an explicit catch-all. Without `surfaces`, selection is every gate. Name an evidence gate by its tier — `unit-*`, `integration-*`, `e2e-*` — so `requires` names the evidence rather than the tool that produces it.
 
 ### Document health
 
 | Field | Meaning |
 |---|---|
-| `governance.docs` | Documents whose links and word budget are checked |
+| `governance.docs` | Documents whose links, word budget, and forbidden text are checked |
 | `governance.instructions` | Globs for every instruction file an agent can read |
 
-`harness doctor` checks that each declared document exists, that its relative Markdown links resolve (a fragment must name a heading in the target), and that it stays within its `maxWords` budget. It also walks the repository for `AGENTS.md` and `AGENTS.delta.md`, and fails when a file is not matched by `governance.instructions` or when a declared glob matches no file. A budget forces relocation instead of accumulation, and an unmanaged instruction file is a rule nobody governs; both keys are recommended.
+`harness doctor` checks that each declared document exists, that its relative Markdown links resolve (a fragment must name a heading in the target), and that it stays within its `maxWords` budget, and rejects a line matching one of the document's `forbid` patterns unless it also matches `allow`. It also walks the repository for `AGENTS.md` and `AGENTS.delta.md`, and fails when a file is not matched by `governance.instructions` or when a declared glob matches no file. A budget forces relocation instead of accumulation, and an unmanaged instruction file is a rule nobody governs; both keys are recommended.
 
 ### Guide section
 

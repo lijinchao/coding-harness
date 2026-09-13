@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { adoptionProblems } from './adopt.mjs'
-import { decisionProblems, documentProblems, instructionProblems, postmortemProblems } from './documents.mjs'
+import { decisionProblems, documentProblems, instructionProblems, postmortemProblems, surfaceCoverageProblems } from './documents.mjs'
 import { productProblems } from './product.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
@@ -30,19 +30,15 @@ export function doctorReport(root, manifest, requirements) {
   }
 
   if (manifest.product !== undefined) problems.push(...productProblems(root, manifest.product))
+  if (manifest.surfaces !== undefined) problems.push(...surfaceCoverageProblems(root, manifest.surfaces))
 
   const governance = manifest.governance
   if (governance === undefined) return { problems, warnings }
 
-  for (const rel of governance.version ?? []) {
-    const path = resolve(root, rel)
-    if (!existsSync(path)) { problems.push(rel + ': version file not found'); continue }
-    if (!readFileSync(path, 'utf8').includes('v' + manifest.version)) problems.push(rel + ': does not mention v' + manifest.version)
-  }
-
   if (governance.decisions !== undefined) {
     const dir = resolve(root, governance.decisions)
-    if (existsSync(dir)) {
+    if (!existsSync(dir)) problems.push(governance.decisions + ': decision-record directory not found')
+    else {
       for (const name of readdirSync(dir).slice().sort()) {
         if (!name.endsWith('.md')) continue
         const text = readFileSync(resolve(dir, name), 'utf8')
@@ -87,7 +83,8 @@ export function doctorReport(root, manifest, requirements) {
 
   if (governance.postmortems !== undefined) {
     const dir = resolve(root, governance.postmortems)
-    if (existsSync(dir)) {
+    if (!existsSync(dir)) problems.push(governance.postmortems + ': postmortem directory not found')
+    else {
       const gateIds = new Set(manifest.gates.map((gate) => gate.id))
       for (const name of readdirSync(dir).slice().sort()) {
         if (!name.endsWith('.md') || name === 'README.md') continue

@@ -27,7 +27,7 @@ export const LOCK_BASE_KEYS = ['version', 'files']
 export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems']
 export const PRODUCT_KEYS = ['version', 'mentions']
 export const PRODUCT_VERSION_KEYS = ['path', 'pattern']
-export const DOC_KEYS = ['path', 'maxWords']
+export const DOC_KEYS = ['path', 'maxWords', 'forbid', 'allow']
 export const SURFACE_KEYS = ['id', 'paths', 'requires']
 export const SURFACE_FIELDS = ['id', 'paths', 'requires']
 
@@ -153,6 +153,14 @@ function validateGovernance(errors, governance) {
         rejectUnknown(errors, entry, DOC_KEYS, where)
         requireString(errors, entry?.path, where + '.path')
         if (entry?.maxWords !== undefined && !Number.isInteger(entry.maxWords)) errors.push(where + '.maxWords: must be an integer')
+        if (entry?.forbid !== undefined) {
+          if (!Array.isArray(entry.forbid) || entry.forbid.length === 0) errors.push(where + '.forbid: required non-empty array')
+          else entry.forbid.forEach((pattern, patternIndex) => requireString(errors, pattern, where + '.forbid[' + patternIndex + ']'))
+        }
+        if (entry?.allow !== undefined) {
+          if (!Array.isArray(entry.allow)) errors.push(where + '.allow: required array')
+          else entry.allow.forEach((pattern, patternIndex) => requireString(errors, pattern, where + '.allow[' + patternIndex + ']'))
+        }
       })
     }
   }

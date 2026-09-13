@@ -27,8 +27,8 @@ test('validate requires a blocking gate to carry an executable proof', () => {
   assert.ok(errors.some((error) => error.includes('revert_command')))
 })
 
-test('proveGate errors rather than silently skipping a blocking gate', () => {
-  const result = proveGate('.', { id: 'x', command: 'true', protects: 'p', prove_fires: 'f', severity: 'blocking' })
+test('proveGate errors rather than silently skipping a blocking gate', async () => {
+  const result = await proveGate('.', { id: 'x', command: 'true', protects: 'p', prove_fires: 'f', severity: 'blocking' })
   assert.equal(result.status, 'error')
 })
 

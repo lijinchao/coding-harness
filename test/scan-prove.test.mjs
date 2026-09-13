@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { toolVersion } from '../src/tool.mjs'
@@ -18,6 +18,13 @@ function manifestPath(dir) {
 
 function gate(overrides) {
   return { id: 'g', command: 'harness check', protects: 'p', prove_fires: 'f', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true', ...overrides }
+}
+
+function gitRepo(dir) {
+  const options = { cwd: dir, stdio: 'pipe' }
+  execFileSync('git', ['init', '-q'], options)
+  execFileSync('git', ['add', '-A'], options)
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'init'], options)
 }
 
 function makeConsumer(root, name) {
@@ -66,8 +73,9 @@ test('prove passes a gate that fires and is reverted', () => {
     version: '0.1.0',
     compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
     skills: [],
-    gates: [gate({ id: 'good', command: 'test -f marker.txt', prove_fires_command: 'rm -f marker.txt', revert_command: 'touch marker.txt' })],
+    gates: [gate({ id: 'good', command: 'test -f marker.txt', prove_fires_command: 'rm -f marker.txt', revert_command: "printf 'x\\n' > marker.txt" })],
   }, null, 2) + '\n')
+  gitRepo(root)
   run(['prove', '--manifest', manifestPath(root), '--gate', 'good'])
   rmSync(root, { recursive: true, force: true })
 })
@@ -82,6 +90,51 @@ test('prove fails a gate whose action no longer fires', () => {
     skills: [],
     gates: [gate({ id: 'dead', command: 'test -f marker.txt', prove_fires_command: 'true', revert_command: 'true' })],
   }, null, 2) + '\n')
+  gitRepo(root)
   assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'dead']))
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('prove refuses a dirty working tree instead of reverting over it', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-dirty-'))
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(join(root, 'target.txt'), 'original\n')
+  writeFileSync(manifestPath(root), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({ id: 'target', command: 'grep -q original target.txt', prove_fires_command: "printf 'broken\\n' > target.txt", revert_command: 'git checkout -- target.txt' })],
+  }, null, 2) + '\n')
+  gitRepo(root)
+  writeFileSync(join(root, 'target.txt'), 'user-uncommitted\n')
+  assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'target']))
+  assert.equal(readFileSync(join(root, 'target.txt'), 'utf8'), 'user-uncommitted\n')
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('prove refuses a directory that is not a git working tree', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-nogit-'))
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(manifestPath(root), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({ id: 'good', command: 'true', prove_fires_command: 'true', revert_command: 'true' })],
+  }, null, 2) + '\n')
+  assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'good']))
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('prove times out a hung proof command', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-timeout-'))
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(manifestPath(root), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({ id: 'hang', command: 'true', prove_fires_command: 'sleep 30', revert_command: 'true' })],
+  }, null, 2) + '\n')
+  gitRepo(root)
+  assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'hang', '--timeout', '1']))
   rmSync(root, { recursive: true, force: true })
 })

@@ -57,7 +57,7 @@ A blocking gate must declare `prove_fires_command` (introduce the failure) and `
 2. Run the gate's `command` and confirm it exits non-zero.
 3. Run `revert_command` and confirm the gate exits zero again.
 
-There is no default revert: `harness prove` refuses to guess, so it cannot discard unrelated work. `harness prove --record` stores the last proof time and commit in the lock. A gate whose `prove_fires_command` has not been run recently is treated as broken until proven otherwise.
+There is no default revert: `harness prove` refuses to guess. It also refuses to start unless the working tree is clean, and refuses to report success unless it is clean again after the revert, so a proof cannot discard uncommitted work; `--timeout` bounds every command. `harness prove --record` stores the last proof time and commit in the lock. A gate whose `prove_fires_command` has not been run recently is treated as broken until proven otherwise.
 
 ## Check the governance facts
 

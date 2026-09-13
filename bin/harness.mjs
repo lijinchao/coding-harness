@@ -23,6 +23,7 @@ import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
 import { doctorReport } from '../src/doctor.mjs'
 import { loadRequirements } from '../src/adopt.mjs'
 import { selectedGateIds } from '../src/select.mjs'
+import { uncoveredPaths } from '../src/documents.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -45,8 +46,8 @@ commands:
   diff       --manifest <path> --to <v> preview what a base upgrade changes
   metrics    --log <file>                first-pass rate from gate reports
   scan       --root <dir>                list consumers whose harness is stale or diverged
-  prove      --manifest <path> [--gate <id>] [--record]
-                                         run the three-step proof for each gate action`
+  prove      --manifest <path> [--gate <id>] [--timeout <s>] [--record]
+                                         run the three-step proof for each gate action (needs a clean tree)`
 
 const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast'])
 const REPEATABLE_FLAGS = new Set(['changed'])
@@ -266,6 +267,8 @@ function cmdSelect(options) {
   const manifest = readValidManifest(path)
   const root = dirname(path)
   const changed = changedFiles(root, options)
+  const uncovered = uncoveredPaths(manifest.surfaces ?? [], changed)
+  if (uncovered.length > 0) console.error('select: no surface covers: ' + uncovered.join(', '))
   for (const id of selectedGateIds(manifest, changed)) console.log(id)
 }
 
@@ -279,7 +282,10 @@ async function cmdGates(options) {
   let gates
   if (options.changed !== undefined || options.since !== undefined) {
     if (only !== undefined || phase !== undefined) throw new Error('--changed/--since cannot be combined with --gate or --phase')
-    const ids = new Set(selectedGateIds(manifest, changedFiles(root, options)))
+    const changed = changedFiles(root, options)
+    const uncovered = uncoveredPaths(manifest.surfaces ?? [], changed)
+    if (uncovered.length > 0) console.error('gates: no surface covers: ' + uncovered.join(', '))
+    const ids = new Set(selectedGateIds(manifest, changed))
     gates = manifest.gates.filter((gate) => ids.has(gate.id))
   } else {
     gates = manifest.gates.filter((gate) => (only === undefined || gate.id === only) && (phase === undefined || gate.phase === undefined || gate.phase === phase))
@@ -385,17 +391,18 @@ function cmdScan(options) {
   if (bad > 0) process.exit(1)
 }
 
-function cmdProve(options) {
+async function cmdProve(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
   const root = dirname(path)
   const only = options.gate
   if (only !== undefined && !manifest.gates.some((gate) => gate.id === only)) throw new Error(`gate not found: ${only}`)
+  const timeoutMs = options.timeout === undefined ? 0 : Number(options.timeout) * 1000
   let bad = 0
   const recorded = {}
   for (const gate of manifest.gates) {
     if (only !== undefined && gate.id !== only) continue
-    const result = proveGate(root, gate)
+    const result = await proveGate(root, gate, timeoutMs)
     if (result.status === 'ok') recorded[gate.id] = `${new Date().toISOString()}@${toolCommit() ?? 'unknown'}`
     if (result.status !== 'ok' && result.status !== 'skip') bad += 1
     console.log(`${result.status}\t${gate.id}\t${result.detail}`)

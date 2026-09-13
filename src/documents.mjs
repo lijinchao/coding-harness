@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { matchGlob } from './select.mjs'
@@ -83,8 +84,53 @@ export function documentProblems(root, docs) {
       const words = text.split(/\s+/).filter(Boolean).length
       if (words > entry.maxWords) problems.push(rel + ': ' + words + ' words exceeds the budget of ' + entry.maxWords)
     }
+    if (entry.forbid !== undefined) {
+      const allow = entry.allow ?? []
+      for (const pattern of entry.forbid) {
+        const hit = text.split('\n').some((line) => line.includes(pattern) && !allow.some((benign) => line.includes(benign)))
+        if (hit) problems.push(rel + ': contains forbidden text: ' + pattern)
+      }
+    }
     if (rel.endsWith('.md')) problems.push(...linkProblems(root, rel, text))
   }
+  return problems
+}
+
+/**
+ * Paths no surface covers. A changed path with no surface is selected by no
+ * gate, so the minimal-check path would silently skip it.
+ *
+ * @param {{ paths: string[] }[]} surfaces - Declared surfaces.
+ * @param {string[]} paths - Repository-relative paths.
+ * @returns {string[]}
+ */
+export function uncoveredPaths(surfaces, paths) {
+  return paths.filter((file) => !surfaces.some((surface) => surface.paths.some((pattern) => matchGlob(file, pattern))))
+}
+
+/**
+ * Tracked files no surface covers.
+ *
+ * Every committed file belongs to some surface, or the matrix is incomplete and
+ * a change to it selects nothing. The check reads `git ls-files`, so ignored
+ * and untracked files are out of scope; a repository that is not a git checkout
+ * is skipped.
+ *
+ * @param {string} root - Directory the manifest lives in.
+ * @param {{ paths: string[] }[]} surfaces - Declared surfaces.
+ * @returns {string[]}
+ */
+export function surfaceCoverageProblems(root, surfaces) {
+  let tracked
+  try {
+    tracked = execFileSync('git', ['-C', root, 'ls-files'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).split('\n').filter(Boolean)
+  } catch {
+    return []
+  }
+  const uncovered = uncoveredPaths(surfaces, tracked)
+  if (uncovered.length === 0) return []
+  const problems = uncovered.slice(0, 5).map((file) => file + ': no surface covers this tracked file')
+  if (uncovered.length > 5) problems.push(uncovered.length - 5 + ' more tracked file(s) have no surface')
   return problems
 }
 
