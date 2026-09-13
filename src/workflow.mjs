@@ -26,6 +26,13 @@ jobs:
         run: ./harness metrics --log .harness/gates.jsonl
       - name: Prove every gate still fires
         run: ./harness prove --manifest harness.manifest.json --isolated --timeout 300
+      - name: Verify the release attestation
+        run: |
+          if ls dist/attestation-*.json >/dev/null 2>&1; then
+            ./harness attest --manifest harness.manifest.json --verify
+          else
+            echo 'no release attestation recorded'
+          fi
       - name: Archive the gate report
         if: always()
         uses: actions/upload-artifact@v4
