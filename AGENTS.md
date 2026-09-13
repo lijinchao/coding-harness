@@ -28,7 +28,7 @@ Everything above this file comes from the shared base. This file holds only what
 - Release the base: `node bin/harness.mjs release --base base --out dist` (version from `base/VERSION`).
 - Validate a manifest: `./harness validate --manifest <path>`
 - Check the example: `./harness check --manifest examples/consumer/harness.manifest.json`
-- Re-record the example after changing `base/`: bump `base/VERSION`, run `release`, then `./harness upgrade --manifest examples/consumer/harness.manifest.json --to <version>`.
+- Re-record the example after changing `base/`: bump `base/VERSION`, run `release`, commit the release, move the pin, then `./harness upgrade --manifest examples/consumer/harness.manifest.json --to <version>`. Use the pinned `./harness`, never `node bin/harness.mjs`: the example's lock records the running tool's commit, so a re-record from a checkout that is not the released commit writes a lock the release does not have.
 
 Run the tests and the example check before reporting any task complete, and paste the output.
 
@@ -48,3 +48,4 @@ Read `base/skills/writing-a-gate/SKILL.md` first. `./harness validate` rejects a
 - Editing a composed output (`AGENTS.md`, `REVIEW.md`) instead of `AGENTS.delta.md`.
 - Adding a guide for a failure that has not happened.
 - Restating the reference in a second place instead of linking it.
+- Re-recording the example with the working-tree tool; its lock then pins a commit no release has.
