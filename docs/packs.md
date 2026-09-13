@@ -37,4 +37,4 @@ The merge order is kernel defaults, then packs in declaration order, then the re
 
 ## Not yet
 
-`harness diff` and `upgrade` compare base releases file by file; they do not yet diff two versions of a pack, so the gates, skills, commands, and permissions a pack upgrade would add or remove are not reported yet.
+`harness diff --pack <id>@<version>` reports what a pack upgrade adds, changes, or removes — each gate with its command, each surface with its paths, each skill with its file. What is still missing is the automatic call: `upgrade` does not print that report when a declared pack version changes, and pack *versions* are still moved by editing the declaration.

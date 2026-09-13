@@ -33,4 +33,5 @@ A pack is a released, hashed, pinned artifact shaped like the base: a `pack.json
 - The pack interface reuses release, hash, verification, and lock machinery; a second mechanism for the same job is the defect this record forbids.
 - A pack can make a repository red on adoption; the conformance repository is what keeps that from being a surprise.
 - The interface is implemented — resolution, namespacing, kernel compatibility, dependencies and conflicts, atomic failure, explicit override, and `lock.packs` provenance — and `test/packs.test.mjs` covers each rule.
-- `harness packs` reports what each declared pack contributes and what the repository overrode; `diff` and `upgrade` still compare base releases file by file, so a pack *upgrade*'s added or removed contributions are the remaining gap.
+- `harness packs` reports what each declared pack contributes, and `harness diff --pack <id>@<version>` reports what a pack upgrade adds, changes, or removes, down to the command a gate would run.
+- Still missing: `upgrade` does not print that report when a declared pack version changes, and a pack version is still moved by editing the declaration rather than by an upgrade flag.

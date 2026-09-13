@@ -34,11 +34,11 @@ function packJson(overrides = {}) {
   }
 }
 
-function makePack(root, descriptor) {
+function makePack(root, descriptor, version = '1.0.0') {
   const dir = join(root, 'demo-pack')
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'pack.json'), JSON.stringify(descriptor, null, 2) + '\n')
-  run(['release', '--base', dir, '--out', join(root, 'registry'), '--version', '1.0.0', '--force'])
+  run(['release', '--base', dir, '--out', join(root, 'registry'), '--version', version, '--force'])
   return join(root, 'registry')
 }
 
@@ -135,5 +135,22 @@ test('packs lists what a declared pack contributes and what the repository overr
   assert.match(listed, /demo@1\.0\.0 — \d+ file\(s\) in the lock/)
   assert.match(listed, /surface demo\/src: src\/\*\*/)
   assert.match(listed, /override: demo\/architecture \(the repository version wins\)/)
+  rmSync(root, { recursive: true, force: true })
+})
+test('diff --pack reports the gates, surfaces, and commands a pack upgrade changes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-pack-diff-'))
+  const registry = makePack(root, packJson())
+  const consumer = makeConsumer(root, registry)
+  makePack(root, packJson({
+    gates: [gate('demo/architecture', { command: 'npm run typecheck' })],
+    surfaces: [
+      { id: 'demo/src', paths: ['src/**'], requires: ['demo/architecture'] },
+      { id: 'demo/tests', paths: ['tests/**'], requires: ['demo/architecture'] },
+    ],
+  }), '2.0.0')
+  const report = run(['diff', '--manifest', join(consumer, 'harness.manifest.json'), '--pack', 'demo@2.0.0'])
+  assert.match(report, /pack demo 1\.0\.0 -> 2\.0\.0/)
+  assert.match(report, /~ gate demo\/architecture: npm run typecheck/)
+  assert.match(report, /\+ surface demo\/tests: tests\/\*\*/)
   rmSync(root, { recursive: true, force: true })
 })

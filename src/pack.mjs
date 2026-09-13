@@ -80,6 +80,44 @@ export function packProblems(descriptor, declaration, kernelVersion) {
   return problems
 }
 
+function describe(kind, entry) {
+  if (kind === 'gates') return entry.command
+  if (kind === 'surfaces') return (entry.paths ?? []).join(', ')
+  return entry.path ?? ''
+}
+
+/**
+ * What one pack version would add, change, or remove against the declared one.
+ *
+ * The contribution is read from the pack's own \`pack.json\` at both versions, so
+ * the report names commands and paths, not only files.
+ *
+ * @param {string} root - Directory the manifest lives in.
+ * @param {object} manifest - A valid manifest.
+ * @param {string} id - The pack id.
+ * @param {string} toVersion - The version to compare against.
+ * @returns {{ from: string, to: string, lines: string[] }}
+ */
+export function packDiff(root, manifest, id, toVersion) {
+  const declaration = (manifest.packs ?? []).find((entry) => entry.id === id)
+  if (declaration === undefined) throw new Error('pack not declared: ' + id)
+  const kernelVersion = manifest.version
+  const before = resolvePack(root, declaration, kernelVersion)
+  const after = resolvePack(root, { ...declaration, version: toVersion }, kernelVersion)
+  const lines = []
+  for (const kind of ['gates', 'surfaces', 'skills']) {
+    const old = new Map((before.descriptor[kind] ?? []).map((entry) => [entry.id, entry]))
+    const next = new Map((after.descriptor[kind] ?? []).map((entry) => [entry.id, entry]))
+    for (const [entryId, entry] of next) {
+      const label = kind.slice(0, -1) + ' ' + entryId
+      if (!old.has(entryId)) lines.push('  + ' + label + ': ' + describe(kind, entry))
+      else if (JSON.stringify(old.get(entryId)) !== JSON.stringify(entry)) lines.push('  ~ ' + label + ': ' + describe(kind, entry))
+    }
+    for (const [entryId] of old) if (!next.has(entryId)) lines.push('  - ' + kind.slice(0, -1) + ' ' + entryId)
+  }
+  return { from: declaration.version, to: after.release.version, lines }
+}
+
 /**
  * Merge declared packs into a manifest without writing anything.
  *

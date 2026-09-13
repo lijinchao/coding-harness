@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
-import { mergePacks } from '../src/pack.mjs'
+import { mergePacks, packDiff } from '../src/pack.mjs'
 import { buildAttestation, verifyAttestation } from '../src/attest.mjs'
 import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
@@ -48,7 +48,7 @@ commands:
                                          run the declared gates, or the gates a change selects (one list for local and CI)
   select     --manifest <path> (--since <ref> | --changed <path>)
                                          print the gates a change selects, one id per line
-  diff       --manifest <path> --to <v> preview what a base upgrade changes
+  diff       --manifest <path> --to <v> | --pack <id>@<v>   preview what a base or pack upgrade changes
   metrics    --log <file> | --manifest <path>                first-pass rate from gate reports
   packs      --manifest <path>            list the gates, surfaces, and skills declared packs contribute
   attest     --manifest <path> [--out <file>] [--example <path>] [--verify]
@@ -334,6 +334,15 @@ function cmdDiff(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
   const root = dirname(path)
+  if (options.pack !== undefined) {
+    const match = /^([^@]+)@(.+)$/.exec(options.pack)
+    if (match === null) throw new Error('--pack expects <id>@<version>')
+    const report = packDiff(root, manifest, match[1], match[2])
+    console.log(`pack ${match[1]} ${report.from} -> ${report.to}`)
+    if (report.lines.length === 0) console.log('  (no contribution changes)')
+    for (const line of report.lines) console.log(line)
+    return
+  }
   const to = requireOption(options, 'to')
   const fromBase = resolveBase(root, manifest)
   const toBase = resolveBase(root, { ...manifest, version: to })
