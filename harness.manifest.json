@@ -39,19 +39,19 @@
       "id": "test-driven-development",
       "path": "base:skills/test-driven-development/SKILL.md",
       "trigger": "before writing implementation code",
-      "owner": "@coding-harness"
+      "owner": "@lijinchao"
     },
     {
       "id": "writing-a-gate",
       "path": "base:skills/writing-a-gate/SKILL.md",
       "trigger": "before adding a gate",
-      "owner": "@coding-harness"
+      "owner": "@lijinchao"
     },
     {
       "id": "verification-tiers",
       "path": "base:skills/verification-tiers/SKILL.md",
       "trigger": "before deciding which check proves a change",
-      "owner": "@coding-harness"
+      "owner": "@lijinchao"
     }
   ],
   "gates": [
@@ -110,6 +110,41 @@
           "ERROR:"
         ]
       }
+    },
+    {
+      "id": "release",
+      "command": "V=$(cat base/VERSION); OUT=$(mktemp -d); node bin/harness.mjs release --base base --out \"$OUT\" --version \"$V\" --force >/dev/null && diff -r \"$OUT/base@$V\" \"dist/base@$V\"; s=$?; rm -rf \"$OUT\"; exit $s",
+      "protects": "the committed base release matches what base/ produces at the pinned version",
+      "prove_fires": "append to base/AGENTS.base.md without re-releasing; the rebuilt artifact differs from dist/ and the gate fails",
+      "prove_fires_command": "printf '\\n<!-- prove -->\\n' >> base/AGENTS.base.md",
+      "revert_command": "git checkout -- base/AGENTS.base.md",
+      "severity": "blocking",
+      "phase": "release",
+      "needs": [
+        "tests"
+      ],
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    },
+    {
+      "id": "example",
+      "command": "./harness check --manifest examples/consumer/harness.manifest.json && ./harness validate --manifest examples/consumer/harness.manifest.json",
+      "protects": "the example consumer stays composed and valid against the pinned base",
+      "prove_fires": "append to the example's composed AGENTS.md, then run the gate; expect exit 1",
+      "prove_fires_command": "printf '\\n<!-- prove -->\\n' >> examples/consumer/AGENTS.md",
+      "revert_command": "./harness sync --manifest examples/consumer/harness.manifest.json",
+      "severity": "blocking",
+      "after": [
+        "harness-drift"
+      ],
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
     }
   ],
   "surfaces": [
@@ -122,7 +157,8 @@
         "harness-drift",
         "doctor",
         "validate",
-        "tests"
+        "tests",
+        "release"
       ]
     },
     {
@@ -149,7 +185,8 @@
       "requires": [
         "harness-drift",
         "validate",
-        "tests"
+        "tests",
+        "release"
       ]
     },
     {
@@ -159,7 +196,8 @@
       ],
       "requires": [
         "harness-drift",
-        "tests"
+        "tests",
+        "example"
       ]
     },
     {
@@ -228,6 +266,10 @@
       {
         "path": "docs/roadmap.md",
         "maxWords": 1600
+      },
+      {
+        "path": "docs/MANUAL_VERIFICATION.md",
+        "maxWords": 400
       }
     ],
     "instructions": [
@@ -236,7 +278,8 @@
       "examples/consumer/AGENTS.md",
       "examples/consumer/AGENTS.delta.md"
     ],
-    "postmortems": "docs/postmortems"
+    "postmortems": "docs/postmortems",
+    "manualVerification": "docs/MANUAL_VERIFICATION.md"
   },
   "lock": {
     "version": "0.1.27",
@@ -267,7 +310,7 @@
       "commit": "805ef272804105e98a3628549325c0213c8dfb1c"
     },
     "outputs": {
-      "AGENTS.md": "37fe68fa6d3aacb1367d381d59e33a9ae229ea16740fe1267c162d23df088329",
+      "AGENTS.md": "e6aabea114436c735b8459791856902ed98d4bc8cc1329038003448c97412afc",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {

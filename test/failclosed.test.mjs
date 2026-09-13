@@ -23,6 +23,15 @@ test('a declared governance directory that is missing is a problem', () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test('a skill owner must be routed by CODEOWNERS', () => {
+  const root = repo()
+  writeFileSync(join(root, 'CODEOWNERS'), '* @owner\n')
+  const base = { version: '1.0.0', gates: [], lock: {} }
+  assert.ok(doctorProblems(root, { ...base, skills: [{ id: 's', owner: '@nobody' }] }).some((problem) => problem.includes('not routed by CODEOWNERS')))
+  assert.deepEqual(doctorProblems(root, { ...base, skills: [{ id: 's', owner: '@owner' }] }), [])
+  rmSync(root, { recursive: true, force: true })
+})
+
 test('a declared document must not contain forbidden text', () => {
   const root = repo()
   writeFileSync(join(root, 'README.md'), 'pinned to coding-harness v0.1.15\n')

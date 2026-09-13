@@ -181,6 +181,37 @@ test('a recorded proof survives a sync revert and a second prove', () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test('prove --isolated runs in a worktree and leaves the real tree untouched', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-isolated-'))
+  const pwdLog = join(tmpdir(), 'coding-harness-prove-pwd-' + Date.now() + '.log')
+  writeFileSync(join(root, '.gitignore'), '.harness/\n')
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(join(root, 'marker.txt'), 'x\n')
+  mkdirSync(join(root, '.harness'), { recursive: true })
+  writeFileSync(join(root, '.harness', 'carried.txt'), 'carried\n')
+  writeFileSync(manifestPath(root), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({
+      id: 'target',
+      command: `test -f marker.txt && test -f .harness/carried.txt && printf '%s\\n' "$(pwd)" >> '${pwdLog}'`,
+      prove_fires_command: 'rm -f marker.txt',
+      revert_command: "printf 'x\\n' > marker.txt",
+    })],
+  }, null, 2) + '\n')
+  gitRepo(root)
+  run(['prove', '--manifest', manifestPath(root), '--gate', 'target', '--isolated', '--timeout', '60'])
+  const logged = readFileSync(pwdLog, 'utf8').trim()
+  assert.notEqual(logged, root)
+  assert.match(logged, /coding-harness-prove-/)
+  assert.equal(readFileSync(join(root, 'marker.txt'), 'utf8'), 'x\n')
+  assert.equal(execFileSync('git', ['-C', root, 'status', '--porcelain'], { encoding: 'utf8' }), '')
+  assert.equal(execFileSync('git', ['-C', root, 'worktree', 'list'], { encoding: 'utf8' }).trim().split('\n').length, 1)
+  rmSync(root, { recursive: true, force: true })
+  rmSync(pwdLog, { force: true })
+})
+
 test('prove times out a hung proof command', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-timeout-'))
   writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')

@@ -4,8 +4,6 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 
 ## Artifact contracts
 
-Each artifact type has a required skeleton. `harness validate` rejects a manifest whose gates or skills omit a required field; `npm test` holds the JSON schema and the validator to one contract.
-
 ### Skill
 
 | Field | Meaning |
@@ -42,6 +40,14 @@ A gate may declare a `phase`. `harness gates --phase <name>` runs the unphased g
 A gate whose `needs` dependency fails or is skipped is itself skipped and reported `skip`, so a broken prerequisite never looks like a passing check; `after` orders gates without propagating failure. `harness validate` rejects an unknown dependency and a dependency cycle, `harness gates --fail-fast` starts no new gate after a blocking gate fails, and `harness select` includes the dependencies of every gate it selects.
 
 A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM`, then `SIGKILL` after five seconds, and forwards `SIGINT` and `SIGTERM` before exiting, so a timed-out gate leaves no children. A result reports exit code, signal, timeout, and duration separately; `--report` records the timeout and duration per gate.
+
+### Proof isolation
+
+| Field | Meaning |
+|---|---|
+| `governance.proofCarry` | Untracked paths a proof worktree must carry |
+
+`harness prove --isolated` runs the proof in a temporary `git worktree` instead of the working tree, so a proof never dirties the checkout it proves. `.harness` and `node_modules` are symlinked into the worktree, and each `governance.proofCarry` path with them, so a pin that resolves only from the local cache still resolves.
 
 ### Evidence surface
 

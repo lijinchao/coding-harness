@@ -8,7 +8,7 @@
  */
 import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname, isAbsolute, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
 import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
@@ -17,7 +17,8 @@ import { SHIM } from '../src/shim.mjs'
 import { WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
-import { proveGate } from '../src/prove.mjs'
+import { dirtyPaths, proveGate } from '../src/prove.mjs'
+import { createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
 import { doctorReport } from '../src/doctor.mjs'
@@ -46,10 +47,10 @@ commands:
   diff       --manifest <path> --to <v> preview what a base upgrade changes
   metrics    --log <file>                first-pass rate from gate reports
   scan       --root <dir>                list consumers whose harness is stale or diverged
-  prove      --manifest <path> [--gate <id>] [--timeout <s>] [--record]
-                                         run the three-step proof for each gate action (needs a clean tree)`
+  prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
+                                         run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated'])
 const REPEATABLE_FLAGS = new Set(['changed'])
 
 function parseOptions(argv) {
@@ -402,14 +403,33 @@ async function cmdProve(options) {
   if (only !== undefined && !manifest.gates.some((gate) => gate.id === only)) throw new Error(`gate not found: ${only}`)
   const timeoutMs = options.timeout === undefined ? 0 : Number(options.timeout) * 1000
   if (timeoutMs === 0 && process.stdout.isTTY) console.error('prove: --timeout is unset; each proof command can wait forever')
+  const isolated = options.isolated === true
+  let runRoot = root
+  let worktree = null
+  if (isolated) {
+    const dirty = dirtyPaths(root)
+    if (dirty === null) throw new Error('prove --isolated requires a git working tree')
+    if (dirty.length > 0) throw new Error('working tree has ' + dirty.length + ' uncommitted path(s) (' + dirty.slice(0, 3).join(', ') + '); commit or stash before prove')
+    const source = manifest.base?.source
+    if (typeof source === 'string' && !source.startsWith('git:') && !isAbsolute(source)) {
+      throw new Error('prove --isolated needs a base source that resolves outside the repository (a git: URL or an absolute path); ' + source + ' is relative')
+    }
+    worktree = createProofWorktree(root, manifest.governance?.proofCarry ?? [])
+    runRoot = worktree.dir
+    console.log(`proof worktree: ${worktree.dir}`)
+  }
   let bad = 0
   const recorded = {}
-  for (const gate of manifest.gates) {
-    if (only !== undefined && gate.id !== only) continue
-    const result = await proveGate(root, gate, timeoutMs)
-    if (result.status === 'ok') recorded[gate.id] = `${new Date().toISOString()}@${toolCommit() ?? 'unknown'}`
-    if (result.status !== 'ok' && result.status !== 'skip') bad += 1
-    console.log(`${result.status}\t${gate.id}\t${result.detail}`)
+  try {
+    for (const gate of manifest.gates) {
+      if (only !== undefined && gate.id !== only) continue
+      const result = await proveGate(runRoot, gate, timeoutMs, { trackedOnly: isolated })
+      if (result.status === 'ok') recorded[gate.id] = `${new Date().toISOString()}@${toolCommit() ?? 'unknown'}`
+      if (result.status !== 'ok' && result.status !== 'skip') bad += 1
+      console.log(`${result.status}\t${gate.id}\t${result.detail}`)
+    }
+  } finally {
+    if (worktree !== null) removeProofWorktree(root, worktree.dir)
   }
   if (bad > 0) process.exit(1)
   if (options.record === true) {

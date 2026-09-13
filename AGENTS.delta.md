@@ -2,7 +2,7 @@
 
 Everything above this file comes from the shared base. This file holds only what is true for this repository.
 
-> This file is the source for the composed `AGENTS.md` and `REVIEW.md`. Run `./harness sync` after editing it.
+> This file is the source for the composed `AGENTS.md`; `REVIEW.md` comes from the base alone. Run `./harness sync` after editing it.
 
 ## Commands
 

@@ -33,6 +33,22 @@ export function doctorReport(root, manifest, requirements) {
   if (manifest.surfaces !== undefined) problems.push(...surfaceCoverageProblems(root, manifest.surfaces))
 
   const governance = manifest.governance
+
+  // An owner nobody routes to is not an owner, whether or not governance is declared.
+  const skillOwners = (manifest.skills ?? []).map((skill) => skill?.owner).filter((owner) => typeof owner === 'string')
+  if ((governance?.owners ?? []).length > 0 || skillOwners.length > 0) {
+    const found = CODEOWNERS.map((rel) => resolve(root, rel)).filter(existsSync)
+    if (found.length === 0) {
+      problems.push('no CODEOWNERS file found for declared owners')
+    } else {
+      const text = found.map((path) => readFileSync(path, 'utf8')).join('\n')
+      for (const owner of governance?.owners ?? []) if (!text.includes(owner)) problems.push('CODEOWNERS does not route to ' + owner)
+      for (const skill of manifest.skills ?? []) {
+        if (typeof skill?.owner === 'string' && !text.includes(skill.owner)) problems.push('skill ' + skill.id + ': owner ' + skill.owner + ' is not routed by CODEOWNERS')
+      }
+    }
+  }
+
   if (governance === undefined) return { problems, warnings }
 
   if (governance.decisions !== undefined) {
@@ -69,16 +85,6 @@ export function doctorReport(root, manifest, requirements) {
 
   if (governance.manualVerification !== undefined && !existsSync(resolve(root, governance.manualVerification))) {
     problems.push(governance.manualVerification + ': manual verification path not found')
-  }
-
-  if ((governance.owners ?? []).length > 0) {
-    const found = CODEOWNERS.map((rel) => resolve(root, rel)).filter(existsSync)
-    if (found.length === 0) {
-      problems.push('no CODEOWNERS file found for declared owners')
-    } else {
-      const text = found.map((path) => readFileSync(path, 'utf8')).join('\n')
-      for (const owner of governance.owners) if (!text.includes(owner)) problems.push('CODEOWNERS does not route to ' + owner)
-    }
   }
 
   if (governance.postmortems !== undefined) {

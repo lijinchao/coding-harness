@@ -3,10 +3,16 @@ import { runCommand } from './process.mjs'
 
 /**
  * Working-tree changes git can see, or null when this is not a git checkout.
+ *
+ * @param {string} root - Repository root.
+ * @param {{ untracked?: boolean }} [options] - Untracked files are listed by default.
+ * @returns {string[]|null}
  */
-function dirtyPaths(root) {
+export function dirtyPaths(root, options = {}) {
+  const args = ['-C', root, 'status', '--porcelain']
+  if (options.untracked === false) args.push('--untracked-files=no')
   try {
-    return execFileSync('git', ['-C', root, 'status', '--porcelain'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
       .split('\n')
       .filter(Boolean)
   } catch {
@@ -28,21 +34,22 @@ function dirtyPaths(root) {
  * @param {number} [timeoutMs] - Per-command timeout; zero means none.
  * @returns {Promise<{ status: string, detail: string }>}
  */
-export async function proveGate(root, gate, timeoutMs = 0) {
+export async function proveGate(root, gate, timeoutMs = 0, options = {}) {
   if (gate.prove_fires_command === undefined) {
     return gate.severity === 'blocking'
       ? { status: 'error', detail: 'blocking gate has no prove_fires_command' }
       : { status: 'skip', detail: 'no prove_fires_command' }
   }
   if (gate.revert_command === undefined) return { status: 'error', detail: 'no revert_command; refusing to guess a revert' }
-  const before = dirtyPaths(root)
+  const untracked = options.trackedOnly === true ? false : true
+  const before = dirtyPaths(root, { untracked })
   if (before === null) return { status: 'error', detail: 'not a git working tree; refusing to prove because the revert cannot be verified' }
   if (before.length > 0) return { status: 'error', detail: 'working tree has ' + before.length + ' uncommitted path(s) (' + before.slice(0, 3).join(', ') + '); commit or stash before prove' }
   // Once the failure has been introduced, every path attempts the revert.
   const revert = async () => {
     const result = await runCommand(root, gate.revert_command, timeoutMs)
     if (result.code !== 0) return 'the revert exited ' + result.code + (result.timedOut ? ' (timeout)' : '')
-    const dirty = dirtyPaths(root)
+    const dirty = dirtyPaths(root, { untracked })
     if (dirty === null) return 'the revert could not be verified'
     if (dirty.length > 0) return 'the revert left the working tree dirty: ' + dirty.slice(0, 3).join(', ')
     return null

@@ -58,7 +58,8 @@
           }
         },
         "instructions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "postmortems": { "type": "string", "minLength": 1 }
+        "postmortems": { "type": "string", "minLength": 1 },
+        "proofCarry": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       }
     },
     "base": {
