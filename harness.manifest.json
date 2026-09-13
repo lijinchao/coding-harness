@@ -257,6 +257,17 @@
       ]
     },
     {
+      "id": "pack-sources",
+      "paths": [
+        "packs/**"
+      ],
+      "requires": [
+        "harness-drift",
+        "validate",
+        "tests"
+      ]
+    },
+    {
       "id": "docs",
       "paths": [
         "docs/**",

@@ -1,0 +1,73 @@
+{
+  "id": "node-library",
+  "kernelVersion": ">=0.1.38",
+  "gates": [
+    {
+      "id": "node-library/no-node-modules-committed",
+      "command": "test -z \"$(git ls-files | grep -E '(^|/)node_modules/' || true)\"",
+      "protects": "installed packages are never committed",
+      "prove_fires": "force-add a node_modules file, then run the gate; expect exit 1",
+      "prove_fires_command": "mkdir -p node_modules/dep && printf '{}\\n' > node_modules/dep/package.json && git add -f node_modules/dep/package.json",
+      "revert_command": "git rm -r -q --cached node_modules && rm -rf node_modules",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    },
+    {
+      "id": "node-library/license-file",
+      "command": "test -f LICENSE",
+      "protects": "a published package declares its license",
+      "prove_fires": "delete LICENSE, then run the gate; expect exit 1",
+      "prove_fires_command": "rm -f LICENSE",
+      "revert_command": "git checkout -- LICENSE",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    },
+    {
+      "id": "node-library/no-console-log",
+      "command": "test -z \"$(grep -rn 'console\\.log' src 2>/dev/null || true)\"",
+      "protects": "shipped source does not log to the console",
+      "prove_fires": "append a console.log to src/index.js, then run the gate; expect exit 1",
+      "prove_fires_command": "printf 'console.log(1)\\n' >> src/index.js",
+      "revert_command": "git checkout -- src/index.js",
+      "severity": "advisory",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "node-library/source",
+      "paths": [
+        "src/**",
+        "package.json",
+        "LICENSE"
+      ],
+      "requires": [
+        "node-library/license-file",
+        "node-library/no-console-log"
+      ]
+    },
+    {
+      "id": "node-library/dependencies",
+      "paths": [
+        "package-lock.json",
+        "node_modules/**"
+      ],
+      "requires": [
+        "node-library/no-node-modules-committed"
+      ]
+    }
+  ],
+  "skills": []
+}
