@@ -125,6 +125,31 @@ test('prove refuses a directory that is not a git working tree', () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test('a recorded proof survives a sync revert and a second prove', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-repeat-'))
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  const path = manifestPath(root)
+  writeFileSync(path, JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({
+      id: 'drift',
+      command: `node ${CLI} check --manifest harness.manifest.json`,
+      prove_fires_command: "printf '<!-- prove -->\\n' >> AGENTS.md",
+      revert_command: `node ${CLI} sync --manifest harness.manifest.json`,
+    })],
+  }, null, 2) + '\n')
+  run(['sync', '--manifest', path])
+  gitRepo(root)
+  run(['prove', '--manifest', path, '--gate', 'drift', '--record'])
+  gitRepo(root)
+  run(['prove', '--manifest', path, '--gate', 'drift', '--timeout', '60'])
+  assert.ok(JSON.parse(readFileSync(path, 'utf8')).lock.proofs.drift)
+  assert.equal(execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }), '')
+  rmSync(root, { recursive: true, force: true })
+})
+
 test('prove times out a hung proof command', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-timeout-'))
   writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')

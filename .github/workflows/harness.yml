@@ -19,7 +19,7 @@ jobs:
         if: always()
         run: ./harness metrics --log .harness/gates.jsonl
       - name: Prove every gate still fires
-        run: ./harness prove --manifest harness.manifest.json
+        run: ./harness prove --manifest harness.manifest.json --timeout 300
       - name: Archive the gate report
         if: always()
         uses: actions/upload-artifact@v4

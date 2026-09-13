@@ -398,6 +398,7 @@ async function cmdProve(options) {
   const only = options.gate
   if (only !== undefined && !manifest.gates.some((gate) => gate.id === only)) throw new Error(`gate not found: ${only}`)
   const timeoutMs = options.timeout === undefined ? 0 : Number(options.timeout) * 1000
+  if (timeoutMs === 0 && process.stdout.isTTY) console.error('prove: --timeout is unset; each proof command can wait forever')
   let bad = 0
   const recorded = {}
   for (const gate of manifest.gates) {
