@@ -24,7 +24,8 @@ export const TOOL_KEYS = ['version', 'commit', 'source']
 export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
-export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs']
+export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs', 'metrics']
+export const METRICS_KEYS = ['log', 'window', 'minFirstPassRate', 'maxFlaky', 'maxTimeouts']
 export const PROOFS_KEYS = ['require', 'maxAgeDays']
 export const PROOF_REQUIRE = ['blocking', 'all', 'none']
 export const PRODUCT_KEYS = ['version', 'mentions']
@@ -145,6 +146,19 @@ function validateGovernance(errors, governance) {
   }
   if (governance.changes !== undefined) requireString(errors, governance.changes, 'governance.changes')
   if (governance.manualVerification !== undefined) requireString(errors, governance.manualVerification, 'governance.manualVerification')
+  if (governance.metrics !== undefined) {
+    requireObject(errors, governance.metrics, 'governance.metrics')
+    rejectUnknown(errors, governance.metrics, METRICS_KEYS, 'governance.metrics')
+    if (isObject(governance.metrics)) {
+      requireString(errors, governance.metrics.log, 'governance.metrics.log')
+      for (const [key, min] of [['window', 1], ['maxFlaky', 0], ['maxTimeouts', 0]]) {
+        const value = governance.metrics[key]
+        if (value !== undefined && (!Number.isInteger(value) || value < min)) errors.push('governance.metrics.' + key + ': required integer >= ' + min)
+      }
+      const rate = governance.metrics.minFirstPassRate
+      if (rate !== undefined && (typeof rate !== 'number' || rate < 0 || rate > 1)) errors.push('governance.metrics.minFirstPassRate: required number between 0 and 1')
+    }
+  }
   if (governance.proofs !== undefined) {
     requireObject(errors, governance.proofs, 'governance.proofs')
     rejectUnknown(errors, governance.proofs, PROOFS_KEYS, 'governance.proofs')

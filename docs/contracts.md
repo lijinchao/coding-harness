@@ -67,7 +67,15 @@ A gate's command runs under a shell in its own process group. On timeout the run
 | `paths` | Repository-relative globs this surface covers |
 | `requires` | The gate ids a change to those paths requires |
 
-A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its files match plus every `always: true` gate; `harness gates --changed` and `--since` run that set, and no selection runs every gate, which is what CI should do. `harness validate` rejects a surface requiring an unknown gate, and a gate no surface requires unless it is `always`, so a new gate cannot fall outside the matrix. `harness doctor` also requires every committed file to be matched by a surface, so a change to an unowned file cannot select nothing; a repository may declare a catch-all. Without `surfaces`, selection is every gate. Name an evidence gate by its tier — `unit-*`, `integration-*`, `e2e-*` — so `requires` names the evidence, not the tool that produces it.
+A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its files match plus every `always: true` gate; `harness gates --changed` and `--since` run that set, and no selection runs every gate, which is what CI should do. `harness validate` rejects a surface requiring an unknown gate, and a gate no surface requires unless it is `always`, so a new gate cannot fall outside the matrix. `harness doctor` also requires every committed file to be matched by a surface, so a change to an unowned file cannot select nothing; a repository may declare a catch-all. Without `surfaces`, selection is every gate.
+
+### Metrics budget
+
+| Field | Meaning |
+|---|---|
+| `governance.metrics` | The committed log of gate runs a window budget judges, and its limits |
+
+`harness metrics --manifest <path>` judges `minFirstPassRate`, `maxFlaky`, and `maxTimeouts` over the last `window` runs (default 20) and names each breach; [reference.md](reference.md) owns the commands and why duration is reported but not budgeted.
 
 ### Document health
 
@@ -77,14 +85,6 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 | `governance.instructions` | Globs for every instruction file an agent can read |
 
 `harness doctor` checks that each declared document exists, that its relative links resolve (a fragment must name a heading), and that it stays within `maxWords`, and rejects a line matching a `forbid` pattern unless it also matches `allow`. It walks the repository for `AGENTS.md` and `AGENTS.delta.md` and fails when a file is unmatched by `governance.instructions` or a declared glob matches nothing. A budget forces relocation instead of accumulation, and an unmanaged instruction file is a rule nobody governs; both keys are recommended.
-
-### Guide section
-
-| Field | Meaning |
-|---|---|
-| `rule` | The instruction, one or two lines |
-| `rationale-link` | Where the reason lives |
-| `owner` | Who changes it |
 
 ### Decision record
 

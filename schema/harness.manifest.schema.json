@@ -60,6 +60,18 @@
         "instructions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "postmortems": { "type": "string", "minLength": 1 },
         "proofCarry": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["log"],
+          "properties": {
+            "log": { "type": "string", "minLength": 1 },
+            "window": { "type": "integer", "minimum": 1 },
+            "minFirstPassRate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "maxFlaky": { "type": "integer", "minimum": 0 },
+            "maxTimeouts": { "type": "integer", "minimum": 0 }
+          }
+        },
         "proofs": {
           "type": "object",
           "additionalProperties": false,

@@ -83,6 +83,9 @@ export function doctorReport(root, manifest, requirements) {
     }
   }
 
+  if (governance.metrics !== undefined && !existsSync(resolve(root, governance.metrics.log))) {
+    problems.push(governance.metrics.log + ': metrics log not found; record a run with harness gates --report')
+  }
   if (governance.manualVerification !== undefined && !existsSync(resolve(root, governance.manualVerification))) {
     problems.push(governance.manualVerification + ': manual verification path not found')
   }

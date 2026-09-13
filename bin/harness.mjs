@@ -19,6 +19,7 @@ import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
 import { definitionHash, proofProblems } from '../src/proof.mjs'
+import { budgetProblems, metricsWindow, readRuns } from '../src/metrics.mjs'
 import { DEFAULT_CARRY, carriedChanges, carriedState, createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
@@ -46,7 +47,7 @@ commands:
   select     --manifest <path> (--since <ref> | --changed <path>)
                                          print the gates a change selects, one id per line
   diff       --manifest <path> --to <v> preview what a base upgrade changes
-  metrics    --log <file>                first-pass rate from gate reports
+  metrics    --log <file> | --manifest <path>                first-pass rate from gate reports
   scan       --root <dir>                list consumers whose harness is stale or diverged
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
@@ -347,6 +348,24 @@ function percentile(sorted, fraction) {
 }
 
 function cmdMetrics(options) {
+  if (options.manifest !== undefined) {
+    const path = resolve(options.manifest)
+    const manifest = readValidManifest(path)
+    const root = dirname(path)
+    const config = manifest.governance?.metrics
+    if (config === undefined) throw new Error('governance.metrics is not declared; the budget has nothing to judge')
+    const logPath = resolve(root, config.log)
+    if (!existsSync(logPath)) throw new Error(config.log + ': metrics log not found; record a run with gates --report')
+    const summary = metricsWindow(readRuns(logPath, readFileSync), config.window)
+    console.log(`window: ${summary.runs} run(s), ${summary.green} green`)
+    console.log(`first-pass rate: ${summary.firstPassRate === null ? 'n/a' : summary.firstPassRate.toFixed(2)}`)
+    if (summary.flaky.length > 0) console.log(`flaky: ${summary.flaky.join(', ')}`)
+    if (summary.timeouts > 0) console.log(`timeouts: ${summary.timeouts}`)
+    const problems = budgetProblems(summary, config)
+    for (const problem of problems) console.error('metrics: ' + problem)
+    if (problems.length > 0) process.exit(1)
+    return
+  }
   const log = resolve(requireOption(options, 'log'))
   const runs = readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line))
   const green = runs.filter((run) => run.results.every((result) => result.ok)).length
