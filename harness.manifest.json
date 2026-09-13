@@ -383,39 +383,44 @@
     },
     "proofs": {
       "harness-drift": {
-        "at": "2026-09-13T05:50:14.600Z",
-        "tool": "9c96e77697a9c75de7809d2ae7414f972b64be41",
+        "at": "2026-09-13T06:13:47.945Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
         "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
       },
       "doctor": {
-        "at": "2026-09-13T05:50:22.671Z",
-        "tool": "9c96e77697a9c75de7809d2ae7414f972b64be41",
+        "at": "2026-09-13T06:13:50.257Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
         "definition": "213d4e3325a35af950e2e7528dc2efc43933f198b00a994347e242f16ac48bad"
       },
       "validate": {
-        "at": "2026-09-13T05:50:37.008Z",
-        "tool": "9c96e77697a9c75de7809d2ae7414f972b64be41",
+        "at": "2026-09-13T06:13:52.530Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
         "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
       },
       "tests": {
-        "at": "2026-09-13T05:54:58.096Z",
-        "tool": "9c96e77697a9c75de7809d2ae7414f972b64be41",
+        "at": "2026-09-13T06:16:45.532Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
         "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
       },
       "release": {
-        "at": "2026-09-13T05:55:00.352Z",
-        "tool": "9c96e77697a9c75de7809d2ae7414f972b64be41",
+        "at": "2026-09-13T06:16:47.338Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
         "definition": "0b003dc204854ed88316fa96f1ed06a8e4b06614bf8f43e6a7f644fa5e76b02e"
       },
       "example": {
-        "at": "2026-09-13T05:55:04.016Z",
-        "tool": "9c96e77697a9c75de7809d2ae7414f972b64be41",
+        "at": "2026-09-13T06:16:50.955Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
         "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
       },
       "metrics": {
-        "at": "2026-09-13T05:55:06.010Z",
-        "tool": "9c96e77697a9c75de7809d2ae7414f972b64be41",
+        "at": "2026-09-13T06:16:55.141Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
         "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
+      },
+      "release-ready": {
+        "at": "2026-09-13T06:16:53.195Z",
+        "tool": "9706609474e5d4e8476139d03b4a613bed213687",
+        "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
       }
     }
   }
