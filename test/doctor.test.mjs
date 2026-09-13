@@ -1,9 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { doctorProblems, doctorReport } from '../src/doctor.mjs'
+
+const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
 function manifest(governance, product) {
   return { version: '1.2.3', governance, product, gates: [], lock: {} }
@@ -73,5 +76,21 @@ test('doctor warns about a missing recommended governance key without failing', 
   const { problems, warnings } = doctorReport(root, manifest({}), { recommendedGovernance: ['manualVerification'] })
   assert.deepEqual(problems, [])
   assert.ok(warnings.some((warning) => warning.includes('manualVerification')))
+  rmSync(root, { recursive: true, force: true })
+})
+test('--strict turns a recommended gap into a failure', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-strict-'))
+  const manifestPath = join(root, 'harness.manifest.json')
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(manifestPath, JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [{ id: 'g', command: 'true', protects: 'p', prove_fires: 'f', prove_fires_command: 'false', revert_command: 'true', severity: 'blocking' }],
+    governance: { proofs: { require: 'blocking' } },
+  }, null, 2) + '\n')
+  const run = (extra) => execFileSync(process.execPath, [CLI, 'doctor', '--manifest', manifestPath, ...extra], { encoding: 'utf8' })
+  assert.match(run([]), /doctor: warning: gate g: no recorded proof/)
+  assert.throws(() => run(['--strict']))
   rmSync(root, { recursive: true, force: true })
 })

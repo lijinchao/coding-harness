@@ -52,7 +52,7 @@ commands:
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict'])
 const REPEATABLE_FLAGS = new Set(['changed'])
 
 function parseOptions(argv) {
@@ -429,6 +429,12 @@ async function cmdProve(options) {
       for (const problem of stale) console.error('prove: ' + problem)
       throw new Error('the recorded proofs are not current; run harness prove --record')
     }
+    // --check reports the freshness a proof run would enforce, without proving
+    // anything, so a gate can hold a release to it.
+    if (options.check === true) {
+      console.log('proofs: current for ' + (only === undefined ? manifest.gates.length + ' gate(s)' : only))
+      return
+    }
   }
   const isolated = options.isolated === true
   let runRoot = root
@@ -495,6 +501,12 @@ function cmdDoctor(options) {
   for (const warning of warnings) console.log(`doctor: warning: ${warning}`)
   if (problems.length > 0) {
     for (const problem of problems) console.error(`doctor: ${problem}`)
+    process.exit(1)
+  }
+  // A release that still carries a recommended-gap warning left an artifact
+  // undeclared: --strict is what an acceptance gate runs.
+  if (options.strict === true && warnings.length > 0) {
+    for (const warning of warnings) console.error(`doctor: strict: ${warning}`)
     process.exit(1)
   }
   console.log('doctor: ok')

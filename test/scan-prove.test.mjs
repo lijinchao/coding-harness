@@ -245,11 +245,13 @@ test('prove refuses stale evidence and --record repairs it', () => {
   }, null, 2) + '\n')
   gitRepo(root)
   assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'target']))
+  assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'target', '--check']))
   run(['prove', '--manifest', manifestPath(root), '--gate', 'target', '--record'])
   const recorded = JSON.parse(readFileSync(manifestPath(root), 'utf8')).lock.proofs.target
   assert.equal(recorded.definition.length, 64)
   assert.equal(typeof recorded.tool, 'string')
   execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qam', 'record'], { cwd: root, stdio: 'pipe' })
+  run(['prove', '--manifest', manifestPath(root), '--gate', 'target', '--check'])
   run(['prove', '--manifest', manifestPath(root), '--gate', 'target'])
   rmSync(root, { recursive: true, force: true })
 })
