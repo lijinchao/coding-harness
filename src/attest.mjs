@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { relative, resolve } from 'node:path'
 import { loadRelease } from './release.mjs'
 
 const digest = (value) => createHash('sha256').update(value).digest('hex')
@@ -39,7 +39,11 @@ function bindings(root, manifest, options = {}) {
  * @returns {object}
  */
 export function buildAttestation(root, manifest, options = {}) {
-  return { at: new Date().toISOString(), ...bindings(root, manifest, options) }
+  const attestation = { at: new Date().toISOString(), ...bindings(root, manifest, options) }
+  // The attestation is self-describing: verification rebinds the same manifest
+  // the build bound, without the caller repeating the flag.
+  if (options.example !== undefined) attestation.example = relative(root, options.example)
+  return attestation
 }
 
 /**
@@ -52,7 +56,8 @@ export function buildAttestation(root, manifest, options = {}) {
  * @returns {string[]}
  */
 export function verifyAttestation(root, manifest, attestation, options = {}) {
-  const actual = bindings(root, manifest, options)
+  const bound = options.example ?? (attestation.example === undefined ? undefined : resolve(root, attestation.example))
+  const actual = bindings(root, manifest, { ...options, example: bound })
   const problems = []
   if (attestation.version !== actual.version) problems.push('version: attested ' + attestation.version + ', now ' + actual.version)
   if (attestation.toolCommit !== actual.toolCommit) problems.push('tool commit: attested ' + attestation.toolCommit + ', now ' + actual.toolCommit)

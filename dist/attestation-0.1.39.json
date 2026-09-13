@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-13T08:50:53.487Z",
+  "at": "2026-09-13T16:34:41.393Z",
   "version": "0.1.39",
   "toolCommit": "99ef32c78c2040b294cd90631669b27dc3ac34cd",
   "tag": "99ef32c78c2040b294cd90631669b27dc3ac34cd",
@@ -44,5 +44,6 @@
       "tool": "99ef32c78c2040b294cd90631669b27dc3ac34cd",
       "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
     }
-  }
+  },
+  "example": "examples/consumer/harness.manifest.json"
 }
