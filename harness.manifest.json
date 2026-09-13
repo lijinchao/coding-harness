@@ -243,7 +243,8 @@
       "requires": [
         "harness-drift",
         "doctor",
-        "validate"
+        "validate",
+        "release-ready"
       ]
     },
     {

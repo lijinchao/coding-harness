@@ -31,11 +31,11 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `after` | Gate ids that must finish first; their failure does not skip this gate |
 | `always` | Select this gate in every changed-surface selection |
 
-A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work. A proof is transactional: it refuses to start unless the git working tree is clean, refuses to report success unless it is clean again, and every path after the introduction attempts the revert, including a failed introduction. It sees only git-visible files, so an ignored cache a revert damages is outside it. `--timeout <s>` bounds each command; the generated CI passes one.
+A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work. A proof is transactional: it refuses to start unless the git working tree is clean, refuses to report success unless it is clean again, and every path after the introduction attempts the revert, including a failed introduction. It sees only git-visible files, so a revert that damages an ignored cache is invisible to it; an isolated proof reports the carried state it changed instead. `--timeout <s>` bounds each command; the generated CI passes one.
 
-A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless the line also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
+A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless it also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
 
-A gate may declare a `phase`: `harness gates --phase <name>` runs the unphased gates plus that phase, and no `--phase` runs every gate. Tag a slow gate `full` so a local `--phase fast` run skips it while CI, which passes no phase, runs it.
+A gate may declare a `phase`: `harness gates --phase <name>` runs the unphased gates plus that phase; no `--phase` runs every gate. Tag a slow gate `full` so a local `--phase fast` run skips it while CI, which passes no phase, runs it.
 
 A gate whose `needs` dependency fails or is skipped is itself skipped and reported `skip`, so a broken prerequisite never looks like a passing check; `after` orders gates without propagating failure. `harness validate` rejects an unknown dependency and a cycle, `--fail-fast` starts no new gate after a blocking failure, and `harness select` includes dependencies.
 
@@ -57,7 +57,7 @@ A gate's command runs under a shell in its own process group. On timeout the run
 | `tool` | The tool commit that ran the proof |
 | `definition` | SHA-256 of the gate's behavioural fields |
 
-`prove --record` writes one record per proved gate into `lock.proofs`. A repository that declares `governance.proofs` — `require`: `blocking`, `all`, or `none`, and `maxAgeDays` (default 30) — has `harness prove` refuse a gate in scope whose record is missing, unbound, or no longer current.
+`prove --record` writes one record per proved gate to `lock.proofs`. A repository that declares `governance.proofs` — `require`: `blocking`, `all`, or `none`, and `maxAgeDays` (default 30) — has `harness prove` refuse a gate in scope whose record is missing, unbound, or no longer current.
 
 ### Evidence surface
 
@@ -67,7 +67,7 @@ A gate's command runs under a shell in its own process group. On timeout the run
 | `paths` | Repository-relative globs this surface covers |
 | `requires` | The gate ids a change to those paths requires |
 
-A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its files match plus every `always: true` gate; `harness gates --changed` and `--since` run that set, and no selection runs every gate, which is what CI should do. `harness validate` rejects a surface requiring an unknown gate, and a gate no surface requires unless it is `always`, so a new gate cannot fall outside the matrix. `harness doctor` also requires every committed file to be matched by a surface, so a change to an unowned file cannot select nothing; a repository may declare a catch-all. Without `surfaces`, selection is every gate.
+A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its files match plus every `always: true` gate; `harness gates --changed` and `--since` run that set, and no selection runs every gate, which is what CI should do. `harness validate` rejects a surface requiring an unknown gate, and a gate no surface requires unless it is `always`, so no gate falls outside the matrix. `harness doctor` also requires every committed file to be matched by a surface, so a change to an unowned file cannot select nothing; a repository may declare a catch-all. Without `surfaces`, selection is every gate.
 
 ### Metrics budget
 
@@ -75,7 +75,7 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 |---|---|
 | `governance.metrics` | The committed log of gate runs a window budget judges, and its limits |
 
-`harness metrics --manifest <path>` judges `minFirstPassRate`, `maxFlaky`, and `maxTimeouts` over the last `window` runs (default 20) and names each breach; [reference.md](reference.md) owns the commands and why duration is reported but not budgeted.
+`harness metrics --manifest <path>` judges `minFirstPassRate`, `maxFlaky`, and `maxTimeouts` over the last `window` runs (default 20) and names each breach; [reference.md](reference.md) owns the commands and the reason duration is reported, not budgeted.
 
 ### Document health
 
@@ -96,7 +96,7 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 | `alternatives` | Each real alternative and why it lost |
 | `consequences` | What the decision cost and bought |
 
-A record declares its status as a `Status: <value>` line or a `## Status` section: `proposed` is decided-not-authorized, `accepted` is decided but not built, `implemented` is the current mechanism, and `rejected` was considered and declined. A `superseded` record names its replacement with `Superseded-by: <path>`, which must exist; `Supersedes:` is checked the same way. A decision records a choice that outlives the change; what changed lives in git.
+A record declares its status as a `Status: <value>` line or a `## Status` section: `proposed` is decided-not-authorized, `accepted` is decided but not built, `implemented` is the current mechanism, `rejected` was declined. A `superseded` record names its replacement with `Superseded-by: <path>`, which must exist; `Supersedes:` is checked the same way. A decision records a choice that outlives the change; what changed lives in git.
 
 `harness validate` loads each declared skill file and rejects it when the frontmatter lacks `name` or `description`, or any of `## Inputs`, `## Steps`, `## Verification`, `## Failure`. A gate's `command` must be non-empty and a single line. The base ships `templates/decision-record.md` and `templates/postmortem.md` for the two record types.
 
@@ -119,7 +119,7 @@ A repository that declares `governance.changes` keeps one record per change ther
 | `observation` | What happened, including friction and abandonment |
 | `decision` | What the observation changes |
 
-Automated verification stays at the unit, integration, and end-to-end tiers; a manual verification record is the product-experience counterpart for what no test asserts. `governance.manualVerification` is recommended, not required: `harness doctor` checks only that the declared path exists and warns when the key is absent, so the gap is visible without blocking unrelated work. The base ships `templates/manual-verification.md`.
+Automated verification stays at unit, integration, and end-to-end tiers; a manual verification record is the product-experience counterpart for what no test asserts. `governance.manualVerification` is recommended, not required: `harness doctor` checks only that the declared path exists and warns when the key is absent, so the gap is visible without blocking unrelated work. The base ships `templates/manual-verification.md`.
 
 ### Postmortem
 
