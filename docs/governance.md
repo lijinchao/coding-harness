@@ -65,6 +65,10 @@ A base release declares its required gates, governance keys, required CI command
 
 A harness can pass every gate and still be wrong about itself: a README naming an old version, a decision record missing an alternative, an owner nobody routes to. `harness doctor --manifest <path>` checks the facts the manifest declares — the product version source and its mentions, decision-record sections and lifecycle status, change-record verification, owner routing, the declared CI file's harness commands, the existence of a declared manual-verification path, the links and budgets of declared documents, and the completeness of the declared instruction tree — so governance-fact drift fails a gate instead of surviving on trust. A recommended key that is absent is a warning, not a failure. The [writing-a-gate](../base/skills/writing-a-gate/SKILL.md) skill owns the procedure.
 
+## Effectiveness signals
+
+`harness gates --report <file>` appends a run summary that `harness metrics --log <file>` reads: runs, green, first-pass rate, per-gate failures, skips, and timeouts, flakiness (a gate that both passed and failed), run duration percentiles, and the slowest gates. A gate that is flaky, that keeps failing, or that keeps getting slower is a guide or a gate to fix, not noise to tolerate.
+
 ## Pruning
 
 Delete a harness item when:

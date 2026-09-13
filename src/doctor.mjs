@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { adoptionProblems } from './adopt.mjs'
-import { decisionProblems, documentProblems, instructionProblems } from './documents.mjs'
+import { decisionProblems, documentProblems, instructionProblems, postmortemProblems } from './documents.mjs'
 import { productProblems } from './product.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
@@ -82,6 +82,17 @@ export function doctorReport(root, manifest, requirements) {
     } else {
       const text = found.map((path) => readFileSync(path, 'utf8')).join('\n')
       for (const owner of governance.owners) if (!text.includes(owner)) problems.push('CODEOWNERS does not route to ' + owner)
+    }
+  }
+
+  if (governance.postmortems !== undefined) {
+    const dir = resolve(root, governance.postmortems)
+    if (existsSync(dir)) {
+      const gateIds = new Set(manifest.gates.map((gate) => gate.id))
+      for (const name of readdirSync(dir).slice().sort()) {
+        if (!name.endsWith('.md') || name === 'README.md') continue
+        problems.push(...postmortemProblems(root, governance.postmortems + '/' + name, readFileSync(resolve(dir, name), 'utf8'), gateIds))
+      }
     }
   }
 

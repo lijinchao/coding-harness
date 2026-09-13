@@ -177,7 +177,11 @@
       },
       {
         "path": "docs/reference.md",
-        "maxWords": 2600
+        "maxWords": 1600
+      },
+      {
+        "path": "docs/contracts.md",
+        "maxWords": 1600
       },
       {
         "path": "docs/governance.md",
@@ -193,7 +197,8 @@
       "AGENTS.delta.md",
       "examples/consumer/AGENTS.md",
       "examples/consumer/AGENTS.delta.md"
-    ]
+    ],
+    "postmortems": "docs/postmortems"
   },
   "lock": {
     "version": "0.1.22",

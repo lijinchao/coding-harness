@@ -18,7 +18,7 @@ Run the tests and the example check before reporting any task complete, and past
 
 - Zero runtime dependencies. The CLI is plain Node.js ESM; do not add a package without the owner's approval.
 - The JSON schema in `schema/` is the normative manifest contract. `src/manifest.mjs` implements the required-field checks; when the schema grows a required field, add its check in the same change.
-- Every artifact contract in `docs/reference.md` is enforced somewhere: a rule stated there without a check is a documentation bug.
+- Every artifact contract in `docs/contracts.md` is enforced somewhere: a rule stated there without a check is a documentation bug.
 - `examples/consumer/` is a generating repository. Change `base/`, re-run `release`, then upgrade/sync; never hand-edit `examples/consumer/AGENTS.md` or `REVIEW.md`.
 
 ## Adding a gate

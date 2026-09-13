@@ -330,6 +330,11 @@ function cmdDiff(options) {
   for (const key of toReq?.requiredGovernance ?? []) if (!(fromReq?.requiredGovernance ?? []).includes(key)) console.log(`  + required governance: ${key}`)
 }
 
+function percentile(sorted, fraction) {
+  if (sorted.length === 0) return 0
+  return sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1))]
+}
+
 function cmdMetrics(options) {
   const log = resolve(requireOption(options, 'log'))
   const runs = readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line))
@@ -337,9 +342,35 @@ function cmdMetrics(options) {
   console.log(`runs: ${runs.length}`)
   console.log(`green: ${green}`)
   console.log(`first-pass rate: ${runs.length === 0 ? 'n/a' : (green / runs.length).toFixed(2)}`)
-  const failures = {}
-  for (const run of runs) for (const result of run.results) if (!result.ok) failures[result.id] = (failures[result.id] ?? 0) + 1
-  for (const [id, count] of Object.entries(failures)) console.log(`failures ${id}: ${count}`)
+  const durations = runs
+    .map((run) => run.results.reduce((total, result) => total + (typeof result.ms === 'number' ? result.ms : 0), 0))
+    .filter((ms) => ms > 0)
+    .sort((a, b) => a - b)
+  if (durations.length > 0) console.log(`duration p50: ${percentile(durations, 0.5)}ms, p95: ${percentile(durations, 0.95)}ms`)
+  const stats = new Map()
+  for (const run of runs) {
+    for (const result of run.results) {
+      const entry = stats.get(result.id) ?? { runs: 0, failures: 0, skips: 0, timeouts: 0, ms: [] }
+      entry.runs += 1
+      if (result.skipped === true) entry.skips += 1
+      else if (!result.ok) entry.failures += 1
+      if (result.timedOut === true) entry.timeouts += 1
+      if (typeof result.ms === 'number' && result.ms > 0) entry.ms.push(result.ms)
+      stats.set(result.id, entry)
+    }
+  }
+  for (const [id, entry] of stats) {
+    if (entry.failures > 0) console.log(`failures ${id}: ${entry.failures} of ${entry.runs}`)
+    if (entry.skips > 0) console.log(`skips ${id}: ${entry.skips} of ${entry.runs}`)
+    if (entry.timeouts > 0) console.log(`timeouts ${id}: ${entry.timeouts} of ${entry.runs}`)
+    if (entry.failures > 0 && entry.failures < entry.runs) console.log(`flaky ${id}: ${entry.failures} failures in ${entry.runs} runs`)
+  }
+  const slowest = [...stats]
+    .filter(([, entry]) => entry.ms.length >= 3)
+    .map(([id, entry]) => [id, percentile(entry.ms.slice().sort((a, b) => a - b), 0.95)])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+  if (slowest.length > 0) console.log(`slowest: ${slowest.map(([id, ms]) => id + ' ' + ms + 'ms').join(', ')}`)
 }
 
 function cmdScan(options) {

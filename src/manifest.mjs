@@ -24,7 +24,7 @@ export const TOOL_KEYS = ['version', 'commit', 'source']
 export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
-export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions']
+export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems']
 export const PRODUCT_KEYS = ['version', 'mentions']
 export const PRODUCT_VERSION_KEYS = ['path', 'pattern']
 export const DOC_KEYS = ['path', 'maxWords']
@@ -160,6 +160,7 @@ function validateGovernance(errors, governance) {
     if (!Array.isArray(governance.instructions)) errors.push('governance.instructions: required array')
     else governance.instructions.forEach((entry, index) => requireString(errors, entry, 'governance.instructions[' + index + ']'))
   }
+  if (governance.postmortems !== undefined) requireString(errors, governance.postmortems, 'governance.postmortems')
 }
 
 function validateExpect(errors, expect, where) {

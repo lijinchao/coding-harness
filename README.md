@@ -15,7 +15,7 @@ The harness has four concerns:
 
 This project gives you three things:
 
-- **[docs/reference.md](docs/reference.md)** — the vocabulary, carrier rules, and artifact contracts.
+- **[docs/reference.md](docs/reference.md)** and **[docs/contracts.md](docs/contracts.md)** — the vocabulary and carrier rules, and the artifact contracts they admit.
 - **A base layer and a manifest** — `base/` declares the shared layer; each repository's `harness.manifest.json` declares what it pins and how the result is verified.
 - **A zero-dependency CLI** — `harness validate | sync | check | init | upgrade`.
 
@@ -44,7 +44,8 @@ node bin/harness.mjs init --dir path/to/repo
 ## Repository layout
 
 ```text
-docs/reference.md              the normative reference
+docs/reference.md              the normative concepts and vocabulary
+docs/contracts.md              the artifact contracts each manifest field must satisfy
 docs/governance.md             ownership, change sources, versioning, proof, pruning
 docs/roadmap.md                next actions, milestones, and what to adapt
 schema/                        JSON schema for the manifest

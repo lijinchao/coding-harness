@@ -132,6 +132,36 @@ export function decisionProblems(root, rel, text) {
   return problems
 }
 
+const POSTMORTEM_SECTIONS = ['Impact', 'Root cause', 'Response', 'Regression test', 'Action items']
+
+/**
+ * Problems with a postmortem record.
+ *
+ * An incident must leave a permanent check. Every `Regression: <gate id or
+ * path>` line must resolve to a gate in the manifest or to a file that exists,
+ * so the lesson cannot decay into prose.
+ *
+ * @param {string} root - Directory the manifest lives in.
+ * @param {string} rel - Record path, repository-relative.
+ * @param {string} text - Record contents.
+ * @param {Set<string>} gateIds - Gate ids declared by the manifest.
+ * @returns {string[]}
+ */
+export function postmortemProblems(root, rel, text, gateIds) {
+  const problems = []
+  for (const section of POSTMORTEM_SECTIONS) {
+    if (!new RegExp('^## ' + section + '\\b', 'm').test(text)) problems.push(rel + ': missing section ## ' + section)
+  }
+  const regressions = [...text.matchAll(/^regression:\s*(\S+)\s*$/gim)].map((match) => match[1])
+  if (regressions.length === 0) problems.push(rel + ': declares no regression; add Regression: <gate id or path>')
+  for (const reference of regressions) {
+    if (gateIds.has(reference)) continue
+    if (existsSync(resolve(root, reference))) continue
+    problems.push(rel + ': Regression target not found: ' + reference)
+  }
+  return problems
+}
+
 /**
  * Every instruction file an agent can read, repository-relative.
  *
