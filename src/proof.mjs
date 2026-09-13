@@ -31,6 +31,26 @@ export function definitionHash(gate) {
 }
 
 /**
+ * Records that name a gate the manifest no longer declares.
+ *
+ * A static fact, so a gate can carry it: it says nothing about whether a proof
+ * is current, which only `prove` can tell while it is also the thing that
+ * repairs it.
+ *
+ * @param {object} manifest - A valid manifest.
+ * @returns {string[]}
+ */
+export function proofIdProblems(manifest) {
+  const proofs = manifest.lock?.proofs ?? {}
+  const ids = new Set(manifest.gates.map((gate) => gate.id))
+  const problems = []
+  for (const id of Object.keys(proofs)) {
+    if (!ids.has(id)) problems.push('lock.proofs references unknown gate ' + id)
+  }
+  return problems
+}
+
+/**
  * Problems with the recorded proofs, against the policy the repository declares.
  *
  * A proof is evidence that one gate definition was watched to fail and pass by
@@ -46,11 +66,7 @@ export function definitionHash(gate) {
  */
 export function proofProblems(manifest, tool, only) {
   const proofs = manifest.lock?.proofs ?? {}
-  const problems = []
-  const ids = new Set(manifest.gates.map((gate) => gate.id))
-  for (const id of Object.keys(proofs)) {
-    if (!ids.has(id)) problems.push('lock.proofs references unknown gate ' + id)
-  }
+  const problems = proofIdProblems(manifest)
   const policy = manifest.governance?.proofs
   if (policy === undefined) return problems
   const scope = policy.require ?? 'blocking'

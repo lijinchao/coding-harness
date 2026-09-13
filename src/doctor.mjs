@@ -3,8 +3,7 @@ import { resolve } from 'node:path'
 import { adoptionProblems } from './adopt.mjs'
 import { decisionProblems, documentProblems, instructionProblems, postmortemProblems, surfaceCoverageProblems } from './documents.mjs'
 import { productProblems } from './product.mjs'
-import { proofProblems } from './proof.mjs'
-import { toolCommit } from './tool.mjs'
+import { proofIdProblems } from './proof.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
 const CHANGE_SECTIONS = ['Verification']
@@ -24,10 +23,10 @@ export function doctorReport(root, manifest, requirements) {
   const problems = [...adoption.problems]
   const warnings = [...adoption.warnings]
 
-  // A warning, not a gate failure: a gate whose command checked proof freshness
-  // could not be proved while its own records were stale, so `prove` enforces
-  // the policy and this reports it.
-  warnings.push(...proofProblems(manifest, toolCommit()))
+  // Only the static half of the proof policy lives here. Freshness is enforced
+  // by `prove`, which is also what repairs it: a gate or warning that failed on
+  // stale records could not be cleared by the run that refreshes them.
+  problems.push(...proofIdProblems(manifest))
 
   if (manifest.product !== undefined) problems.push(...productProblems(root, manifest.product))
   if (manifest.surfaces !== undefined) problems.push(...surfaceCoverageProblems(root, manifest.surfaces))

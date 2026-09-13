@@ -78,19 +78,25 @@ test('doctor warns about a missing recommended governance key without failing', 
   assert.ok(warnings.some((warning) => warning.includes('manualVerification')))
   rmSync(root, { recursive: true, force: true })
 })
+
 test('--strict turns a recommended gap into a failure', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-doctor-strict-'))
+  const base = join(root, 'base')
+  mkdirSync(base, { recursive: true })
+  writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n')
+  writeFileSync(join(base, 'requirements.json'), JSON.stringify({ recommendedGovernance: ['decisions'] }) + '\n')
+  execFileSync(process.execPath, [CLI, 'release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0'], { encoding: 'utf8' })
   const manifestPath = join(root, 'harness.manifest.json')
   writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
   writeFileSync(manifestPath, JSON.stringify({
     version: '0.1.0',
+    base: { source: 'dist' },
     compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
     skills: [],
     gates: [{ id: 'g', command: 'true', protects: 'p', prove_fires: 'f', prove_fires_command: 'false', revert_command: 'true', severity: 'blocking' }],
-    governance: { proofs: { require: 'blocking' } },
   }, null, 2) + '\n')
   const run = (extra) => execFileSync(process.execPath, [CLI, 'doctor', '--manifest', manifestPath, ...extra], { encoding: 'utf8' })
-  assert.match(run([]), /doctor: warning: gate g: no recorded proof/)
+  assert.match(run([]), /doctor: warning: missing recommended governance: decisions/)
   assert.throws(() => run(['--strict']))
   rmSync(root, { recursive: true, force: true })
 })

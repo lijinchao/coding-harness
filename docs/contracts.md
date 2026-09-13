@@ -57,7 +57,7 @@ A gate's command runs under a shell in its own process group. On timeout the run
 | `tool` | The tool commit that ran the proof |
 | `definition` | SHA-256 of the gate's behavioural fields |
 
-`prove --record` writes one record per proved gate into `lock.proofs`. A repository that declares `governance.proofs` — `require`: `blocking`, `all`, or `none`, and `maxAgeDays` (default 30) — has `harness prove` refuse a gate in scope whose record is missing, unbound, or no longer current; `doctor` warns instead.
+`prove --record` writes one record per proved gate into `lock.proofs`. A repository that declares `governance.proofs` — `require`: `blocking`, `all`, or `none`, and `maxAgeDays` (default 30) — has `harness prove` refuse a gate in scope whose record is missing, unbound, or no longer current.
 
 ### Evidence surface
 
