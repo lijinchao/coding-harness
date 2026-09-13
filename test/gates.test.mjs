@@ -136,6 +136,27 @@ test('validate rejects an unknown dependency and a dependency cycle', () => {
   rmSync(dir, { recursive: true, force: true })
 })
 
+test('upgrade keeps recorded proofs', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-upgrade-'))
+  const base = join(dir, 'base')
+  mkdirSync(base)
+  writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n')
+  writeManifest(dir, [{ id: 'drift', command: 'true', protects: 'match base@0.1.0 plus delta', prove_fires: 'edit base@0.1.0', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true' }])
+  run(['release', '--base', base, '--out', join(dir, 'dist'), '--version', '0.1.0', '--force'])
+  const m = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  m.base = { source: './dist' }
+  m.compositions = [{ output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] }]
+  writeFileSync(manifestPath(dir), JSON.stringify(m, null, 2) + '\n')
+  run(['sync', '--manifest', manifestPath(dir)])
+  const synced = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+  synced.lock.proofs = { drift: '2026-01-01T00:00:00.000Z@abc' }
+  writeFileSync(manifestPath(dir), JSON.stringify(synced, null, 2) + '\n')
+  run(['release', '--base', base, '--out', join(dir, 'dist'), '--version', '0.2.0', '--force'])
+  run(['upgrade', '--manifest', manifestPath(dir), '--to', '0.2.0'])
+  assert.deepEqual(JSON.parse(readFileSync(manifestPath(dir), 'utf8')).lock.proofs, { drift: '2026-01-01T00:00:00.000Z@abc' })
+  rmSync(dir, { recursive: true, force: true })
+})
+
 test('gates --changed runs only the gates a change selects', () => {
   const dir = mkdtempSync(join(tmpdir(), 'coding-harness-changed-'))
   const marker = join(dir, 'ran.txt')

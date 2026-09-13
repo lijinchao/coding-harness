@@ -221,7 +221,10 @@ function cmdUpgrade(options) {
     gate.protects = rewrite(gate.protects)
     gate.prove_fires = rewrite(gate.prove_fires)
   }
-  delete manifest.lock
+  // An upgrade re-composes, but a recorded proof is evidence about a gate and
+  // must survive it; applySync preserves whatever lock.proofs it is given.
+  const proofs = manifest.lock?.proofs
+  manifest.lock = proofs === undefined ? undefined : { proofs }
   const outputs = applySync(root, path, manifest)
   for (const item of outputs) console.log(`synced ${item.output}`)
   // A declared product mention that tracks the base pin must name the new one;
