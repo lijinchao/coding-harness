@@ -142,10 +142,6 @@ export function applySync(root, path, manifest) {
   }
   const outputs = composedOutputs(root, manifest, base === null ? undefined : base.dir)
   const lock = { version: manifest.version, tool: { version: toolVersion(), files: toolFiles() }, outputs: {} }
-  // A recorded proof is a fact about a gate, not about this composition. A sync
-  // must not delete it, or a proof whose revert is `sync` would dirty the tree
-  // and fail the next proof's clean-tree precondition.
-  if (manifest.lock?.proofs !== undefined) lock.proofs = manifest.lock.proofs
   const commit = toolCommit()
   if (commit !== undefined) lock.tool.commit = commit
   for (const item of outputs) {
@@ -157,6 +153,10 @@ export function applySync(root, path, manifest) {
   writeAtomic(bootstrapPath, SHIM)
   chmodSync(bootstrapPath, 0o755)
   if (base !== null) lock.base = { version: base.release.version, files: base.release.files }
+  // A recorded proof is a fact about a gate, not about this composition: a sync
+  // must not delete it. It is appended after `base` so the lock keeps one key
+  // order and a sync that changes nothing leaves the file byte-identical.
+  if (manifest.lock?.proofs !== undefined) lock.proofs = manifest.lock.proofs
   manifest.lock = lock
   writeAtomic(path, JSON.stringify(manifest, null, 2) + '\n')
   return outputs

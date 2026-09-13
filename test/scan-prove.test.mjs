@@ -125,6 +125,37 @@ test('prove refuses a directory that is not a git working tree', () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test('a recorded proof survives a sync revert when a base is pinned', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-base-'))
+  const base = join(root, 'base')
+  mkdirSync(base, { recursive: true })
+  writeFileSync(join(base, 'AGENTS.base.md'), '# Base\n')
+  run(['release', '--base', base, '--out', join(root, 'dist'), '--version', '0.1.0', '--force'])
+  const consumer = join(root, 'consumer')
+  mkdirSync(consumer)
+  writeFileSync(join(consumer, 'AGENTS.delta.md'), '# Delta\n')
+  const path = manifestPath(consumer)
+  writeFileSync(path, JSON.stringify({
+    version: '0.1.0',
+    base: { source: '../dist' },
+    compositions: [{ output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({
+      id: 'drift',
+      command: `node ${CLI} check --manifest harness.manifest.json`,
+      prove_fires_command: "printf '<!-- prove -->\\n' >> AGENTS.md",
+      revert_command: `node ${CLI} sync --manifest harness.manifest.json`,
+    })],
+  }, null, 2) + '\n')
+  run(['sync', '--manifest', path])
+  gitRepo(consumer)
+  run(['prove', '--manifest', path, '--gate', 'drift', '--record'])
+  gitRepo(consumer)
+  run(['prove', '--manifest', path, '--gate', 'drift', '--timeout', '60'])
+  assert.equal(execFileSync('git', ['status', '--porcelain'], { cwd: consumer, encoding: 'utf8' }), '')
+  rmSync(root, { recursive: true, force: true })
+})
+
 test('a recorded proof survives a sync revert and a second prove', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-repeat-'))
   writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')

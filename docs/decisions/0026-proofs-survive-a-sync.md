@@ -8,7 +8,7 @@ Status: implemented
 
 ## Decision
 
-`applySync` preserves `lock.proofs`, and `upgrade` hands the recorded proofs to it instead of discarding the whole lock: a sync or an upgrade changes the composition and the pin, and neither is a statement about whether a gate fires. `proveGate` attempts the revert on every path once the introduction has run, reports whether that revert succeeded, and the generated CI runs `prove --timeout 300` so no proof command can wait forever by default; `prove` prints a hint when it runs interactively without a timeout.
+`applySync` preserves `lock.proofs` and appends it after `base`, so the lock has one key order and a sync that changes nothing leaves the file byte-identical; `upgrade` hands the recorded proofs to it instead of discarding the whole lock: a sync or an upgrade changes the composition and the pin, and neither is a statement about whether a gate fires. `proveGate` attempts the revert on every path once the introduction has run, reports whether that revert succeeded, and the generated CI runs `prove --timeout 300` so no proof command can wait forever by default; `prove` prints a hint when it runs interactively without a timeout.
 
 ## Alternatives
 
