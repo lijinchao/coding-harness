@@ -285,6 +285,12 @@
         "templates/manual-verification.md": "21d347b902c54b6bcba4a7a90cef4c02f53afeb0c352f2dd6a0a316f091b044b",
         "templates/postmortem.md": "80af444609639a827e383450b682b93f59dc0b08279b519a1342e708dc65d1ee"
       }
+    },
+    "proofs": {
+      "harness-drift": "2026-09-13T03:38:28.106Z@a4fb886be67f9cbd5df2824afbced4f34c438534",
+      "doctor": "2026-09-13T03:38:33.613Z@a4fb886be67f9cbd5df2824afbced4f34c438534",
+      "validate": "2026-09-13T03:38:37.584Z@a4fb886be67f9cbd5df2824afbced4f34c438534",
+      "tests": "2026-09-13T03:41:11.689Z@a4fb886be67f9cbd5df2824afbced4f34c438534"
     }
   }
 }
