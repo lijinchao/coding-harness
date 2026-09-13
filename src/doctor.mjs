@@ -24,7 +24,10 @@ export function doctorReport(root, manifest, requirements) {
   const problems = [...adoption.problems]
   const warnings = [...adoption.warnings]
 
-  problems.push(...proofProblems(manifest, toolCommit()))
+  // A warning, not a gate failure: a gate whose command checked proof freshness
+  // could not be proved while its own records were stale, so `prove` enforces
+  // the policy and this reports it.
+  warnings.push(...proofProblems(manifest, toolCommit()))
 
   if (manifest.product !== undefined) problems.push(...productProblems(root, manifest.product))
   if (manifest.surfaces !== undefined) problems.push(...surfaceCoverageProblems(root, manifest.surfaces))

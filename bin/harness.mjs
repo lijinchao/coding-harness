@@ -18,7 +18,7 @@ import { WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
-import { definitionHash } from '../src/proof.mjs'
+import { definitionHash, proofProblems } from '../src/proof.mjs'
 import { createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
@@ -404,6 +404,13 @@ async function cmdProve(options) {
   if (only !== undefined && !manifest.gates.some((gate) => gate.id === only)) throw new Error(`gate not found: ${only}`)
   const timeoutMs = options.timeout === undefined ? 0 : Number(options.timeout) * 1000
   if (timeoutMs === 0 && process.stdout.isTTY) console.error('prove: --timeout is unset; each proof command can wait forever')
+  if (options.record !== true) {
+    const stale = proofProblems(manifest, toolCommit(), only === undefined ? undefined : new Set([only]))
+    if (stale.length > 0) {
+      for (const problem of stale) console.error('prove: ' + problem)
+      throw new Error('the recorded proofs are not current; run harness prove --record')
+    }
+  }
   const isolated = options.isolated === true
   let runRoot = root
   let worktree = null

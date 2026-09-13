@@ -74,6 +74,13 @@ test('a legacy string proof is reported as unbound', () => {
   assert.deepEqual(proofProblems(declared, TOOL), ['gate g: proof is not bound to its gate definition; run harness prove --record'])
 })
 
+test('a selection demands only the gates it names', () => {
+  const gates = [gate({ id: 'a' }), gate({ id: 'b' })]
+  const declared = manifest({ gates, governance: { proofs: { require: 'blocking' } }, lock: { proofs: record(gates[0]) } })
+  assert.deepEqual(proofProblems(declared, TOOL), ['gate b: no recorded proof; run harness prove --record'])
+  assert.deepEqual(proofProblems(declared, TOOL, new Set(['a'])), [])
+})
+
 test('require none is silent and require all covers advisory gates', () => {
   const advisory = gate({ id: 'warn', severity: 'advisory' })
   const gates = [gate(), advisory]

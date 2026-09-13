@@ -41,9 +41,10 @@ export function definitionHash(gate) {
  *
  * @param {object} manifest - A valid manifest.
  * @param {string} [tool] - The commit of the running tool.
+ * @param {Set<string>} [only] - Gate ids to demand when only some are being proved.
  * @returns {string[]}
  */
-export function proofProblems(manifest, tool) {
+export function proofProblems(manifest, tool, only) {
   const proofs = manifest.lock?.proofs ?? {}
   const problems = []
   const ids = new Set(manifest.gates.map((gate) => gate.id))
@@ -58,6 +59,7 @@ export function proofProblems(manifest, tool) {
   const commit = tool ?? 'unknown'
   const now = Date.now()
   for (const gate of manifest.gates) {
+    if (only !== undefined && !only.has(gate.id)) continue
     if (scope !== 'all' && gate.severity !== 'blocking') continue
     const record = proofs[gate.id]
     if (record === undefined) {

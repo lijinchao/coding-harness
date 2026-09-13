@@ -8,14 +8,17 @@ The governance document said a gate whose proof had not been run recently is tre
 
 ## Decision
 
-`prove --record` writes an object per gate: `at`, the tool commit that ran it, and `definition`, a SHA-256 of the gate's behavioural fields — command, proof commands, `expect`, severity, phase, dependencies, `always` — while prose such as `protects` stays outside the hash, because rewording what a gate defends does not invalidate the run that watched it fail. A repository declares the policy in `governance.proofs`: `require` is `blocking` (the default), `all`, or `none`, and `maxAgeDays` defaults to 30. `doctor` then fails a gate in scope with no record, a legacy unbound record, a record whose definition no longer matches, a record from another tool commit, or one past the window. The base recommends the key rather than requiring it, so a consumer adopts the policy by declaring it and recording proofs, and a repository that declares nothing gains only the existing unknown-gate check.
+`prove --record` writes an object per gate: `at`, the tool commit that ran it, and `definition`, a SHA-256 of the gate's behavioural fields — command, proof commands, `expect`, severity, phase, dependencies, `always` — while prose such as `protects` stays outside the hash, because rewording what a gate defends does not invalidate the run that watched it fail. A repository declares the policy in `governance.proofs`: `require` is `blocking` (the default), `all`, or `none`, and `maxAgeDays` defaults to 30. `harness prove` then refuses to prove a gate in scope with no record, a legacy unbound record, a definition that no longer matches, a record from another tool commit, or one past the window, naming `--record` as the repair. `doctor` reports the same list as warnings.
+ 
+The enforcement sits in `prove` rather than in a gate because a gate whose command checked proof freshness cannot be proved while its own records are stale: this repository's `doctor` gate failed its own proof that way, with every other gate green, and no ordering or exclusion removes the loop. `prove` is the one command that both detects staleness and repairs it. The base recommends the key rather than requiring it, so a consumer adopts the policy by declaring it and recording proofs, and a repository that declares nothing gains only the existing unknown-gate check.
 
 ## Alternatives
 
 - Require the policy in every consumer at once: their CI would fail until each one re-proves every gate, which is a migration, not a check.
 - Hash the whole gate object: a word change in `protects` would demand a re-proof, and a proof that fires for cosmetic edits stops being read.
 - Store freshness only as the tool commit: a gate can change while the tool does not, which is the more common drift.
-- Warn instead of fail: this repository's whole rule is that a rule which must hold belongs in a gate; a warning would repeat the original defect one level down.
+- Warn instead of fail: this repository's whole rule is that a rule which must hold belongs in a gate; a warning would repeat the original defect one level down. The policy is enforced, just not by a gate command.
+- Fail `doctor` from inside the gate: tried first, and it made the `doctor` gate unprovable — the gate cannot pass in the state that demands the re-record.
 
 ## Consequences
 

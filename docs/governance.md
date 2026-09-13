@@ -57,7 +57,7 @@ A blocking gate must declare `prove_fires_command` (introduce the failure) and `
 2. Run the gate's `command` and confirm it exits non-zero.
 3. Run `revert_command` and confirm the gate exits zero again.
 
-There is no default revert: `harness prove` refuses to guess. It also refuses to start unless the working tree is clean, and refuses to report success unless it is clean again after the revert, so a proof cannot discard uncommitted work; `--timeout` bounds every command. `harness prove --record` stores one record per proved gate: when, the tool commit, and a hash of the gate's definition. A repository that declares `governance.proofs` — `require` scope (`blocking`, `all`, `none`) and `maxAgeDays` (default 30) — fails `doctor` on a gate in scope with no record, a changed definition, another tool commit, or an expired one.
+There is no default revert: `harness prove` refuses to guess. It also refuses to start unless the working tree is clean, and refuses to report success unless it is clean again after the revert, so a proof cannot discard uncommitted work; `--timeout` bounds every command. `harness prove --record` stores one record per proved gate: when, the tool commit, and a hash of the gate's definition. A repository that declares `governance.proofs` — `require` scope (`blocking`, `all`, `none`) and `maxAgeDays` (default 30) — makes `harness prove` refuse a gate in scope with no record, a changed definition, another tool commit, or an expired one, and `doctor` warns.
 
 ## Check the governance facts
 

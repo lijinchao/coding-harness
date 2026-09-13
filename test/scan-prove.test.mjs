@@ -232,6 +232,28 @@ test('an isolated worktree keeps a carried cache invisible to git', () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test('prove refuses stale evidence and --record repairs it', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-proof-policy-'))
+  writeFileSync(join(root, 'marker.txt'), 'x\n')
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(manifestPath(root), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    governance: { proofs: { require: 'blocking' } },
+    gates: [gate({ id: 'target', command: 'test -f marker.txt', prove_fires_command: 'rm -f marker.txt', revert_command: "printf 'x\\n' > marker.txt" })],
+  }, null, 2) + '\n')
+  gitRepo(root)
+  assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'target']))
+  run(['prove', '--manifest', manifestPath(root), '--gate', 'target', '--record'])
+  const recorded = JSON.parse(readFileSync(manifestPath(root), 'utf8')).lock.proofs.target
+  assert.equal(recorded.definition.length, 64)
+  assert.equal(typeof recorded.tool, 'string')
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qam', 'record'], { cwd: root, stdio: 'pipe' })
+  run(['prove', '--manifest', manifestPath(root), '--gate', 'target'])
+  rmSync(root, { recursive: true, force: true })
+})
+
 test('prove times out a hung proof command', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-timeout-'))
   writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
