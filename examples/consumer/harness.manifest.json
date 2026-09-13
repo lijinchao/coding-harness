@@ -1,7 +1,8 @@
 {
   "version": "0.1.29",
   "tool": {
-    "version": "0.1.29"
+    "version": "0.1.29",
+    "commit": "f3dd5d265fc13bdc089612600d9e0d3e22f66d01"
   },
   "base": {
     "source": "../../dist"

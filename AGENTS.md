@@ -28,7 +28,7 @@ Everything above this file comes from the shared base. This file holds only what
 - Release the base: `node bin/harness.mjs release --base base --out dist` (version from `base/VERSION`).
 - Validate a manifest: `./harness validate --manifest <path>`
 - Check the example: `./harness check --manifest examples/consumer/harness.manifest.json`
-- Re-record the example after changing `base/`: bump `base/VERSION`, run `release`, commit the release, move the pin, then `./harness upgrade --manifest examples/consumer/harness.manifest.json --to <version>`. Use the pinned `./harness`, never `node bin/harness.mjs`: the example's lock records the running tool's commit, so a re-record from a checkout that is not the released commit writes a lock the release does not have.
+- Re-record the example after changing `base/`: bump `base/VERSION`, run `release`, commit the release, move the pin, then `./harness upgrade --manifest examples/consumer/harness.manifest.json --to <version> --tool-commit <released commit>` with the pinned `./harness`. The example pins the tool commit, so neither a working-tree tool nor a forgotten `--tool-commit` passes the pin check.
 
 Run the tests and the example check before reporting any task complete, and paste the output.
 

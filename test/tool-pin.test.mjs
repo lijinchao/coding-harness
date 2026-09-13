@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { toolVersion } from '../src/tool.mjs'
+import { toolCommit, toolVersion } from '../src/tool.mjs'
 
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
@@ -20,7 +20,7 @@ function gate() {
   return { id: 'drift', command: './harness check', protects: 'composition', prove_fires: 'edit AGENTS.md', severity: 'blocking', prove_fires_command: 'true', revert_command: 'true' }
 }
 
-function makeRepo() {
+function makeRepo({ pinCommit = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-tool-'))
   const base = join(root, 'base')
   const consumer = join(root, 'consumer')
@@ -31,7 +31,7 @@ function makeRepo() {
   writeFileSync(join(consumer, 'AGENTS.delta.md'), '# Delta\n\nLocal.\n')
   writeFileSync(manifestPath(consumer), JSON.stringify({
     version: '0.1.0',
-    tool: { version: toolVersion() },
+    tool: { version: toolVersion(), ...(pinCommit ? { commit: toolCommit() } : {}) },
     base: { source: '../dist' },
     compositions: [{ output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] }],
     skills: [],
@@ -60,6 +60,22 @@ test('check fails when a recorded tool file hash is wrong', () => {
   parsed.lock.tool.files['src/tool.mjs'] = 'deadbeef'
   writeFileSync(manifest, JSON.stringify(parsed, null, 2) + '\n')
   assert.throws(() => run(['check', '--manifest', manifest]))
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('check fails when the lock names another tool commit than the pin', () => {
+  const { root, consumer } = makeRepo({ pinCommit: true })
+  const manifest = manifestPath(consumer)
+  run(['sync', '--manifest', manifest])
+  const parsed = JSON.parse(readFileSync(manifest, 'utf8'))
+  assert.equal(parsed.lock.tool.commit, parsed.tool.commit)
+  parsed.lock.tool.commit = 'deadbeef'
+  writeFileSync(manifest, JSON.stringify(parsed, null, 2) + '\n')
+  assert.throws(() => run(['check', '--manifest', manifest]))
+  run(['sync', '--manifest', manifest])
+  const repaired = JSON.parse(readFileSync(manifest, 'utf8'))
+  assert.equal(repaired.lock.tool.commit, repaired.tool.commit)
+  run(['check', '--manifest', manifest])
   rmSync(root, { recursive: true, force: true })
 })
 

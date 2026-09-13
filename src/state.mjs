@@ -52,6 +52,22 @@ export function toolPinProblems(manifest) {
 }
 
 /**
+ * Problems with the lock against the declared pin.
+ *
+ * The lock records the pin, not wherever the tool happened to be run from, so a
+ * lock naming another commit is stale evidence even while the running tool is
+ * the pinned one. A sync rewrites it from the declared pin.
+ *
+ * @returns {string[]}
+ */
+export function lockPinProblems(manifest) {
+  const declared = manifest.tool?.commit
+  const locked = manifest.lock?.tool?.commit
+  if (declared === undefined || locked === undefined || declared === locked) return []
+  return ['lock tool commit ' + locked + ' does not match pinned ' + declared + '; run harness sync']
+}
+
+/**
  * Problems with the running tool's file hashes against the lock.
  *
  * @returns {string[]}
@@ -84,6 +100,8 @@ export function inspect(root, manifest) {
   if (locked === undefined || locked.version !== manifest.version) return { status: 'stale', detail: 'lock missing or pinned to another version' }
   const pin = toolPinProblems(manifest)
   if (pin.length > 0) return { status: 'stale', detail: pin[0] }
+  const lockPin = lockPinProblems(manifest)
+  if (lockPin.length > 0) return { status: 'diverged', detail: lockPin[0] }
   const files = toolFileProblems(manifest)
   if (files.length > 0) return { status: 'diverged', detail: files[0] }
   const bootstrapPath = resolve(root, 'harness')
@@ -142,7 +160,9 @@ export function applySync(root, path, manifest) {
   }
   const outputs = composedOutputs(root, manifest, base === null ? undefined : base.dir)
   const lock = { version: manifest.version, tool: { version: toolVersion(), files: toolFiles() }, outputs: {} }
-  const commit = toolCommit()
+  // The lock records the pin: a declared commit is what the repository pinned,
+  // and the running checkout only supplies it when the manifest declares none.
+  const commit = manifest.tool?.commit ?? toolCommit()
   if (commit !== undefined) lock.tool.commit = commit
   for (const item of outputs) {
     mkdirSync(dirname(item.path), { recursive: true })

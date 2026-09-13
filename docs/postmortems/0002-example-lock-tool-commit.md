@@ -20,5 +20,5 @@ The `example` gate is the check that caught both incidents: it runs `check` and 
 
 ## Action items
 
-- Teach `check` the one fact this incident turned on: when a manifest declares `tool.commit`, fail when `lock.tool.commit` disagrees with it, and let `applySync` record the declared pin rather than the ambient checkout. That closes the gap for every pinned repository and needs a release of its own.
-- Keep the `example` gate's revert on `./harness sync`: restoring from git would have hidden the disagreement instead of reporting it.
+- [x] Teach `check` that `lock.tool.commit` must match a declared `tool.commit`, let `applySync` record the declared pin, and pin the example's tool commit so a re-record with another build fails at the pin — @lijinchao, 0.1.30 (docs/decisions/0030-the-lock-records-the-pin.md)
+- [x] Keep the `example` gate's revert on `./harness sync`: restoring from git would have hidden the disagreement instead of reporting it — @lijinchao, 0.1.29
