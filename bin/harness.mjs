@@ -356,7 +356,7 @@ function cmdMetrics(options) {
     if (config === undefined) throw new Error('governance.metrics is not declared; the budget has nothing to judge')
     const logPath = resolve(root, config.log)
     if (!existsSync(logPath)) throw new Error(config.log + ': metrics log not found; record a run with gates --report')
-    const summary = metricsWindow(readRuns(logPath, readFileSync), config.window)
+    const summary = metricsWindow(readRuns(logPath, readFileSync), config.window, config.exclude ?? [])
     console.log(`window: ${summary.runs} run(s), ${summary.green} green`)
     console.log(`first-pass rate: ${summary.firstPassRate === null ? 'n/a' : summary.firstPassRate.toFixed(2)}`)
     if (summary.flaky.length > 0) console.log(`flaky: ${summary.flaky.join(', ')}`)

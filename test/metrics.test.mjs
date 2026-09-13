@@ -79,3 +79,27 @@ test('a declared budget with no recorded run is reported', () => {
   assert.throws(() => execFileSync(process.execPath, [CLI, 'metrics', '--manifest', manifest], { encoding: 'utf8', stdio: 'pipe' }))
   rmSync(dir, { recursive: true, force: true })
 })
+test('a window can exclude the gate that judges it', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-budget-exclude-'))
+  const log = join(dir, 'metrics.jsonl')
+  const manifest = join(dir, 'harness.manifest.json')
+  const entry = (results) => JSON.stringify({ at: '2026-09-13T00:00:00.000Z', version: '1.0.0', tool: '1.0.0', results })
+  const ok = (id) => ({ id, ok: true, skipped: false, timedOut: false, ms: 10 })
+  const bad = (id) => ({ id, ok: false, skipped: false, timedOut: false, ms: 10 })
+  writeFileSync(log, [
+    entry([ok('tests'), bad('metrics')]),
+    entry([ok('tests'), bad('metrics')]),
+  ].join('\n') + '\n')
+  const gates = ['tests', 'metrics'].map((id) => ({ id, command: 'true', protects: 'p', prove_fires: 'f', prove_fires_command: 'false', revert_command: 'true', severity: 'blocking' }))
+  writeFileSync(manifest, JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates,
+    governance: { metrics: { log: 'metrics.jsonl', minFirstPassRate: 1, maxFlaky: 0, exclude: ['metrics'] } },
+  }, null, 2) + '\n')
+  const out = execFileSync(process.execPath, [CLI, 'metrics', '--manifest', manifest], { encoding: 'utf8' })
+  assert.match(out, /first-pass rate: 1\.00/)
+  assert.doesNotMatch(out, /flaky/)
+  rmSync(dir, { recursive: true, force: true })
+})

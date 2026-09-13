@@ -69,7 +69,8 @@
             "window": { "type": "integer", "minimum": 1 },
             "minFirstPassRate": { "type": "number", "minimum": 0, "maximum": 1 },
             "maxFlaky": { "type": "integer", "minimum": 0 },
-            "maxTimeouts": { "type": "integer", "minimum": 0 }
+            "maxTimeouts": { "type": "integer", "minimum": 0 },
+            "exclude": { "type": "array", "items": { "type": "string", "minLength": 1 } }
           }
         },
         "proofs": {

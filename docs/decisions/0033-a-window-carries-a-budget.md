@@ -15,6 +15,7 @@ A repository declares `governance.metrics`: the committed JSONL log of gate runs
 - Budget p95 duration: the review's example, and refused above — the signal is dominated by runner and load.
 - Judge only the current run: one red run is not a rate, and a budget needs a window to tell a regression from a bad afternoon.
 - Let CI append to the committed log: CI cannot commit, so the file would change without review, and `prove` in the same workflow refuses a dirty tree.
+- Let the judging gate's own verdict count in the window: the first draft did, and it locked itself out — a breached window makes the gate fail, the failed gate is recorded, and the window can never recover. `governance.metrics.exclude` names the ids the window ignores, and the repository names its own judging gate, so recording a run is always a way back.
 - Require the budget in every consumer: a threshold is a repository's own risk appetite; the base recommends the key and `doctor` warns when it is absent, like the other recommended artifacts.
 
 ## Consequences
@@ -22,4 +23,5 @@ A repository declares `governance.metrics`: the committed JSONL log of gate runs
 - A gate that flakes, times out, or drags the first-pass rate below the floor fails a gate instead of waiting to be noticed.
 - The window is only as good as what was recorded: an unrecorded run does not count, and the thresholds are a starting point to tighten as the window fills rather than a measurement of a history nobody kept.
 - `governance.metrics.log` must exist; `doctor` fails when a declared log is missing.
+- A gate that judges a window names itself in `exclude`; the alternative is a metric that ratchets itself red.
 - This repository declares `minFirstPassRate: 0.75`, `maxFlaky: 1`, `maxTimeouts: 0` over a 20-run window, sized so one honest red run ages out of the floor once three green runs are recorded after it.

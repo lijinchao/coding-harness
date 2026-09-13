@@ -5,16 +5,23 @@
  * The window is the last `window` runs, so an old incident stops counting once
  * enough runs have been recorded after it.
  *
+ * `exclude` names gate ids the window ignores. A gate that judges the window
+ * must be able to name itself: its own verdict then never feeds the evidence it
+ * reads, so a breached window can recover by recording runs instead of
+ * ratcheting itself red forever.
+ *
  * @param {object[]} entries - Report entries, oldest first.
  * @param {number} [window] - How many recent runs the budget judges.
+ * @param {string[]} [exclude] - Gate ids the window ignores.
  * @returns {{ runs: number, green: number, firstPassRate: number|null, flaky: string[], timeouts: number, failures: Record<string, number> }}
  */
-export function metricsWindow(entries, window = 20) {
+export function metricsWindow(entries, window = 20, exclude = []) {
   const runs = entries.slice(-Math.max(1, window))
+  const ignored = new Set(exclude)
   const stats = new Map()
   let green = 0
   for (const run of runs) {
-    const results = Array.isArray(run?.results) ? run.results : []
+    const results = (Array.isArray(run?.results) ? run.results : []).filter((result) => !ignored.has(result.id))
     if (results.length > 0 && results.every((result) => result.ok === true)) green += 1
     for (const result of results) {
       const entry = stats.get(result.id) ?? { runs: 0, failures: 0, timeouts: 0 }
