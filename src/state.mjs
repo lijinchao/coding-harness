@@ -6,6 +6,7 @@ import { ensureGitCheckout, isGitSource } from './fetch.mjs'
 import { toolCommit, toolFiles, toolVersion } from './tool.mjs'
 import { adoptionProblems, loadRequirements } from './adopt.mjs'
 import { SHIM } from './shim.mjs'
+import { PACK_RAW } from './pack.mjs'
 
 function writeAtomic(path, text) {
   const tmp = path + '.tmp'
@@ -173,11 +174,18 @@ export function applySync(root, path, manifest) {
   writeAtomic(bootstrapPath, SHIM)
   chmodSync(bootstrapPath, 0o755)
   if (base !== null) lock.base = { version: base.release.version, files: base.release.files }
-  // A recorded proof is a fact about a gate, not about this composition: a sync
-  // must not delete it. It is appended after `base` so the lock keeps one key
-  // order and a sync that changes nothing leaves the file byte-identical.
+  // A recorded proof is a fact about a gate, not about this composition, and a
+  // declared pack is a fact about the repository, not about this composition: a
+  // sync preserves both. They are appended after `base` so the lock keeps one
+  // key order and a sync that changes nothing leaves the file byte-identical.
+  if (manifest.lock?.packs !== undefined) lock.packs = manifest.lock.packs
+  if (manifest.lock?.overrides !== undefined) lock.overrides = manifest.lock.overrides
   if (manifest.lock?.proofs !== undefined) lock.proofs = manifest.lock.proofs
   manifest.lock = lock
-  writeAtomic(path, JSON.stringify(manifest, null, 2) + '\n')
+  // A merged manifest carries pack contributions in memory; the repository's
+  // own file receives only the lock, never a materialized pack gate.
+  const persisted = manifest[PACK_RAW] ?? manifest
+  persisted.lock = lock
+  writeAtomic(path, JSON.stringify(persisted, null, 2) + '\n')
   return outputs
 }

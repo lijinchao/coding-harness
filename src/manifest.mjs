@@ -14,14 +14,15 @@ export function loadManifest(path) {
 // contract; the schema alone is not executable and drifted once already.
 export const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
 export const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
-export const ROOT_KEYS = ['version', 'tool', 'base', 'product', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'lock']
+export const ROOT_KEYS = ['version', 'tool', 'base', 'product', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'packs', 'lock']
 export const COMPOSITION_KEYS = ['output', 'sources']
 export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after']
+export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after', 'override']
 export const EXPECT_KEYS = ['forbid', 'allow']
 export const BASE_KEYS = ['source', 'registry', 'cache']
 export const TOOL_KEYS = ['version', 'commit', 'source']
-export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
+export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs', 'packs', 'overrides']
+export const PACK_DECLARATION_KEYS = ['id', 'source', 'version', 'registry', 'cache']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
 export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs', 'metrics']
@@ -231,12 +232,39 @@ function validateLockTool(errors, tool) {
   if (tool.files !== undefined) requireObject(errors, tool.files, 'lock.tool.files')
 }
 
+function validatePacks(errors, packs) {
+  if (packs === undefined) return
+  if (!Array.isArray(packs)) {
+    errors.push('packs: required array')
+    return
+  }
+  packs.forEach((declaration, index) => {
+    const where = 'packs[' + index + ']'
+    requireObject(errors, declaration, where)
+    rejectUnknown(errors, declaration, PACK_DECLARATION_KEYS, where)
+    if (!isObject(declaration)) return
+    requireString(errors, declaration.id, where + '.id')
+    requireString(errors, declaration.source, where + '.source')
+    requireString(errors, declaration.version, where + '.version')
+  })
+  if (packs.length > 0) {
+    const ids = packs.map((declaration) => declaration?.id).filter((id) => typeof id === 'string')
+    for (const id of new Set(ids)) {
+      if (ids.filter((candidate) => candidate === id).length > 1) errors.push('packs: duplicate declaration ' + id)
+    }
+  }
+}
+
 function validateLock(errors, lock) {
   if (lock === undefined) return
   requireObject(errors, lock, 'lock')
   rejectUnknown(errors, lock, LOCK_KEYS, 'lock')
   if (!isObject(lock)) return
   requireString(errors, lock.version, 'lock.version')
+  if (lock.packs !== undefined) requireObject(errors, lock.packs, 'lock.packs')
+  if (lock.overrides !== undefined) {
+    if (!Array.isArray(lock.overrides)) errors.push('lock.overrides: required array')
+  }
   requireObject(errors, lock.outputs, 'lock.outputs')
   if (lock.proofs !== undefined) requireObject(errors, lock.proofs, 'lock.proofs')
   if (lock.tool !== undefined) validateLockTool(errors, lock.tool)
@@ -267,6 +295,7 @@ export function validateManifest(manifest) {
   requireString(errors, manifest.version, 'version')
   validateBase(errors, manifest.base)
   validateTool(errors, manifest.tool)
+  validatePacks(errors, manifest.packs)
   validateProduct(errors, manifest.product)
   validateGovernance(errors, manifest.governance)
 

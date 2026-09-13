@@ -1,6 +1,6 @@
 # 0036 — A pack is a pinned release whose contribution is declared
 
-Status: proposed
+Status: implemented
 
 ## Problem
 
@@ -32,4 +32,5 @@ A pack is a released, hashed, pinned artifact shaped like the base: a `pack.json
 
 - The pack interface reuses release, hash, verification, and lock machinery; a second mechanism for the same job is the defect this record forbids.
 - A pack can make a repository red on adoption; the conformance repository is what keeps that from being a surprise.
-- This is `proposed`: the interface and the first packs land under it, and the status moves to `accepted` when the interface is agreed and `implemented` when a real pack is composed by a real consumer.
+- The interface is implemented — resolution, namespacing, kernel compatibility, dependencies and conflicts, atomic failure, explicit override, and `lock.packs` provenance — and `test/packs.test.mjs` covers each rule.
+- Two parts of this contract are not built: `diff` and `upgrade` do not yet report the gates, skills, commands, and permissions a pack upgrade adds, and no pack has shipped, so the layer is a working interface with no members.

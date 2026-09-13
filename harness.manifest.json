@@ -306,6 +306,10 @@
       {
         "path": "docs/direction.md",
         "maxWords": 700
+      },
+      {
+        "path": "docs/packs.md",
+        "maxWords": 500
       }
     ],
     "instructions": [

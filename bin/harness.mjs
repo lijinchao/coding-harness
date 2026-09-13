@@ -10,6 +10,7 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
+import { mergePacks } from '../src/pack.mjs'
 import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
 import { toolCommit, toolRoot, toolVersion } from '../src/tool.mjs'
@@ -81,7 +82,15 @@ function requireOption(options, name) {
 }
 
 function readValidManifest(path) {
-  const manifest = loadManifest(path)
+  let manifest = loadManifest(path)
+  try {
+    // A declared pack is resolved, verified, and merged before anything else
+    // reads the manifest; a partial merge never reaches a command.
+    manifest = mergePacks(dirname(path), manifest)
+  } catch (error) {
+    console.error(`manifest: ${error.message}`)
+    process.exit(1)
+  }
   const errors = validateManifest(manifest)
   if (errors.length === 0) return manifest
   for (const error of errors) console.error(`manifest: ${error}`)
