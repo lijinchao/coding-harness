@@ -11,6 +11,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
 import { mergePacks } from '../src/pack.mjs'
+import { buildAttestation, verifyAttestation } from '../src/attest.mjs'
 import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
 import { toolCommit, toolRoot, toolVersion } from '../src/tool.mjs'
@@ -49,11 +50,13 @@ commands:
                                          print the gates a change selects, one id per line
   diff       --manifest <path> --to <v> preview what a base upgrade changes
   metrics    --log <file> | --manifest <path>                first-pass rate from gate reports
+  attest     --manifest <path> [--out <file>] [--example <path>] [--verify]
+                                         bind a release to its tag, lock, and proofs, or verify that binding
   scan       --root <dir>                list consumers whose harness is stale or diverged
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify'])
 const REPEATABLE_FLAGS = new Set(['changed'])
 
 function parseOptions(argv) {
@@ -521,7 +524,26 @@ function cmdDoctor(options) {
   console.log('doctor: ok')
 }
 
-const COMMANDS = { validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+function cmdAttest(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const manifest = readValidManifest(path)
+  const root = dirname(path)
+  const example = options.example === undefined ? undefined : resolve(options.example)
+  const out = resolve(root, options.out ?? 'dist/attestation-' + manifest.version + '.json')
+  if (options.verify === true) {
+    const attestation = JSON.parse(readFileSync(out, 'utf8'))
+    const problems = verifyAttestation(root, manifest, attestation, { example })
+    for (const problem of problems) console.error('attest: ' + problem)
+    if (problems.length > 0) process.exit(1)
+    console.log('attest: ' + attestation.version + ' verifies (' + Object.keys(attestation.proofs ?? {}).length + ' proof(s), tag ' + String(attestation.toolCommit).slice(0, 7) + ')')
+    return
+  }
+  const attestation = buildAttestation(root, manifest, { example })
+  writeFileSync(out, JSON.stringify(attestation, null, 2) + '\n')
+  console.log('attested ' + attestation.version + ' -> ' + out)
+}
+
+const COMMANDS = { attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

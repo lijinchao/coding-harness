@@ -321,6 +321,10 @@
       {
         "path": "docs/packs.md",
         "maxWords": 500
+      },
+      {
+        "path": "docs/release.md",
+        "maxWords": 500
       }
     ],
     "instructions": [
