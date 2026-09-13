@@ -31,15 +31,15 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `after` | Gate ids that must finish first; their failure does not skip this gate |
 | `always` | Select this gate in every changed-surface selection |
 
-A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work. A proof is transactional: `harness prove` refuses to start unless the git working tree is clean, refuses to report success unless it is clean again after the revert, and runs every command with `--timeout`, so a revert that loses content is visible instead of silently destroying uncommitted work. Every path after the failure is introduced attempts the revert, including a failed introduction. The check sees only git-visible files: an ignored build cache that a revert damages is outside it. Pass `--timeout <s>` to bound each command; the generated CI does.
+A gate without `prove_fires` is not admissible. A blocking gate must also declare `prove_fires_command` and `revert_command`; `harness validate` rejects it otherwise and `harness prove` exits non-zero when the gate does not fire. A gate nobody has watched fail is not known to work. A proof is transactional: it refuses to start unless the git working tree is clean, refuses to report success unless it is clean again, and every path after the introduction attempts the revert, including a failed introduction. It sees only git-visible files, so an ignored cache a revert damages is outside it. `--timeout <s>` bounds each command; the generated CI passes one.
 
 A gate passes only when its command exits zero, does not time out, and its output contains no line matching an `expect.forbid` pattern unless the line also matches an `expect.allow` entry. Exit code alone is not proof of a clean run; an engine that exits zero while printing errors fails such a gate. A base release may set `requireOutputAssertions: true` so a blocking gate without `expect.forbid` is rejected.
 
-A gate may declare a `phase`. `harness gates --phase <name>` runs the unphased gates plus the gates in that phase, and `harness gates` without `--phase` runs every gate. Tag a slow gate `full` so a local `--phase fast` run skips it while CI, which passes no phase, still runs it.
+A gate may declare a `phase`: `harness gates --phase <name>` runs the unphased gates plus that phase, and no `--phase` runs every gate. Tag a slow gate `full` so a local `--phase fast` run skips it while CI, which passes no phase, runs it.
 
-A gate whose `needs` dependency fails or is skipped is itself skipped and reported `skip`, so a broken prerequisite never looks like a passing check; `after` orders gates without propagating failure. `harness validate` rejects an unknown dependency and a dependency cycle, `harness gates --fail-fast` starts no new gate after a blocking gate fails, and `harness select` includes the dependencies of every gate it selects.
+A gate whose `needs` dependency fails or is skipped is itself skipped and reported `skip`, so a broken prerequisite never looks like a passing check; `after` orders gates without propagating failure. `harness validate` rejects an unknown dependency and a cycle, `--fail-fast` starts no new gate after a blocking failure, and `harness select` includes dependencies.
 
-A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM`, then `SIGKILL` after five seconds, and forwards `SIGINT` and `SIGTERM` before exiting, so a timed-out gate leaves no children. A result reports exit code, signal, timeout, and duration separately; `--report` records the timeout and duration per gate.
+A gate's command runs under a shell in its own process group. On timeout the runner signals the group with `SIGTERM`, then `SIGKILL` after five seconds, and forwards `SIGINT` and `SIGTERM` before exiting, so a timed-out gate leaves no children. A result reports exit code, signal, timeout, and duration separately; `--report` records timeout and duration per gate.
 
 ### Proof isolation
 
@@ -47,7 +47,17 @@ A gate's command runs under a shell in its own process group. On timeout the run
 |---|---|
 | `governance.proofCarry` | Untracked paths a proof worktree must carry |
 
-`harness prove --isolated` runs the proof in a temporary `git worktree` instead of the working tree, so a proof never dirties the checkout it proves. `.harness` and `node_modules` are symlinked into the worktree, and each `governance.proofCarry` path with them, so a pin that resolves only from the local cache still resolves.
+`harness prove --isolated` runs the proof in a temporary `git worktree` instead of the working tree, so a proof never dirties the checkout it proves. `.harness` and `node_modules` are carried into the worktree, and each `governance.proofCarry` path with them, so a pin that resolves only from the local cache still resolves.
+
+### Proof record
+
+| Field | Meaning |
+|---|---|
+| `at` | When the gate was watched to fail and pass |
+| `tool` | The tool commit that ran the proof |
+| `definition` | SHA-256 of the gate's behavioural fields |
+
+`prove --record` writes one record per proved gate into `lock.proofs`. A repository that declares `governance.proofs` — `require`: `blocking`, `all`, or `none`, and `maxAgeDays` (default 30) — has `harness doctor` demand a current record for every gate in scope: missing, legacy unbound, changed definition, another tool commit, and past the window all fail. Rewording `protects` does not invalidate a record; changing the command, proof commands, `expect`, or dependencies does.
 
 ### Evidence surface
 
@@ -57,7 +67,7 @@ A gate's command runs under a shell in its own process group. On timeout the run
 | `paths` | Repository-relative globs this surface covers |
 | `requires` | The gate ids a change to those paths requires |
 
-A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its changed files match, plus every gate marked `always: true`. `harness gates --changed <path>` and `harness gates --since <ref>` run that set; `harness gates` without a selection runs every gate, which is what CI should do. `harness validate` rejects a surface that requires an unknown gate, and a gate that no surface requires and that is not `always`, so a new gate cannot silently fall outside the matrix. `harness doctor` also requires every committed file to be matched by some surface, so a change to an unowned file cannot select nothing; a repository may declare an explicit catch-all. Without `surfaces`, selection is every gate. Name an evidence gate by its tier — `unit-*`, `integration-*`, `e2e-*` — so `requires` names the evidence rather than the tool that produces it.
+A manifest may declare `surfaces`. `harness select --manifest <path> (--since <ref> | --changed <path>)` prints the gate ids a change selects: the union of the surfaces its files match plus every `always: true` gate; `harness gates --changed` and `--since` run that set, and no selection runs every gate, which is what CI should do. `harness validate` rejects a surface requiring an unknown gate, and a gate no surface requires unless it is `always`, so a new gate cannot fall outside the matrix. `harness doctor` also requires every committed file to be matched by a surface, so a change to an unowned file cannot select nothing; a repository may declare a catch-all. Without `surfaces`, selection is every gate. Name an evidence gate by its tier — `unit-*`, `integration-*`, `e2e-*` — so `requires` names the evidence, not the tool that produces it.
 
 ### Document health
 
@@ -66,7 +76,7 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 | `governance.docs` | Documents whose links, word budget, and forbidden text are checked |
 | `governance.instructions` | Globs for every instruction file an agent can read |
 
-`harness doctor` checks that each declared document exists, that its relative Markdown links resolve (a fragment must name a heading in the target), and that it stays within its `maxWords` budget, and rejects a line matching one of the document's `forbid` patterns unless it also matches `allow`. It also walks the repository for `AGENTS.md` and `AGENTS.delta.md`, and fails when a file is not matched by `governance.instructions` or when a declared glob matches no file. A budget forces relocation instead of accumulation, and an unmanaged instruction file is a rule nobody governs; both keys are recommended.
+`harness doctor` checks that each declared document exists, that its relative links resolve (a fragment must name a heading), and that it stays within `maxWords`, and rejects a line matching a `forbid` pattern unless it also matches `allow`. It walks the repository for `AGENTS.md` and `AGENTS.delta.md` and fails when a file is unmatched by `governance.instructions` or a declared glob matches nothing. A budget forces relocation instead of accumulation, and an unmanaged instruction file is a rule nobody governs; both keys are recommended.
 
 ### Guide section
 
@@ -86,9 +96,9 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 | `alternatives` | Each real alternative and why it lost |
 | `consequences` | What the decision cost and bought |
 
-A record declares its status as a `Status: <value>` line or a `## Status` section. `proposed` is a plan not yet authorized, so an in-repository plan is a proposed decision rather than a separate document; `accepted` is decided but not built; `implemented` is the current mechanism; `rejected` was considered and declined. A `superseded` record names its replacement with `Superseded-by: <path>`, which must exist, and `Supersedes:` is checked the same way. A decision records a choice that outlives the change; what changed lives in git.
+A record declares its status as a `Status: <value>` line or a `## Status` section: `proposed` is decided-not-authorized, `accepted` is decided but not built, `implemented` is the current mechanism, and `rejected` was considered and declined. A `superseded` record names its replacement with `Superseded-by: <path>`, which must exist; `Supersedes:` is checked the same way. A decision records a choice that outlives the change; what changed lives in git.
 
-`harness validate` loads each declared skill file and rejects it when the frontmatter lacks `name` or `description`, or when it lacks any of `## Inputs`, `## Steps`, `## Verification`, `## Failure`. A gate's `command` must be non-empty and a single line. The base ships `templates/decision-record.md` and `templates/postmortem.md` for the two record types.
+`harness validate` loads each declared skill file and rejects it when the frontmatter lacks `name` or `description`, or any of `## Inputs`, `## Steps`, `## Verification`, `## Failure`. A gate's `command` must be non-empty and a single line. The base ships `templates/decision-record.md` and `templates/postmortem.md` for the two record types.
 
 ### Change record
 
@@ -98,7 +108,7 @@ A record declares its status as a `Status: <value>` line or a `## Status` sectio
 | `context` | Optional: what the change is and why now |
 | `decision` | Optional `Decision: <path>` naming the record this change implements |
 
-A repository that declares `governance.changes` keeps one record per change under that directory. `harness doctor` requires `## Verification` and resolves a `Decision:` line when it is present. The record carries the evidence git cannot: what was decided lives in `docs/decisions/`, and what changed lives in git. The base ships `templates/change-record.md`.
+A repository that declares `governance.changes` keeps one record per change there. `harness doctor` requires `## Verification` and resolves a `Decision:` line when present. The record carries the evidence git cannot: decisions live in `docs/decisions/`, the change lives in git. The base ships `templates/change-record.md`.
 
 ### Manual verification
 
@@ -109,7 +119,7 @@ A repository that declares `governance.changes` keeps one record per change unde
 | `observation` | What happened, including friction and abandonment |
 | `decision` | What the observation changes |
 
-Automated verification stays at the unit, integration, and end-to-end tiers. A manual verification record is the product-experience counterpart for what no test asserts. `governance.manualVerification` is recommended, not required: `harness doctor` checks only that the declared path exists and emits a warning when the key is absent, so the gap is visible without blocking unrelated work. The base ships `templates/manual-verification.md`.
+Automated verification stays at the unit, integration, and end-to-end tiers; a manual verification record is the product-experience counterpart for what no test asserts. `governance.manualVerification` is recommended, not required: `harness doctor` checks only that the declared path exists and warns when the key is absent, so the gap is visible without blocking unrelated work. The base ships `templates/manual-verification.md`.
 
 ### Postmortem
 
@@ -121,7 +131,7 @@ Automated verification stays at the unit, integration, and end-to-end tiers. A m
 | `regression` | The permanent check that now catches it |
 | `action-items` | Follow-ups, with owners |
 
-A repository that declares `governance.postmortems` keeps one record per incident. `harness doctor` requires `## Impact`, `## Root cause`, `## Response`, `## Regression test`, and `## Action items`, and resolves every `Regression: <gate id or path>` line against the manifest's gates and the working tree: an incident that leaves no check is not closed.
+A repository that declares `governance.postmortems` keeps one record per incident. `harness doctor` requires `## Impact`, `## Root cause`, `## Response`, `## Regression test`, and `## Action items`, and resolves every `Regression: <gate id or path>` against the manifest's gates and the tree: an incident that leaves no check is not closed.
 
 ## Verification tiers
 

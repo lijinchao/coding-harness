@@ -3,6 +3,8 @@ import { resolve } from 'node:path'
 import { adoptionProblems } from './adopt.mjs'
 import { decisionProblems, documentProblems, instructionProblems, postmortemProblems, surfaceCoverageProblems } from './documents.mjs'
 import { productProblems } from './product.mjs'
+import { proofProblems } from './proof.mjs'
+import { toolCommit } from './tool.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
 const CHANGE_SECTIONS = ['Verification']
@@ -22,12 +24,7 @@ export function doctorReport(root, manifest, requirements) {
   const problems = [...adoption.problems]
   const warnings = [...adoption.warnings]
 
-  if (manifest.lock?.proofs !== undefined) {
-    const ids = new Set(manifest.gates.map((gate) => gate.id))
-    for (const id of Object.keys(manifest.lock.proofs)) {
-      if (!ids.has(id)) problems.push('lock.proofs references unknown gate ' + id)
-    }
-  }
+  problems.push(...proofProblems(manifest, toolCommit()))
 
   if (manifest.product !== undefined) problems.push(...productProblems(root, manifest.product))
   if (manifest.surfaces !== undefined) problems.push(...surfaceCoverageProblems(root, manifest.surfaces))

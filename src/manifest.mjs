@@ -24,7 +24,9 @@ export const TOOL_KEYS = ['version', 'commit', 'source']
 export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
-export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry']
+export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs']
+export const PROOFS_KEYS = ['require', 'maxAgeDays']
+export const PROOF_REQUIRE = ['blocking', 'all', 'none']
 export const PRODUCT_KEYS = ['version', 'mentions']
 export const PRODUCT_VERSION_KEYS = ['path', 'pattern']
 export const DOC_KEYS = ['path', 'maxWords', 'forbid', 'allow']
@@ -143,6 +145,18 @@ function validateGovernance(errors, governance) {
   }
   if (governance.changes !== undefined) requireString(errors, governance.changes, 'governance.changes')
   if (governance.manualVerification !== undefined) requireString(errors, governance.manualVerification, 'governance.manualVerification')
+  if (governance.proofs !== undefined) {
+    requireObject(errors, governance.proofs, 'governance.proofs')
+    rejectUnknown(errors, governance.proofs, PROOFS_KEYS, 'governance.proofs')
+    if (isObject(governance.proofs)) {
+      if (governance.proofs.require !== undefined && !PROOF_REQUIRE.includes(governance.proofs.require)) {
+        errors.push('governance.proofs.require: must be one of ' + PROOF_REQUIRE.join(', '))
+      }
+      if (governance.proofs.maxAgeDays !== undefined && (!Number.isInteger(governance.proofs.maxAgeDays) || governance.proofs.maxAgeDays < 1)) {
+        errors.push('governance.proofs.maxAgeDays: required positive integer')
+      }
+    }
+  }
   if (governance.docs !== undefined) {
     if (!Array.isArray(governance.docs)) {
       errors.push('governance.docs: required array')

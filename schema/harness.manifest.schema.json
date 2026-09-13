@@ -59,7 +59,15 @@
         },
         "instructions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "postmortems": { "type": "string", "minLength": 1 },
-        "proofCarry": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        "proofCarry": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "proofs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "require": { "enum": ["blocking", "all", "none"] },
+            "maxAgeDays": { "type": "integer", "minimum": 1 }
+          }
+        }
       }
     },
     "base": {

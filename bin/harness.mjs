@@ -18,6 +18,7 @@ import { WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
+import { definitionHash } from '../src/proof.mjs'
 import { createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
@@ -424,7 +425,7 @@ async function cmdProve(options) {
     for (const gate of manifest.gates) {
       if (only !== undefined && gate.id !== only) continue
       const result = await proveGate(runRoot, gate, timeoutMs, { trackedOnly: isolated })
-      if (result.status === 'ok') recorded[gate.id] = `${new Date().toISOString()}@${toolCommit() ?? 'unknown'}`
+      if (result.status === 'ok') recorded[gate.id] = { at: new Date().toISOString(), tool: toolCommit() ?? 'unknown', definition: definitionHash(gate) }
       if (result.status !== 'ok' && result.status !== 'skip') bad += 1
       console.log(`${result.status}\t${gate.id}\t${result.detail}`)
     }

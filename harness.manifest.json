@@ -279,7 +279,11 @@
       "examples/consumer/AGENTS.delta.md"
     ],
     "postmortems": "docs/postmortems",
-    "manualVerification": "docs/MANUAL_VERIFICATION.md"
+    "manualVerification": "docs/MANUAL_VERIFICATION.md",
+    "proofs": {
+      "require": "blocking",
+      "maxAgeDays": 30
+    }
   },
   "lock": {
     "version": "0.1.30",
