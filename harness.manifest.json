@@ -1,9 +1,9 @@
 {
-  "version": "0.1.34",
+  "version": "0.1.35",
   "tool": {
-    "version": "0.1.34",
+    "version": "0.1.35",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "75dd605c5a9a563bed0b1775bc8f491414e06144"
+    "commit": "9c96e77697a9c75de7809d2ae7414f972b64be41"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -58,7 +58,7 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.34 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.35 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
@@ -140,6 +140,20 @@
       "after": [
         "harness-drift"
       ],
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    },
+    {
+      "id": "metrics",
+      "command": "./harness metrics --manifest harness.manifest.json",
+      "protects": "the recorded runs stay inside the declared quality budget",
+      "prove_fires": "append a run with a failed gate to docs/metrics.jsonl, then run the gate; expect exit 1",
+      "prove_fires_command": "printf '%s\\n' '{\"at\":\"2026-01-01T00:00:00.000Z\",\"version\":\"0.0.0\",\"tool\":\"0.0.0\",\"results\":[{\"id\":\"tests\",\"ok\":false,\"skipped\":false,\"timedOut\":false,\"ms\":1}]}' >> docs/metrics.jsonl",
+      "revert_command": "git checkout -- docs/metrics.jsonl",
+      "severity": "blocking",
       "expect": {
         "forbid": [
           "ERROR:"
@@ -233,7 +247,8 @@
       ],
       "requires": [
         "doctor",
-        "validate"
+        "validate",
+        "metrics"
       ]
     }
   ],
@@ -283,14 +298,24 @@
     "proofs": {
       "require": "blocking",
       "maxAgeDays": 30
+    },
+    "metrics": {
+      "log": "docs/metrics.jsonl",
+      "window": 20,
+      "minFirstPassRate": 0.75,
+      "maxFlaky": 1,
+      "maxTimeouts": 0,
+      "exclude": [
+        "metrics"
+      ]
     }
   },
   "lock": {
-    "version": "0.1.34",
+    "version": "0.1.35",
     "tool": {
-      "version": "0.1.34",
+      "version": "0.1.35",
       "files": {
-        "bin/harness.mjs": "4b71b2cef46eb6a10e013fd7eef6398872a8f6423118926be31560084d8cb0d6",
+        "bin/harness.mjs": "eb6b318d989011ae17ca2a4290d0cea4ab750d330af985476eba4a6a9d8d45ac",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
@@ -298,8 +323,8 @@
         "src/documents.mjs": "76765cb4c5ebb4d818b23d4b7d25ee9d3140a40cedf225a219cf8e24b4580ea9",
         "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
         "src/gates.mjs": "6c3c6792ff3ef9191d78380ea5ccdf30205989e22eae728b33151373141feb09",
-        "src/manifest.mjs": "176cee7e3f5e7df7aa3c05cdb1362dd08008ddedc7f92251b4a5c292dc4121da",
-        "src/metrics.mjs": "92b9ebe6a6ea0cce5cc08bee6f347a53687ee9bbb9b59538a154d88c1adedeff",
+        "src/manifest.mjs": "42ef84464094a1282a88afa9972883a2b2b72c116d68d6479c72b73ed12c315c",
+        "src/metrics.mjs": "1b4fb293661e7fd16e31959cd54fae1fddc6e628bf02c2e08089ba2fa384c9ac",
         "src/process.mjs": "d904422c346eff70b6c415c83859cd2ef94e988b4a423c81ba788c742d2a61ec",
         "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
         "src/proof.mjs": "70e91e08ca12bb66e1ad2da1d2dbffc68d3d92e3fe1b0506c2d2e71b1c0122e8",
@@ -312,20 +337,20 @@
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
         "src/workflow.mjs": "74bdce5bc5fbfa03950f9ca9c16acedbb7c4fc90623aee33264c8a1f4ca782f8",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "12bf973c3dbcb5f9fcc7454a7bc716c4e442a9c6bf1fa4084f62de593f3abf2b"
+        "package.json": "85bf0af1cb7caa11f7071a390cdf01067f8ce29f5f98e4324392c26ebdcffb2b"
       },
-      "commit": "75dd605c5a9a563bed0b1775bc8f491414e06144"
+      "commit": "9c96e77697a9c75de7809d2ae7414f972b64be41"
     },
     "outputs": {
       "AGENTS.md": "71b138542ed3331629b7f57efe434f27a20ab2f4e80f258d96b0f6759d9c584f",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.34",
+      "version": "0.1.35",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "691087f859ce8399cb11902c2fb32ed9095a22d055f0bd7d8ff97274f5d6e650",
+        "VERSION": "ad293b715e631d84895611a4991dfa1d0f824c1ed575cf93edb6a51492ed9e69",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
