@@ -50,6 +50,7 @@ commands:
                                          print the gates a change selects, one id per line
   diff       --manifest <path> --to <v> preview what a base upgrade changes
   metrics    --log <file> | --manifest <path>                first-pass rate from gate reports
+  packs      --manifest <path>            list the gates, surfaces, and skills declared packs contribute
   attest     --manifest <path> [--out <file>] [--example <path>] [--verify]
                                          bind a release to its tag, lock, and proofs, or verify that binding
   scan       --root <dir>                list consumers whose harness is stale or diverged
@@ -543,7 +544,29 @@ function cmdAttest(options) {
   console.log('attested ' + attestation.version + ' -> ' + out)
 }
 
-const COMMANDS = { attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+function cmdPacks(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const manifest = readValidManifest(path)
+  const declarations = manifest.packs ?? []
+  if (declarations.length === 0) {
+    console.log('packs: none declared')
+    return
+  }
+  for (const declaration of declarations) {
+    const record = manifest.lock?.packs?.[declaration.id]
+    console.log(declaration.id + '@' + declaration.version + (record === undefined ? ' (not resolved)' : ' — ' + Object.keys(record.files).length + ' file(s) in the lock'))
+    const contributed = [
+      ...(manifest.gates ?? []).filter((gate) => gate.id.startsWith(declaration.id + '/')).map((gate) => 'gate ' + gate.id + ': ' + gate.command),
+      ...(manifest.surfaces ?? []).filter((surface) => surface.id.startsWith(declaration.id + '/')).map((surface) => 'surface ' + surface.id + ': ' + surface.paths.join(', ')),
+      ...(manifest.skills ?? []).filter((skill) => typeof skill?.id === 'string' && skill.id.startsWith(declaration.id + '/')).map((skill) => 'skill ' + skill.id + ': ' + skill.path),
+    ]
+    for (const line of contributed) console.log('  ' + line)
+    if (contributed.length === 0) console.log('  (contributes nothing to this repository)')
+  }
+  for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
+}
+
+const COMMANDS = { packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

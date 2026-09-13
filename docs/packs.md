@@ -31,6 +31,10 @@ The merge order is kernel defaults, then packs in declaration order, then the re
 
 `packs/node-library/` ships the first one: three dependency-free gates (no committed `node_modules`, a license file, no `console.log` in `src/`), released like any base, and proved by `test/pack-conformance.test.mjs` — a fixture consumer that declares it and watches every contributed gate fail and pass again, which is the conformance a pack owes its consumers.
 
+## Seeing what a pack contributes
+
+`harness packs --manifest <path>` lists each declared pack with its version and locked file count, then every gate (with the command it runs), surface (with its paths), and skill it contributes, and every gate the repository overrode. Adoption is then a decision made by reading, not by trusting.
+
 ## Not yet
 
-`harness diff` and `upgrade` report file changes, not yet the gates, skills, surfaces, commands, and permissions a pack upgrade adds; and no pack has shipped, so the ecosystem is a contract with a working interface and no members. Both are the next steps.
+`harness diff` and `upgrade` compare base releases file by file; they do not yet diff two versions of a pack, so the gates, skills, commands, and permissions a pack upgrade would add or remove are not reported yet.
