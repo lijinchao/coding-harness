@@ -27,9 +27,11 @@ Resolution is atomic: every declared pack is fetched, verified, and merged befor
 
 The merge order is kernel defaults, then packs in declaration order, then the repository. A repository gate colliding with a pack gate is an error unless that gate declares `override: true`, and `lock.overrides` records what was overridden. `lock.packs` records each pack's version and per-file hashes, so a generated gate is traceable to the pack that produced it. Pack contributions live in memory and in the lock; they are never written into the repository's own manifest.
 
-## The first pack
+## The shipped packs
 
-`packs/node-library/` ships the first one: three dependency-free gates (no committed `node_modules`, a license file, no `console.log` in `src/`), released like any base, and proved by `test/pack-conformance.test.mjs` — a fixture consumer that declares it and watches every contributed gate fail and pass again, which is the conformance a pack owes its consumers.
+`packs/node-library/` contributes three gates (no committed `node_modules`, a license file, no `console.log` in `src/`). `packs/architecture/` contributes two that hold for any repository (generated code stays out of `src/`, one package system at the root). Every gate is shell-only, because a pack's failure injection runs in someone else's repository and must not assume a toolchain it may not have.
+
+Each is released like a base, and `test/pack-conformance.test.mjs` is the conformance a pack owes its consumers: one fixture consumer declares both packs, and every contributed gate is watched to fail and pass again — which is also what proves a pack gate is not dead on arrival.
 
 ## Seeing what a pack contributes
 

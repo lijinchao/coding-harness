@@ -1,0 +1,58 @@
+{
+  "id": "architecture",
+  "kernelVersion": ">=0.1.38",
+  "gates": [
+    {
+      "id": "architecture/no-generated-source",
+      "command": "test -z \"$(git ls-files 'src/**' | grep -E '\\.(gen|generated)\\.' || true)\"",
+      "protects": "generated code stays out of the hand-written source tree",
+      "prove_fires": "add src/thing.gen.ts to the index, then run the gate; expect exit 1",
+      "prove_fires_command": "printf 'generated\\n' > src/thing.gen.ts && git add src/thing.gen.ts",
+      "revert_command": "git rm -q --cached src/thing.gen.ts 2>/dev/null; rm -f src/thing.gen.ts",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    },
+    {
+      "id": "architecture/one-root-manifest",
+      "command": "test \"$(ls package.json pyproject.toml go.mod Cargo.toml 2>/dev/null | wc -l | tr -d ' ')\" -le 1",
+      "protects": "a repository declares one package system at its root",
+      "prove_fires": "add a second root manifest, then run the gate; expect exit 1",
+      "prove_fires_command": "printf 'name = \"second\"\\n' > pyproject.toml && git add pyproject.toml",
+      "revert_command": "git rm -q --cached pyproject.toml 2>/dev/null; rm -f pyproject.toml",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "architecture/source",
+      "paths": [
+        "src/**"
+      ],
+      "requires": [
+        "architecture/no-generated-source"
+      ]
+    },
+    {
+      "id": "architecture/root",
+      "paths": [
+        "package.json",
+        "pyproject.toml",
+        "go.mod",
+        "Cargo.toml"
+      ],
+      "requires": [
+        "architecture/one-root-manifest"
+      ]
+    }
+  ],
+  "skills": []
+}

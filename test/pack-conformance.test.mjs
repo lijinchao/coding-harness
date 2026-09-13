@@ -20,10 +20,19 @@ function git(dir, args) {
  * The conformance repository a pack owes its consumers: a repository that
  * declares the pack and watches every contributed gate fail and pass again.
  */
-test('every gate of the node-library pack fires and reverts in a consumer', () => {
+const PACKS = ['node-library', 'architecture']
+const EXPECTED = [
+  'node-library/no-node-modules-committed',
+  'node-library/license-file',
+  'node-library/no-console-log',
+  'architecture/no-generated-source',
+  'architecture/one-root-manifest',
+]
+
+test('every gate of every shipped pack fires and reverts in one consumer', () => {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-conformance-'))
-  const registry = join(root, 'registry')
-  run(['release', '--base', PACK, '--out', registry, '--version', '1.0.0', '--force'])
+  const registryFor = (id) => join(root, 'registry-' + id)
+  for (const id of PACKS) run(['release', '--base', resolve(import.meta.dirname, '../packs', id), '--out', registryFor(id), '--version', '1.0.0', '--force'])
   const consumer = join(root, 'consumer')
   mkdirSync(join(consumer, 'src'), { recursive: true })
   writeFileSync(join(consumer, 'LICENSE'), 'MIT\n')
@@ -36,16 +45,17 @@ test('every gate of the node-library pack fires and reverts in a consumer', () =
     compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
     skills: [],
     gates: [],
-    packs: [{ id: 'node-library', source: registry, version: '1.0.0' }],
+    packs: PACKS.map((id) => ({ id, source: registryFor(id), version: '1.0.0' })),
   }, null, 2) + '\n')
   git(consumer, ['init', '-q'])
   git(consumer, ['add', '-A'])
   git(consumer, ['commit', '-qm', 'init'])
   const manifest = join(consumer, 'harness.manifest.json')
   run(['validate', '--manifest', manifest])
-  assert.equal(run(['gates', '--manifest', manifest]).includes('ok\tnode-library/license-file'), true)
+  const gates = run(['gates', '--manifest', manifest])
+  for (const id of EXPECTED) assert.equal(gates.includes('ok\t' + id), true)
   const proved = run(['prove', '--manifest', manifest, '--timeout', '60'])
-  for (const id of ['node-library/no-node-modules-committed', 'node-library/license-file', 'node-library/no-console-log']) {
+  for (const id of EXPECTED) {
     assert.match(proved, new RegExp('ok\\t' + id + '\\tfired on the failure and passed after revert'))
   }
   assert.equal(execFileSync('git', ['status', '--porcelain'], { cwd: consumer, encoding: 'utf8' }), '')
