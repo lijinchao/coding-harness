@@ -20,13 +20,15 @@ function git(dir, args) {
  * The conformance repository a pack owes its consumers: a repository that
  * declares the pack and watches every contributed gate fail and pass again.
  */
-const PACKS = ['node-library', 'architecture']
+const PACKS = ['node-library', 'architecture', 'hygiene']
 const EXPECTED = [
   'node-library/no-node-modules-committed',
   'node-library/license-file',
   'node-library/no-console-log',
   'architecture/no-generated-source',
   'architecture/one-root-manifest',
+  'hygiene/no-conflict-markers',
+  'hygiene/no-large-files',
 ]
 
 test('every gate of every shipped pack fires and reverts in one consumer', () => {

@@ -1,0 +1,47 @@
+{
+  "id": "hygiene",
+  "kernelVersion": ">=0.1.38",
+  "gates": [
+    {
+      "id": "hygiene/no-conflict-markers",
+      "command": "test -z \"$(git grep -nE '^(<<<<<<<|>>>>>>>) ' -- . || true)\"",
+      "protects": "an unresolved merge is never committed",
+      "prove_fires": "append a conflict marker to a tracked file, then run the gate; expect exit 1",
+      "prove_fires_command": "printf '<<<<<<< HEAD\\n' >> src/index.js",
+      "revert_command": "git checkout -- src/index.js",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    },
+    {
+      "id": "hygiene/no-large-files",
+      "command": "test -z \"$(git ls-files | while read -r f; do s=$(wc -c < \"$f\"); [ \"$s\" -gt 1048576 ] && echo \"$f\"; done || true)\"",
+      "protects": "a binary or dataset over 1 MiB does not live in the repository",
+      "prove_fires": "add a 1.1 MiB file to the index, then run the gate; expect exit 1",
+      "prove_fires_command": "head -c 1100000 /dev/zero > big.bin && git add big.bin",
+      "revert_command": "git rm -q --cached big.bin 2>/dev/null; rm -f big.bin",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "hygiene/repository",
+      "paths": [
+        "**"
+      ],
+      "requires": [
+        "hygiene/no-conflict-markers",
+        "hygiene/no-large-files"
+      ]
+    }
+  ],
+  "skills": []
+}

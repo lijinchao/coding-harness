@@ -29,9 +29,9 @@ The merge order is kernel defaults, then packs in declaration order, then the re
 
 ## The shipped packs
 
-`packs/node-library/` contributes three gates (no committed `node_modules`, a license file, no `console.log` in `src/`). `packs/architecture/` contributes two that hold for any repository (generated code stays out of `src/`, one package system at the root). Every gate is shell-only: a pack's failure injection runs in someone else's repository and must not assume a toolchain it may not have.
+`packs/node-library/` contributes three gates (no committed `node_modules`, a license file, no `console.log` in `src/`); `packs/architecture/`, two that hold anywhere (generated code stays out of `src/`, one package system at the root); `packs/hygiene/`, two more (no conflict markers, no tracked file over 1 MiB). Every gate is shell-only: a pack's failure injection runs in someone else's repository and must not assume a toolchain it may not have.
 
-`test/pack-conformance.test.mjs` is the conformance a pack owes its consumers: one fixture consumer declares both, and every contributed gate is watched to fail and pass again.
+`test/pack-conformance.test.mjs` is the conformance a pack owes its consumers: one fixture consumer declares all three, and every contributed gate is watched to fail and pass again.
 
 ## Seeing what a pack contributes
 
@@ -39,4 +39,4 @@ The merge order is kernel defaults, then packs in declaration order, then the re
 
 ## Not yet
 
-`harness diff --pack <id>@<version>` reports what a pack upgrade adds, changes, or removes — each gate with its command, each surface with its paths, each skill with its file. What is still missing is the automatic call: `upgrade` does not print that report when a declared pack version changes, and pack *versions* are still moved by editing the declaration.
+`harness diff --pack <id>@<version>` reports what a pack upgrade adds, changes, or removes — down to each gate's command. Still missing: `upgrade` does not print it when a declared version changes, and pack versions are moved by editing the declaration.
