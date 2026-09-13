@@ -1,10 +1,41 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 /** Ignored state a proof usually needs: the tool cache and installed packages. */
 const DEFAULT_CARRY = ['.harness', 'node_modules']
+
+/**
+ * Link one carried path into the worktree.
+ *
+ * A directory is materialized as a real directory of symlinked entries instead
+ * of a symlinked directory: a gitignore rule such as `node_modules/` matches a
+ * directory, not a symlink, so a linked directory would surface as an untracked
+ * file to a gate that lists them, while the entries of a real ignored directory
+ * stay invisible.
+ *
+ * @param {string} source - Path in the real repository.
+ * @param {string} target - Path in the worktree.
+ * @returns {string[]} Repository-relative entries that were linked.
+ */
+function linkCarried(source, target) {
+  if (!statSync(source).isDirectory()) {
+    symlinkSync(source, target)
+    return ['']
+  }
+  mkdirSync(target, { recursive: true })
+  const linked = []
+  for (const entry of readdirSync(source)) {
+    try {
+      symlinkSync(resolve(source, entry), resolve(target, entry))
+      linked.push(entry)
+    } catch {
+      // An entry that cannot be linked is simply not carried.
+    }
+  }
+  return linked
+}
 
 /**
  * Create a detached worktree of HEAD for an isolated proof, carrying over the
@@ -26,8 +57,7 @@ export function createProofWorktree(root, carry = []) {
     const target = resolve(dir, rel)
     if (!existsSync(source) || existsSync(target)) continue
     try {
-      symlinkSync(source, target)
-      links.push(rel)
+      for (const entry of linkCarried(source, target)) links.push(entry === '' ? rel : join(rel, entry))
     } catch {
       // A path that cannot be linked is simply not carried.
     }

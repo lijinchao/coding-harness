@@ -5,6 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { toolVersion } from '../src/tool.mjs'
+import { createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
@@ -195,7 +196,7 @@ test('prove --isolated runs in a worktree and leaves the real tree untouched', (
     skills: [],
     gates: [gate({
       id: 'target',
-      command: `test -f marker.txt && test -f .harness/carried.txt && printf '%s\\n' "$(pwd)" >> '${pwdLog}'`,
+      command: `test -f marker.txt && test -f .harness/carried.txt && test -z "$(git ls-files -o --exclude-standard)" && printf '%s\\n' "$(pwd)" >> '${pwdLog}'`,
       prove_fires_command: 'rm -f marker.txt',
       revert_command: "printf 'x\\n' > marker.txt",
     })],
@@ -210,6 +211,25 @@ test('prove --isolated runs in a worktree and leaves the real tree untouched', (
   assert.equal(execFileSync('git', ['-C', root, 'worktree', 'list'], { encoding: 'utf8' }).trim().split('\n').length, 1)
   rmSync(root, { recursive: true, force: true })
   rmSync(pwdLog, { force: true })
+})
+
+test('an isolated worktree keeps a carried cache invisible to git', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-worktree-'))
+  writeFileSync(join(root, '.gitignore'), '.harness/\nnode_modules/\n')
+  writeFileSync(join(root, 'tracked.txt'), 'x\n')
+  mkdirSync(join(root, '.harness', 'tool'), { recursive: true })
+  writeFileSync(join(root, '.harness', 'tool', 'carried.txt'), 'carried\n')
+  mkdirSync(join(root, 'node_modules', 'pkg'), { recursive: true })
+  writeFileSync(join(root, 'node_modules', 'pkg', 'index.js'), '\n')
+  gitRepo(root)
+  const { dir, links } = createProofWorktree(root)
+  assert.equal(execFileSync('git', ['-C', dir, 'ls-files', '-o', '--exclude-standard'], { encoding: 'utf8' }), '')
+  assert.equal(readFileSync(join(dir, '.harness', 'tool', 'carried.txt'), 'utf8'), 'carried\n')
+  assert.equal(readFileSync(join(dir, 'node_modules', 'pkg', 'index.js'), 'utf8'), '\n')
+  assert.ok(links.includes(join('.harness', 'tool')))
+  removeProofWorktree(root, dir)
+  assert.equal(execFileSync('git', ['-C', root, 'worktree', 'list'], { encoding: 'utf8' }).trim().split('\n').length, 1)
+  rmSync(root, { recursive: true, force: true })
 })
 
 test('prove times out a hung proof command', () => {

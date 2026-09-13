@@ -15,6 +15,7 @@ A repository owner adopting the harness: first-time setup, then a base release, 
 ## Observation
 
 - 2026-09-13, base 0.1.27: journey 3 passed by hand on `coding-harness` and `codex-inspired-agent` — `prove` reported four gates `ok` and `git status` was clean afterwards. Journeys 1 and 2 are covered by `test/journeys.test.mjs`.
+- 2026-09-13, base 0.1.28: journey 2 run on `codex-inspired-agent`. Its authorization gate rejects any untracked file, which caught the isolated proof carrying `.harness` as a symlink; the carry now materializes a directory's entries, so the worktree stays invisible to `git ls-files`. The acceptance run also caught `coding-harness` itself: the 0.1.28 pin moved without re-recording the example, so the `example` gate failed on main until the example followed.
 - The failures found in this session — a repeated `prove` deleting recorded proofs, `upgrade` dropping them, and the lock key order drifting — were found by running journeys 2 and 3, not by the unit tests that existed at the time.
 
 ## Decision
