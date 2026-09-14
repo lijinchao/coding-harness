@@ -103,3 +103,32 @@ test('a window can exclude the gate that judges it', () => {
   assert.doesNotMatch(out, /flaky/)
   rmSync(dir, { recursive: true, force: true })
 })
+test('a budget never averages gate health with delivery outcomes', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-metrics-kind-'))
+  const log = join(dir, 'metrics.jsonl')
+  const manifest = join(dir, 'harness.manifest.json')
+  const entry = (kind, results) => JSON.stringify({ at: '2026-09-13T00:00:00.000Z', kind, version: '1.0.0', tool: '1.0.0', results })
+  const green = [{ id: 'tests', ok: true, skipped: false, timedOut: false, ms: 10 }]
+  const red = [{ id: 'task', ok: false, skipped: false, timedOut: false, ms: 10 }]
+  writeFileSync(log, [entry('delivery-outcome', red), entry('gate-health', green), entry('delivery-outcome', red)].join('\n') + '\n')
+  writeFileSync(manifest, JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [{ id: 'tests', command: 'true', protects: 'p', prove_fires: 'f', prove_fires_command: 'false', revert_command: 'true', severity: 'blocking' }],
+    governance: { metrics: { log: 'metrics.jsonl', minFirstPassRate: 1 } },
+  }, null, 2) + '\n')
+  const gateOut = execFileSync(process.execPath, [CLI, 'metrics', '--manifest', manifest], { encoding: 'utf8' })
+  assert.match(gateOut, /window: 1 run\(s\), 1 green/)
+  assert.match(gateOut, /first-pass rate: 1\.00/)
+  const evalManifest = join(dir, 'eval.manifest.json')
+  writeFileSync(evalManifest, JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [{ id: 'tests', command: 'true', protects: 'p', prove_fires: 'f', prove_fires_command: 'false', revert_command: 'true', severity: 'blocking' }],
+    governance: { metrics: { log: 'metrics.jsonl', kind: 'delivery-outcome', minFirstPassRate: 1 } },
+  }, null, 2) + '\n')
+  assert.throws(() => execFileSync(process.execPath, [CLI, 'metrics', '--manifest', evalManifest], { encoding: 'utf8', stdio: 'pipe' }))
+  rmSync(dir, { recursive: true, force: true })
+})

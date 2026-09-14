@@ -95,7 +95,8 @@
             "minFirstPassRate": { "type": "number", "minimum": 0, "maximum": 1 },
             "maxFlaky": { "type": "integer", "minimum": 0 },
             "maxTimeouts": { "type": "integer", "minimum": 0 },
-            "exclude": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+            "exclude": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            "kind": { "enum": ["gate-health", "delivery-outcome"] }
           }
         },
         "proofs": {

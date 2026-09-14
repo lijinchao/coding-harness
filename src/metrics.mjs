@@ -13,10 +13,11 @@
  * @param {object[]} entries - Report entries, oldest first.
  * @param {number} [window] - How many recent runs the budget judges.
  * @param {string[]} [exclude] - Gate ids the window ignores.
+ * @param {string} [kind] - The run kind the window judges; gate health by default, so a budget never averages a gate that flakes with a task an agent cannot finish.
  * @returns {{ runs: number, green: number, firstPassRate: number|null, flaky: string[], timeouts: number, failures: Record<string, number> }}
  */
-export function metricsWindow(entries, window = 20, exclude = []) {
-  const runs = entries.slice(-Math.max(1, window))
+export function metricsWindow(entries, window = 20, exclude = [], kind = 'gate-health') {
+  const runs = entries.filter((run) => (run?.kind ?? 'gate-health') === kind).slice(-Math.max(1, window))
   const ignored = new Set(exclude)
   const stats = new Map()
   let green = 0

@@ -28,7 +28,8 @@ export const LOCK_BASE_KEYS = ['version', 'files']
 export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs', 'metrics', 'legibility']
 export const LEGIBILITY_ADAPTERS = ['start', 'ready', 'observe.ui', 'observe.logs', 'observe.metrics', 'observe.traces', 'reset', 'teardown']
 export const LEGIBILITY_KEYS = ['command', 'evidence']
-export const METRICS_KEYS = ['log', 'window', 'minFirstPassRate', 'maxFlaky', 'maxTimeouts', 'exclude']
+export const METRICS_KEYS = ['log', 'window', 'minFirstPassRate', 'maxFlaky', 'maxTimeouts', 'exclude', 'kind']
+export const METRICS_KINDS = ['gate-health', 'delivery-outcome']
 export const PROOFS_KEYS = ['require', 'maxAgeDays']
 export const PROOF_REQUIRE = ['blocking', 'all', 'none']
 export const PRODUCT_KEYS = ['version', 'mentions']
@@ -184,6 +185,9 @@ function validateGovernance(errors, governance) {
       if (governance.metrics.exclude !== undefined) {
         if (!Array.isArray(governance.metrics.exclude)) errors.push('governance.metrics.exclude: required array')
         else governance.metrics.exclude.forEach((id, index) => requireString(errors, id, 'governance.metrics.exclude[' + index + ']'))
+      }
+      if (governance.metrics.kind !== undefined && !METRICS_KINDS.includes(governance.metrics.kind)) {
+        errors.push('governance.metrics.kind: must be one of ' + METRICS_KINDS.join(', '))
       }
       const rate = governance.metrics.minFirstPassRate
       if (rate !== undefined && (typeof rate !== 'number' || rate < 0 || rate > 1)) errors.push('governance.metrics.minFirstPassRate: required number between 0 and 1')

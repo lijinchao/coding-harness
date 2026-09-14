@@ -324,7 +324,7 @@ async function cmdGates(options) {
     console.log(`${status}\t${result.id}${notes.length === 0 ? '' : ' (' + notes.join('; ') + ')'}`)
   }
   if (typeof options.report === 'string') {
-    const entry = { at: new Date().toISOString(), version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
+    const entry = { at: new Date().toISOString(), kind: 'gate-health', version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
     appendFileSync(resolve(options.report), `${JSON.stringify(entry)}\n`)
   }
   if (blocking > 0) process.exit(1)
@@ -378,7 +378,7 @@ function cmdMetrics(options) {
     if (config === undefined) throw new Error('governance.metrics is not declared; the budget has nothing to judge')
     const logPath = resolve(root, config.log)
     if (!existsSync(logPath)) throw new Error(config.log + ': metrics log not found; record a run with gates --report')
-    const summary = metricsWindow(readRuns(logPath, readFileSync), config.window, config.exclude ?? [])
+    const summary = metricsWindow(readRuns(logPath, readFileSync), config.window, config.exclude ?? [], config.kind ?? 'gate-health')
     console.log(`window: ${summary.runs} run(s), ${summary.green} green`)
     console.log(`first-pass rate: ${summary.firstPassRate === null ? 'n/a' : summary.firstPassRate.toFixed(2)}`)
     if (summary.flaky.length > 0) console.log(`flaky: ${summary.flaky.join(', ')}`)
