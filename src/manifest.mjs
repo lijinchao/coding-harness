@@ -14,7 +14,8 @@ export function loadManifest(path) {
 // contract; the schema alone is not executable and drifted once already.
 export const SKILL_FIELDS = ['id', 'path', 'trigger', 'owner']
 export const GATE_FIELDS = ['id', 'command', 'protects', 'prove_fires', 'severity']
-export const ROOT_KEYS = ['version', 'tool', 'base', 'product', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'packs', 'lock']
+export const ROOT_KEYS = ['version', 'tool', 'base', 'product', 'governance', 'compositions', 'skills', 'gates', 'surfaces', 'packs', 'evals', 'lock']
+export const EVAL_KEYS = ['id', 'fixture', 'task', 'assert', 'evidence', 'feedback', 'retries']
 export const COMPOSITION_KEYS = ['output', 'sources']
 export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
 export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after', 'override']
@@ -284,6 +285,34 @@ function validatePacks(errors, packs) {
   }
 }
 
+function validateEvals(errors, manifest) {
+  const evals = manifest.evals
+  if (evals === undefined) return
+  if (!Array.isArray(evals)) {
+    errors.push('evals: required array')
+    return
+  }
+  const ids = new Set()
+  evals.forEach((entry, index) => {
+    const where = 'evals[' + index + ']'
+    requireObject(errors, entry, where)
+    rejectUnknown(errors, entry, EVAL_KEYS, where)
+    if (!isObject(entry)) return
+    for (const key of ['id', 'fixture', 'task', 'assert']) requireString(errors, entry[key], where + '.' + key)
+    for (const key of ['fixture', 'assert']) {
+      if (typeof entry[key] === 'string' && entry[key].includes('\n')) errors.push(where + '.' + key + ': required single line')
+    }
+    if (entry.evidence !== undefined) requireString(errors, entry.evidence, where + '.evidence')
+    if (entry.feedback !== undefined) requireString(errors, entry.feedback, where + '.feedback')
+    if (entry.retries !== undefined && (!Number.isInteger(entry.retries) || entry.retries < 0)) errors.push(where + '.retries: required integer >= 0')
+    if (typeof entry.id === 'string') {
+      if (ids.has(entry.id)) errors.push(where + '.id: duplicate id ' + entry.id)
+      ids.add(entry.id)
+    }
+  })
+  if (manifest.governance?.legibility === undefined) errors.push('evals: requires governance.legibility, because an eval asserts on the world the adapters start')
+}
+
 function validateLock(errors, lock) {
   if (lock === undefined) return
   requireObject(errors, lock, 'lock')
@@ -325,6 +354,7 @@ export function validateManifest(manifest) {
   validateBase(errors, manifest.base)
   validateTool(errors, manifest.tool)
   validatePacks(errors, manifest.packs)
+  validateEvals(errors, manifest)
   validateProduct(errors, manifest.product)
   validateGovernance(errors, manifest.governance)
 
