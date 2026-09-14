@@ -325,6 +325,10 @@
       {
         "path": "docs/release.md",
         "maxWords": 500
+      },
+      {
+        "path": "docs/legibility.md",
+        "maxWords": 500
       }
     ],
     "instructions": [
