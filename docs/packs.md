@@ -10,7 +10,7 @@ A pack is depth that does not become everyone's burden: a released, hashed, pinn
 ]
 ```
 
-`source` and `registry` mean what they mean for `base`: a directory holding `<id>@<version>/` releases, or a `git:` URL fetched at `v<version>`. A pack is released with `harness release --base <pack dir> --out <registry> --version <v>`, so it is verified by the same per-file hashes as the base and never introduces a second mechanism.
+`source` and `registry` mean what they mean for `base`: a directory holding `<id>@<version>/` releases, or a `git:` URL. A pack fetched over git lives at `pack/<id>/v<version>`: one repository holds many artifacts, and its own tags name its own releases. A pack is released with `harness release --base <pack dir> --out <registry> --version <v>`, so it is verified by the same per-file hashes as the base.
 
 ## Contributing
 
@@ -23,7 +23,7 @@ The pack's `pack.json` declares what it contributes:
 | `gates`, `surfaces`, `skills` | The declarations, with namespaced ids |
 | `packs`, `conflicts` | Pack ids this one requires or refuses |
 
-Resolution is atomic: every declared pack is fetched, verified, and merged before any command reads the manifest, and a failure — an unnamespaced id, a kernel that is too old, a missing dependency, a conflict, a collision with a repository gate — leaves the manifest untouched.
+Resolution is atomic: every declared pack is fetched, verified, and merged before any command reads the manifest, and a failure — unnamespaced id, old kernel, missing dependency, conflict, collision with a repository gate — leaves the manifest untouched.
 
 The merge order is kernel defaults, then packs in declaration order, then the repository. A repository gate colliding with a pack gate is an error unless that gate declares `override: true`, and `lock.overrides` records what was overridden. `lock.packs` records each pack's version and per-file hashes, so a generated gate is traceable to the pack that produced it. Pack contributions live in memory and in the lock; they are never written into the repository's own manifest.
 
@@ -39,4 +39,4 @@ The merge order is kernel defaults, then packs in declaration order, then the re
 
 ## Not yet
 
-`harness diff --pack <id>@<version>` reports what a pack upgrade adds, changes, or removes — down to each gate's command. Still missing: `upgrade` does not print it when a declared version changes, and pack versions are moved by editing the declaration.
+`harness diff --pack <id>@<version>` reports what a pack upgrade adds, changes, or removes — down to each gate's command. Still missing: `upgrade` does not print it, and pack versions move by editing the declaration.

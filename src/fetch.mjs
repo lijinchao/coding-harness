@@ -23,8 +23,9 @@ export function gitUrl(source) {
   return source.slice('git:'.length)
 }
 
-function cacheKey(source, version) {
-  return createHash('sha256').update(source + '@' + version).digest('hex').slice(0, 16)
+function cacheKey(source, version, tag) {
+  const suffix = tag === 'v' + version ? '' : '#' + tag
+  return createHash('sha256').update(source + '@' + version + suffix).digest('hex').slice(0, 16)
 }
 
 /**
@@ -36,12 +37,12 @@ function cacheKey(source, version) {
  * @param {string} source - A base source prefixed `git:`.
  * @param {string} version - Pinned base version.
  * @param {string} cacheRoot - Directory that holds the checkout cache.
+ * @param {string} [tag] - The tag to fetch; `v<version>` by default. A pack uses its own convention, because one repository holds many artifacts and its tags name its own releases.
  * @returns {string} The checkout root.
  */
-export function ensureGitCheckout(source, version, cacheRoot) {
+export function ensureGitCheckout(source, version, cacheRoot, tag = 'v' + version) {
   const url = gitUrl(source)
-  const tag = 'v' + version
-  const repoDir = resolve(cacheRoot, cacheKey(source, version), 'repo')
+  const repoDir = resolve(cacheRoot, cacheKey(source, version, tag), 'repo')
   if (existsSync(resolve(repoDir, '.git'))) return repoDir
   mkdirSync(dirname(repoDir), { recursive: true })
   try {

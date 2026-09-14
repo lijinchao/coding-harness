@@ -33,10 +33,16 @@ function atLeast(version, minimum) {
  * @returns {{ id: string, dir: string, release: object, descriptor: object }}
  */
 export function resolvePack(root, declaration, kernelVersion) {
-  const { dir, release } = resolveBase(root, {
-    version: declaration.version,
-    base: { source: declaration.source, registry: declaration.registry, cache: declaration.cache },
-  })
+  const { dir, release } = resolveBase(
+    root,
+    {
+      version: declaration.version,
+      base: { source: declaration.source, registry: declaration.registry, cache: declaration.cache },
+    },
+    // One repository holds many artifacts and tags its own releases, so a pack
+    // fetched over git lives under a tag that names it.
+    { tag: declaration.source.startsWith('git:') ? 'pack/' + declaration.id + '/v' + declaration.version : undefined },
+  )
   const path = resolve(dir, 'pack.json')
   let descriptor
   try {

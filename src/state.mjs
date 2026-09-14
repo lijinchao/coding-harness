@@ -19,13 +19,13 @@ export { writeAtomic }
 /**
  * Resolve and verify the pinned base release, or null when none is pinned.
  */
-export function resolveBase(root, manifest) {
+export function resolveBase(root, manifest, options = {}) {
   if (manifest.base === undefined) return null
   const config = manifest.base
   let registry
   if (isGitSource(config.source)) {
     const cacheRoot = resolve(root, config.cache ?? '.harness')
-    const repoDir = ensureGitCheckout(config.source, manifest.version, cacheRoot)
+    const repoDir = ensureGitCheckout(config.source, manifest.version, cacheRoot, options.tag)
     registry = resolve(repoDir, config.registry ?? 'dist')
   } else {
     registry = resolve(root, config.source)
