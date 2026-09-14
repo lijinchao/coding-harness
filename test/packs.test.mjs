@@ -154,3 +154,30 @@ test('diff --pack reports the gates, surfaces, and commands a pack upgrade chang
   assert.match(report, /\+ surface demo\/tests: tests\/\*\*/)
   rmSync(root, { recursive: true, force: true })
 })
+test('a pack fetched over git lives at pack/<id>/v<version>', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-pack-git-'))
+  const origin = join(root, 'origin')
+  const packDir = join(origin, 'packs', 'demo')
+  mkdirSync(packDir, { recursive: true })
+  writeFileSync(join(packDir, 'pack.json'), JSON.stringify(packJson(), null, 2) + '\n')
+  run(['release', '--base', packDir, '--out', join(origin, 'dist'), '--version', '1.0.0', '--force'])
+  const git = (args) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...args], { cwd: origin, stdio: 'pipe' })
+  git(['init', '-q'])
+  git(['add', '-A'])
+  git(['commit', '-qm', 'pack'])
+  git(['tag', 'pack/demo/v1.0.0'])
+  const consumer = join(root, 'consumer')
+  mkdirSync(consumer, { recursive: true })
+  writeFileSync(join(consumer, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(join(consumer, 'harness.manifest.json'), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [],
+    packs: [{ id: 'demo', source: 'git:file://' + origin, version: '1.0.0', registry: 'dist' }],
+  }, null, 2) + '\n')
+  const listed = run(['packs', '--manifest', join(consumer, 'harness.manifest.json')])
+  assert.match(listed, /demo@1\.0\.0 — 1 file\(s\) in the lock/)
+  assert.match(listed, /gate demo\/architecture: true/)
+  rmSync(root, { recursive: true, force: true })
+})
