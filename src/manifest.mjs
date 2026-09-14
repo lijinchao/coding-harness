@@ -298,11 +298,10 @@ function validateEvals(errors, manifest) {
     requireObject(errors, entry, where)
     rejectUnknown(errors, entry, EVAL_KEYS, where)
     if (!isObject(entry)) return
-    for (const key of ['id', 'fixture', 'task', 'assert']) requireString(errors, entry[key], where + '.' + key)
+    for (const key of ['id', 'fixture', 'task', 'assert', 'evidence']) requireString(errors, entry[key], where + '.' + key)
     for (const key of ['fixture', 'assert']) {
       if (typeof entry[key] === 'string' && entry[key].includes('\n')) errors.push(where + '.' + key + ': required single line')
     }
-    if (entry.evidence !== undefined) requireString(errors, entry.evidence, where + '.evidence')
     if (entry.feedback !== undefined) requireString(errors, entry.feedback, where + '.feedback')
     if (entry.retries !== undefined && (!Number.isInteger(entry.retries) || entry.retries < 0)) errors.push(where + '.retries: required integer >= 0')
     if (typeof entry.id === 'string') {

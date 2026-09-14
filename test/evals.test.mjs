@@ -14,16 +14,17 @@ function manifest(evals, legibility) {
 }
 
 const adapters = { start: { command: 'make up' }, ready: { command: 'make ready' } }
-const task = { id: 'fix-reward', fixture: 'make fixture', task: 'Fix the broken reward', assert: 'make assert-reward', retries: 2 }
+const task = { id: 'fix-reward', fixture: 'make fixture', task: 'Fix the broken reward', assert: 'make assert-reward', evidence: 'artifacts/reward.json', retries: 2 }
 
 test('a complete eval declaration is valid', () => {
   assert.deepEqual(validateManifest(manifest([task], adapters)), [])
 })
 
-test('an eval needs an id, a fixture, a task, and an assertion', () => {
+test('an eval needs an id, a fixture, a task, an assertion, and evidence', () => {
   const errors = validateManifest(manifest([{ id: 'x', task: 'do it' }], adapters))
   assert.match(errors.join('\n'), /evals\[0\]\.fixture: required non-empty string/)
   assert.match(errors.join('\n'), /evals\[0\]\.assert: required non-empty string/)
+  assert.match(errors.join('\n'), /evals\[0\]\.evidence: required non-empty string/)
 })
 
 test('a multi-line command, a duplicate id, and a bad retry count are rejected', () => {
