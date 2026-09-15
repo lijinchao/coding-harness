@@ -66,6 +66,7 @@ export function doctorReport(root, manifest, requirements) {
   }
 
   if (governance.changes !== undefined) {
+    const seen = new Set()
     const dir = resolve(root, governance.changes)
     if (!existsSync(dir)) {
       problems.push(governance.changes + ': change-record directory not found')
@@ -78,6 +79,11 @@ export function doctorReport(root, manifest, requirements) {
         }
         const reference = text.match(/^decision:\s*(\S+)/im)
         if (reference !== null && !existsSync(resolve(root, reference[1]))) problems.push(governance.changes + '/' + name + ': decision reference not found: ' + reference[1])
+        const number = /^(\d+)-/.exec(name)
+        if (number !== null) {
+          if (seen.has(number[1])) problems.push(governance.changes + '/' + name + ': change number ' + number[1] + ' is already used')
+          seen.add(number[1])
+        }
       }
     }
   }
