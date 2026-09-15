@@ -21,6 +21,20 @@ without running a command. Every repository needs a reviewed verification.
 The complete format is in [system-manifest.md](system-manifest.md).
 An unresolved member uses `revision: null` and prevents readiness.
 
+### System receipt
+
+| Field | Meaning |
+|---|---|
+| `manifest` | Absolute path and SHA-256 of the system declaration |
+| `repositories` | Exact revision combination used by the run |
+| `results` | Command identity, outcome, timeout, duration, and output hashes |
+
+`system-run` requires a ready snapshot and writes a receipt after passing or
+failing commands. `system-receipt-check` rejects manifest, revision, tier-command,
+or result drift without rerunning the tier. Receipt output stays outside every
+declared repository. External qualification additionally requires
+`--allow-external`; a manifest declaration alone is not execution authority.
+
 ### Skill
 
 | Field | Meaning |

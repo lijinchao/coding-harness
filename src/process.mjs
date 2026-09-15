@@ -54,7 +54,7 @@ process.on('exit', () => terminateAll('SIGKILL'))
  * @param {string} root - Working directory.
  * @param {string} command - Shell command.
  * @param {number} [timeoutMs] - Zero means no timeout.
- * @returns {Promise<{ code: number, signal: string|null, timedOut: boolean, ms: number, output: string }>}
+ * @returns {Promise<{ code: number, signal: string|null, timedOut: boolean, ms: number, output: string, stdout: string, stderr: string }>}
  */
 export function runCommand(root, command, timeoutMs = 0) {
   return new Promise((resolve) => {
@@ -62,9 +62,11 @@ export function runCommand(root, command, timeoutMs = 0) {
     active.add(child)
     const startedAt = Date.now()
     let output = ''
+    let stdout = ''
+    let stderr = ''
     let settled = false
-    child.stdout.on('data', (chunk) => { output += chunk })
-    child.stderr.on('data', (chunk) => { output += chunk })
+    child.stdout.on('data', (chunk) => { stdout += chunk; output += chunk })
+    child.stderr.on('data', (chunk) => { stderr += chunk; output += chunk })
     let timedOut = false
     let killTimer = null
     const timer = timeoutMs > 0 ? setTimeout(() => {
@@ -78,9 +80,14 @@ export function runCommand(root, command, timeoutMs = 0) {
       active.delete(child)
       if (timer !== null) clearTimeout(timer)
       if (killTimer !== null) clearTimeout(killTimer)
-      resolve({ code: code ?? 1, signal: signal ?? null, timedOut, ms: Date.now() - startedAt, output })
+      resolve({ code: code ?? 1, signal: signal ?? null, timedOut, ms: Date.now() - startedAt, output, stdout, stderr })
     }
     child.on('close', finish)
-    child.on('error', (error) => { output += String(error.message); finish(1, null) })
+    child.on('error', (error) => {
+      const message = String(error.message)
+      stderr += message
+      output += message
+      finish(1, null)
+    })
   })
 }

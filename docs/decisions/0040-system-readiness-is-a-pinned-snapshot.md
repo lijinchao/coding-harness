@@ -24,6 +24,12 @@ The status `declared-ready` means only that this snapshot is aligned and its
 evidence exists. It does not mean that verification commands passed, that an
 integration environment was qualified, or that the system is released.
 
+One reviewed tier may then run through `system-run`. It produces a receipt
+outside the declared repositories, bound to the manifest hash, repository
+revisions, commands, results, timeouts, and output hashes. External-qualified
+execution requires a separate invocation flag. Receipt verification never
+reruns commands.
+
 ## Alternatives
 
 - Put sibling repositories in one repository manifest: this makes a portable
@@ -40,5 +46,5 @@ integration environment was qualified, or that the system is released.
 - Paths may be absolute or relative to the system manifest, while revisions are
   immutable full commit IDs. An unresolved member uses `revision: null` and
   prevents readiness instead of accepting a guessed pin.
-- Command execution and result recording remain future work; this change proves
-  declarations and checkout alignment only.
+- Tier execution is explicit and bounded; a receipt proves one tier run, not
+  release or runtime health beyond the commands it records.

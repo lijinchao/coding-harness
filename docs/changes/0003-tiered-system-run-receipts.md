@@ -26,4 +26,8 @@ manifest or checked for staleness later.
 
 ## Verification
 
-Pending implementation.
+- `node --test test/system.test.mjs`
+- `npm test`
+- `node bin/harness.mjs doctor --manifest harness.manifest.json`
+- `./harness check --manifest examples/consumer/harness.manifest.json`
+- Real QIHOOAgent preflight refusal with no command execution or receipt output.

@@ -30,13 +30,17 @@ import { loadRequirements } from '../src/adopt.mjs'
 import { selectedGateIds } from '../src/select.mjs'
 import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
-import { checkSystemManifest } from '../src/system.mjs'
+import { checkSystemManifest, checkSystemReceipt, runSystemTier } from '../src/system.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
 commands:
   survey     --dir <path>                inspect an unadopted repository without writing or running its commands
   system-check --manifest <path>         check a multi-repository system snapshot without running its commands
+  system-run --manifest <path> --tier <tier> --out <receipt> [--timeout <s>] [--allow-external] [--force]
+                                         run one reviewed tier and write a version-bound receipt
+  system-receipt-check --manifest <path> --receipt <path>
+                                         verify a receipt without rerunning commands
   validate   --manifest <path>           validate manifest structure
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
@@ -61,7 +65,7 @@ commands:
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external'])
 const REPEATABLE_FLAGS = new Set(['changed'])
 
 function parseOptions(argv) {
@@ -453,6 +457,33 @@ function cmdSystemCheck(options) {
   if (!report.ready) process.exit(1)
 }
 
+async function cmdSystemRun(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const tier = requireOption(options, 'tier')
+  const out = resolve(requireOption(options, 'out'))
+  const timeoutSeconds = options.timeout === undefined ? 300 : Number(options.timeout)
+  if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) throw new Error('--timeout must be a positive number of seconds')
+  const receipt = await runSystemTier(path, tier, out, {
+    timeoutMs: timeoutSeconds * 1000,
+    allowExternal: options['allow-external'] === true,
+    force: options.force === true,
+    onOutput(verification, result) {
+      if (result.output.length > 0) process.stderr.write(`system-run: ${verification.id}\n${result.output}${result.output.endsWith('\n') ? '' : '\n'}`)
+    },
+  })
+  console.log(JSON.stringify(receipt, null, 2))
+  if (receipt.status !== 'passed') process.exit(1)
+}
+
+function cmdSystemReceiptCheck(options) {
+  const report = checkSystemReceipt(
+    resolve(requireOption(options, 'manifest')),
+    resolve(requireOption(options, 'receipt')),
+  )
+  console.log(JSON.stringify(report, null, 2))
+  if (!report.valid) process.exit(1)
+}
+
 async function cmdProve(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
@@ -591,7 +622,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

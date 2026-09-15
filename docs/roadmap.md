@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.39 — the released kernel remains unchanged; the working tool now surveys unadopted repositories and checks pinned multi-repository snapshots without executing discovered or declared commands. Base and tool releases are versioned, hashed, and commit-pinned; the manifest carries gates, governance, changed-surface selection, proof records, metrics, packs, legibility declarations, and eval declarations. The detailed current contracts live in [reference.md](reference.md) and [contracts.md](contracts.md).
+Status: v0.1.39 — the released kernel remains unchanged; the working tool surveys unadopted repositories, checks pinned multi-repository snapshots, and runs one reviewed verification tier into a version-bound receipt. External-qualified execution remains separately authorized. Base and tool releases are versioned, hashed, and commit-pinned; the manifest carries gates, governance, changed-surface selection, proof records, metrics, packs, legibility declarations, and eval declarations. The detailed current contracts live in [reference.md](reference.md) and [contracts.md](contracts.md).
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)), the artifact contracts ([contracts.md](contracts.md)), and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 

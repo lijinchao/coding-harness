@@ -65,3 +65,32 @@ Survey candidates remain suggestions. A person reviews the exact command and
 adds it with `reviewed_by`; there is no automatic promotion. `declared-ready`
 means only that the pinned checkout combination and contract evidence align.
 It is not test success, integration qualification, release, or runtime proof.
+
+## Tier execution receipts
+
+Run one reviewed tier only:
+
+```sh
+harness system-run --manifest system.manifest.json --tier unit \
+  --out /outside/the/repositories/unit-receipt.json --timeout 300
+harness system-receipt-check --manifest system.manifest.json \
+  --receipt /outside/the/repositories/unit-receipt.json
+```
+
+Execution requires a ready snapshot. Receipt output must stay outside every
+declared repository so generating evidence does not dirty the snapshot being
+proved. Each command runs from its repository and is bounded by the per-command
+timeout. A failed command still produces a failed receipt.
+An existing receipt is immutable by default; use another path or pass `--force`
+only when replacement is intentional. CLI runs show command output in the
+terminal, but the receipt retains hashes only.
+
+The receipt binds the manifest SHA-256, repository revisions, tier, exact
+commands, result and timeout state, duration, and separate stdout/stderr sizes
+and hashes. It does not store command output, which may contain secrets.
+`system-receipt-check` rejects changed manifests, repository drift, command-set
+drift, failed results, and malformed receipts without rerunning anything.
+
+`external-qualified` remains disabled unless the caller separately passes
+`--allow-external`. That flag is execution authority for that invocation only;
+it is not persisted as production approval.

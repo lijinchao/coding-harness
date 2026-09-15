@@ -7,15 +7,24 @@ import { join, resolve } from 'node:path'
 import {
   SYSTEM_CONTRACT_KEYS,
   SYSTEM_EVIDENCE_KEYS,
+  SYSTEM_RECEIPT_KEYS,
+  SYSTEM_RECEIPT_MANIFEST_KEYS,
+  SYSTEM_RECEIPT_REPOSITORY_KEYS,
+  SYSTEM_RECEIPT_RESULT_KEYS,
+  SYSTEM_RECEIPT_STREAM_KEYS,
   SYSTEM_REPOSITORY_KEYS,
   SYSTEM_ROOT_KEYS,
   SYSTEM_VERIFICATION_KEYS,
   checkSystemManifest,
+  checkSystemReceipt,
+  runSystemTier,
   validateSystemManifest,
+  validateSystemReceipt,
 } from '../src/system.mjs'
 
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 const SCHEMA = JSON.parse(readFileSync(resolve(import.meta.dirname, '../schema/system.manifest.schema.json'), 'utf8'))
+const RECEIPT_SCHEMA = JSON.parse(readFileSync(resolve(import.meta.dirname, '../schema/system-receipt.schema.json'), 'utf8'))
 
 function commit(root, message = 'fixture') {
   execFileSync('git', ['init', '-q'], { cwd: root })
@@ -143,4 +152,126 @@ test('system schema and executable validator expose the same object fields', () 
   assert.deepEqual([...SYSTEM_CONTRACT_KEYS].sort(), [...SCHEMA.properties.contracts.items.required].sort())
   assert.deepEqual([...SYSTEM_EVIDENCE_KEYS].sort(), [...SCHEMA.properties.contracts.items.properties.evidence.required].sort())
   assert.deepEqual([...SYSTEM_VERIFICATION_KEYS].sort(), [...SCHEMA.properties.verifications.items.required].sort())
+})
+
+test('system run executes only the selected tier and writes a passing receipt', async () => {
+  const value = fixture()
+  const unitMarker = join(value.root, 'unit-ran')
+  const contractMarker = join(value.root, 'contract-ran')
+  value.manifest.verifications[1].command = `touch ${unitMarker}`
+  value.manifest.verifications.push({
+    id: 'runtime-contract', repository: 'runtime', tier: 'contract', command: `touch ${contractMarker}`, external: false, reviewed_by: '@owner',
+  })
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const receiptPath = join(value.root, 'unit-receipt.json')
+  await assert.rejects(runSystemTier(value.manifestPath, 'unit', join(value.runtime, 'receipt.json')), /outside every declared repository/)
+  const receipt = await runSystemTier(value.manifestPath, 'unit', receiptPath, { timeoutMs: 5000 })
+  assert.equal(receipt.status, 'passed')
+  assert.equal(receipt.results.length, 1)
+  assert.equal(receipt.results[0].id, 'runtime-unit')
+  assert.equal(existsSync(unitMarker), true)
+  assert.equal(existsSync(contractMarker), false)
+  assert.deepEqual(validateSystemReceipt(receipt), [])
+  assert.equal(checkSystemReceipt(value.manifestPath, receiptPath).valid, true)
+  await assert.rejects(runSystemTier(value.manifestPath, 'unit', receiptPath), /receipt already exists/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system run refuses a non-ready snapshot before creating a receipt', async () => {
+  const value = fixture()
+  writeFileSync(join(value.runtime, 'dirty.txt'), 'dirty\n')
+  const receiptPath = join(value.root, 'must-not-exist.json')
+  await assert.rejects(runSystemTier(value.manifestPath, 'unit', receiptPath), /snapshot is not ready/)
+  assert.equal(existsSync(receiptPath), false)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('a failed tier still writes a failed receipt', async () => {
+  const value = fixture()
+  value.manifest.verifications[1].command = 'node -e "process.exit(7)"'
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const receiptPath = join(value.root, 'failed-receipt.json')
+  const receipt = await runSystemTier(value.manifestPath, 'unit', receiptPath, { timeoutMs: 5000 })
+  assert.equal(receipt.status, 'failed')
+  assert.equal(receipt.results[0].exit_code, 7)
+  assert.equal(JSON.parse(readFileSync(receiptPath, 'utf8')).status, 'failed')
+  assert.match(checkSystemReceipt(value.manifestPath, receiptPath).problems.join('\n'), /does not contain a passing run/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('a timed-out tier records timeout evidence', async () => {
+  const value = fixture()
+  value.manifest.verifications[1].command = 'node -e "setInterval(() => {}, 1000)"'
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const receipt = await runSystemTier(value.manifestPath, 'unit', join(value.root, 'timeout-receipt.json'), { timeoutMs: 50 })
+  assert.equal(receipt.status, 'failed')
+  assert.equal(receipt.results[0].timed_out, true)
+  assert.equal(receipt.results[0].ok, false)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('external-qualified requires explicit execution authority', async () => {
+  const value = fixture()
+  const marker = join(value.root, 'external-ran')
+  value.manifest.verifications.push({
+    id: 'external-probe', repository: 'control', tier: 'external-qualified', command: `touch ${marker}`, external: true, reviewed_by: '@owner',
+  })
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const receiptPath = join(value.root, 'external-receipt.json')
+  await assert.rejects(runSystemTier(value.manifestPath, 'external-qualified', receiptPath), /requires --allow-external/)
+  assert.equal(existsSync(marker), false)
+  await runSystemTier(value.manifestPath, 'external-qualified', receiptPath, { allowExternal: true, timeoutMs: 5000 })
+  assert.equal(existsSync(marker), true)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('receipt check rejects manifest and repository drift without rerunning commands', async () => {
+  const value = fixture()
+  const receiptPath = join(value.root, 'receipt.json')
+  await runSystemTier(value.manifestPath, 'unit', receiptPath, { timeoutMs: 5000 })
+  writeFileSync(value.manifestPath, readFileSync(value.manifestPath, 'utf8') + '\n')
+  writeFileSync(join(value.runtime, 'later.txt'), 'later\n')
+  const report = checkSystemReceipt(value.manifestPath, receiptPath)
+  assert.equal(report.valid, false)
+  assert.match(report.problems.join('\n'), /manifest hash does not match receipt/)
+  assert.match(report.problems.join('\n'), /system snapshot is no longer ready/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('receipt check reports malformed result collections without crashing', async () => {
+  const value = fixture()
+  const receiptPath = join(value.root, 'receipt.json')
+  const receipt = await runSystemTier(value.manifestPath, 'unit', receiptPath, { timeoutMs: 5000 })
+  receipt.results = {}
+  writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + '\n')
+  const report = checkSystemReceipt(value.manifestPath, receiptPath)
+  assert.equal(report.valid, false)
+  assert.match(report.problems.join('\n'), /results: required non-empty array/)
+  assert.match(report.problems.join('\n'), /receipt commands do not match selected tier/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('receipt schema and validator expose the same object fields', () => {
+  assert.deepEqual([...SYSTEM_RECEIPT_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.properties).sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_MANIFEST_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.properties.manifest.properties).sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_REPOSITORY_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.properties.repositories.items.properties).sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_RESULT_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.properties.results.items.properties).sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_STREAM_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.definitions.stream.properties).sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_KEYS].sort(), [...RECEIPT_SCHEMA.required].sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_MANIFEST_KEYS].sort(), [...RECEIPT_SCHEMA.properties.manifest.required].sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_REPOSITORY_KEYS].sort(), [...RECEIPT_SCHEMA.properties.repositories.items.required].sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_RESULT_KEYS].sort(), [...RECEIPT_SCHEMA.properties.results.items.required].sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_STREAM_KEYS].sort(), [...RECEIPT_SCHEMA.definitions.stream.required].sort())
+})
+
+test('system run and receipt check work through the CLI', () => {
+  const value = fixture()
+  const receiptPath = join(value.root, 'cli-receipt.json')
+  const run = spawnSync(process.execPath, [CLI, 'system-run', '--manifest', value.manifestPath, '--tier', 'unit', '--out', receiptPath, '--timeout', '5'], { encoding: 'utf8' })
+  assert.equal(run.status, 0, run.stderr)
+  assert.equal(JSON.parse(run.stdout).status, 'passed')
+  const check = spawnSync(process.execPath, [CLI, 'system-receipt-check', '--manifest', value.manifestPath, '--receipt', receiptPath], { encoding: 'utf8' })
+  assert.equal(check.status, 0, check.stderr)
+  assert.equal(JSON.parse(check.stdout).valid, true)
+  rmSync(value.root, { recursive: true, force: true })
 })
