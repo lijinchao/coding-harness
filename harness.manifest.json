@@ -1,9 +1,9 @@
 {
-  "version": "0.1.39",
+  "version": "0.1.40",
   "tool": {
-    "version": "0.1.39",
+    "version": "0.1.40",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "99ef32c78c2040b294cd90631669b27dc3ac34cd"
+    "commit": "22af38418d8537edcdc342a9e02f8470031a3dda"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -58,7 +58,7 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.39 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.40 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
@@ -367,23 +367,24 @@
     }
   },
   "lock": {
-    "version": "0.1.39",
+    "version": "0.1.40",
     "tool": {
-      "version": "0.1.39",
+      "version": "0.1.40",
       "files": {
-        "bin/harness.mjs": "f3991aee17a602f63a9b9608bab0cb1e0d531c22bff8fac73cd9f07ec3bb4b01",
+        "bin/harness.mjs": "7180abc28b2eaea1d32862d78b4e7d007e6f1385402f62284b3ad0b297a8ddcd",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
-        "src/attest.mjs": "69bb84d94727c3a566ef64481b7a61d6789ed0ceac3fc47f7cb668dadaf828d4",
+        "src/attest.mjs": "83e4637cc9dcc1e28d1ee63a155359aa3a94072e37d2ae8c6c0f3da6d3a8481a",
+        "src/command-review.mjs": "2c65b25882ecb345b7c3ba521b53335089681ea73f249a628e9993ea29c132fb",
         "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
-        "src/doctor.mjs": "ce31ef0585273f0c1369299a4d10d457d453552627bbf7108fab07c6a073fb81",
+        "src/doctor.mjs": "849683d298ae4d2b10c6c2257f26fbbc3637252d716b7278950a318dcbd0e04b",
         "src/documents.mjs": "76765cb4c5ebb4d818b23d4b7d25ee9d3140a40cedf225a219cf8e24b4580ea9",
-        "src/fetch.mjs": "3d2888335e69769d591ab8f16beb21d569657e62d79a116c47332b81a0da2f66",
+        "src/fetch.mjs": "cd43a0439c0cdd31637237d5b15cbab799273262dd833f7cd7b7210a1db7d51b",
         "src/gates.mjs": "6c3c6792ff3ef9191d78380ea5ccdf30205989e22eae728b33151373141feb09",
-        "src/manifest.mjs": "958d76270d799fe6551325f84b50aa1df20475861c44fbdc8e1b6e3a98c3afb4",
-        "src/metrics.mjs": "1b4fb293661e7fd16e31959cd54fae1fddc6e628bf02c2e08089ba2fa384c9ac",
-        "src/pack.mjs": "23771c1940e700dd9fae7c8578fa57195e0725c44e91b84bbbe31125e80c6274",
-        "src/process.mjs": "d904422c346eff70b6c415c83859cd2ef94e988b4a423c81ba788c742d2a61ec",
+        "src/manifest.mjs": "3587a4349a0256e711ad5ae03aa496565fe6be3a6b9fcc59c5450da48e074358",
+        "src/metrics.mjs": "28230934a869bd040545dc8a82e849bad1d565e022f02dc191c89c6fdccd61fa",
+        "src/pack.mjs": "e1abb02a171a1b1def290613c84a565538fc4749c9b0845cc3d3762e21affe2c",
+        "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
         "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
         "src/proof.mjs": "0898b32cf0da41a64002b6206c9cae52593f9f34152e414dcd134a57ad336d02",
         "src/prove.mjs": "0f204a9eea00d0ec6329ebcd0ed52566f8250ab6b7aef56a9c45af121c89b8dc",
@@ -391,24 +392,27 @@
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/select.mjs": "b4ce3dd85b30f9e3826dc54886311bc1004513124f276d7e16ad874fe6c9e94e",
         "src/shim.mjs": "565579029f2cbd87ec02cf186331c5a3a5a53e07d4ba590da3a0778235aa3fc5",
-        "src/state.mjs": "24483f86d6ce373bb9eea81adeb881a64b9e0efbe7facfe0c32acf019cda85d0",
+        "src/state.mjs": "8d915d3d5c591ed806da105c9348cb14912cdb3119e306e148a974c11d28fdfa",
+        "src/survey.mjs": "8b83a6b927c90044b5d034dee0f6439d317eb1f681a118bc8f80869984deaa02",
+        "src/system-ci-template.mjs": "714343ebef940e9facbd17dbba3febe417bfa84d022a242cd8e736c0371b73cb",
+        "src/system.mjs": "054e0c3795013b5750a68e87ab3e098c037689bff981446ed7ea2f9f476b5453",
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
-        "src/workflow.mjs": "6ae6392ff17225dc3675f6379f0ec1c38015f50205d2c6bafa5347900fcaa9b9",
+        "src/workflow.mjs": "5a6cbbfe9bfab8bd29c40b195802a8a314c4eab331e2674fddf7d20ae7781714",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "8350189ccf9de3adda5755b78c5a8a5ac436110da8b4e8493a9878c21928807f"
+        "package.json": "ba0f52a1a4515e8b68985c5741533673ac0543672ed5ae435f2e5a4f4ca6794c"
       },
-      "commit": "99ef32c78c2040b294cd90631669b27dc3ac34cd"
+      "commit": "22af38418d8537edcdc342a9e02f8470031a3dda"
     },
     "outputs": {
       "AGENTS.md": "71b138542ed3331629b7f57efe434f27a20ab2f4e80f258d96b0f6759d9c584f",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.39",
+      "version": "0.1.40",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "719a4e95a9456d21af9c2a88e9e2808853644367f09683dde0c13c8b2a57f280",
+        "VERSION": "d039141f2ff4fdb8f3353d7836193293677127535438e103fc60c09a4d42d9e7",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
