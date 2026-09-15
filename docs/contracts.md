@@ -21,6 +21,23 @@ without running a command. Every repository needs a reviewed verification.
 The complete format is in [system-manifest.md](system-manifest.md).
 An unresolved member uses `revision: null` and prevents readiness.
 
+### Command review receipt
+
+| Field | Meaning |
+|---|---|
+| `repository` | Source repository path and exact committed revision exported for review |
+| `command` | Exact single-line candidate command |
+| `result` | Outcome, timeout, duration, and output hashes without raw output |
+| `filesystem` | Hashes and changed paths inside the isolated export |
+| `observability` | Explicit boundaries that were compared or remain unobserved |
+| `authorizes_verification` | Always `false`; the receipt cannot replace human review |
+
+`command-review` runs committed files from an exact revision in a temporary
+archive. Tree changes become `mutated`; external commands need explicit
+authority. Network, child processes, and outside-tree writes remain unobserved.
+`command-review-check` verifies repository, revision, and command identity
+without rerunning. See [command-review.md](command-review.md).
+
 ### System receipt
 
 | Field | Meaning |

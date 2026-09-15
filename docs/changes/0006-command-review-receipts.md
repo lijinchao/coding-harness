@@ -22,7 +22,7 @@ changes, and observation limits are not bound by a portable contract.
 4. Bind the receipt to repository identity, revision, exact command, timing,
    result, and stdout/stderr hashes without retaining command output.
 5. Make observation limits explicit: only the isolated tree is compared;
-   network, child processes, and absolute-path writes are not observed. Keep
+   network, child processes, and outside-tree writes are not observed. Keep
    obvious external commands disabled unless the invocation explicitly passes
    `--allow-external`.
 6. Fix every receipt to `authorizes_verification: false`. A passing review may

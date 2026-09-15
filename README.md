@@ -17,7 +17,7 @@ This project gives you three things:
 
 - **[docs/reference.md](docs/reference.md)** and **[docs/contracts.md](docs/contracts.md)** — the vocabulary and carrier rules, and the artifact contracts they admit.
 - **A base layer and a manifest** — `base/` declares the shared layer; each repository's `harness.manifest.json` declares what it pins and how the result is verified.
-- **A zero-dependency CLI** — `harness survey | system-check | system-run | system-ci | system-ci-template | validate | sync | check | init | upgrade`.
+- **A zero-dependency CLI** for repository and system governance.
 
 ## Why a shared base
 
@@ -68,6 +68,8 @@ test/                          node:test suites
 | Command | Effect |
 |---|---|
 | `survey --dir <path>` | Inspect an unadopted repository without writing or running discovered commands |
+| `command-review ...` | Review an exact-revision command without approving it |
+| `command-review-check ...` | Check that receipt without rerunning |
 | `system-check --manifest <path>` | Check a pinned multi-repository snapshot without running its commands |
 | `validate --manifest <path>` | Fail on any missing required field |
 | `sync --manifest <path>` | Compose outputs and rewrite the lock |

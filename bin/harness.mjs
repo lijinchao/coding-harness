@@ -32,6 +32,7 @@ import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
 import { checkSystemManifest, checkSystemReceipt, runSystemTier, systemCiReport } from '../src/system.mjs'
 import { renderSystemCiTemplate, writeSystemCiTemplate } from '../src/system-ci-template.mjs'
+import { checkCommandReview, runCommandReview } from '../src/command-review.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -46,6 +47,10 @@ commands:
                                          check required receipts; Shadow mode is non-blocking by default
   system-ci-template --provider github|gitlab [--out <path>] [--force]
                                          print or explicitly write a reviewable Shadow scaffold
+  command-review --repository <path> --revision <commit> --command <command> --out <receipt> [--timeout <s>] [--allow-external] [--force]
+                                         run one candidate in an exact-revision archive; never grants approval
+  command-review-check --repository <path> --revision <commit> --command <command> --receipt <path>
+                                         validate a review receipt without rerunning the command
   validate   --manifest <path>           validate manifest structure
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
@@ -508,6 +513,36 @@ function cmdSystemCiTemplate(options) {
   else console.log('wrote ' + writeSystemCiTemplate(provider, resolve(options.out), { force: options.force === true }))
 }
 
+async function cmdCommandReview(options) {
+  const repository = resolve(requireOption(options, 'repository'))
+  const revision = requireOption(options, 'revision')
+  const command = requireOption(options, 'command')
+  const out = resolve(requireOption(options, 'out'))
+  const timeoutSeconds = options.timeout === undefined ? 300 : Number(options.timeout)
+  if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) throw new Error('--timeout must be a positive number of seconds')
+  const receipt = await runCommandReview(repository, revision, command, out, {
+    timeoutMs: timeoutSeconds * 1000,
+    allowExternal: options['allow-external'] === true,
+    force: options.force === true,
+    onOutput(result) {
+      if (result.output.length > 0) process.stderr.write(`command-review:\n${result.output}${result.output.endsWith('\n') ? '' : '\n'}`)
+    },
+  })
+  console.log(JSON.stringify(receipt, null, 2))
+  if (receipt.status !== 'passed') process.exit(1)
+}
+
+function cmdCommandReviewCheck(options) {
+  const report = checkCommandReview(
+    resolve(requireOption(options, 'repository')),
+    requireOption(options, 'revision'),
+    requireOption(options, 'command'),
+    resolve(requireOption(options, 'receipt')),
+  )
+  console.log(JSON.stringify(report, null, 2))
+  if (!report.valid) process.exit(1)
+}
+
 async function cmdProve(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
@@ -646,7 +681,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, 'command-review': cmdCommandReview, 'command-review-check': cmdCommandReviewCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

@@ -76,6 +76,11 @@ adds it with `reviewed_by`; there is no automatic promotion. `declared-ready`
 means only that the pinned checkout combination and contract evidence align.
 It is not test success, integration qualification, release, or runtime proof.
 
+Before approval, `harness command-review` can create an independent
+exact-revision execution receipt. That receipt always carries
+`authorizes_verification: false`; passing it never fills or substitutes for
+`reviewed_by`. See [command-review.md](command-review.md).
+
 ## Tier execution receipts
 
 Run one reviewed tier only:

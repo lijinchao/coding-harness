@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/coding-harness/command-review.schema.json",
+  "title": "Coding harness isolated command review receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repository", "command", "started_at", "finished_at", "isolation", "result", "filesystem", "observability", "status", "authorizes_verification"],
+  "properties": {
+    "schema_version": { "const": "coding-harness.command-review/v1" },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "revision"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "command": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string", "minLength": 1 },
+    "finished_at": { "type": "string", "minLength": 1 },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "temporary_directory_removed"],
+      "properties": {
+        "mode": { "const": "git-archive" },
+        "temporary_directory_removed": { "const": true }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "exit_code", "signal", "timed_out", "duration_ms", "stdout", "stderr"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "exit_code": { "type": "integer", "minimum": 0 },
+        "signal": { "type": ["string", "null"] },
+        "timed_out": { "type": "boolean" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "stdout": { "$ref": "#/definitions/stream" },
+        "stderr": { "$ref": "#/definitions/stream" }
+      }
+    },
+    "filesystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "before_sha256", "after_sha256", "added", "modified", "removed"],
+      "properties": {
+        "scope": { "const": "isolated-tree-only" },
+        "before_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "after_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "added": { "$ref": "#/definitions/paths" },
+        "modified": { "$ref": "#/definitions/paths" },
+        "removed": { "$ref": "#/definitions/paths" }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filesystem", "network", "child_processes", "outside_tree_writes", "external_execution_allowed"],
+      "properties": {
+        "filesystem": { "const": "compared" },
+        "network": { "const": "not-observed" },
+        "child_processes": { "const": "not-observed" },
+        "outside_tree_writes": { "const": "not-observed" },
+        "external_execution_allowed": { "type": "boolean" }
+      }
+    },
+    "status": { "enum": ["passed", "failed", "mutated"] },
+    "authorizes_verification": { "const": false }
+  },
+  "definitions": {
+    "stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "sha256"],
+      "properties": {
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}
