@@ -17,7 +17,7 @@ This project gives you three things:
 
 - **[docs/reference.md](docs/reference.md)** and **[docs/contracts.md](docs/contracts.md)** — the vocabulary and carrier rules, and the artifact contracts they admit.
 - **A base layer and a manifest** — `base/` declares the shared layer; each repository's `harness.manifest.json` declares what it pins and how the result is verified.
-- **A zero-dependency CLI** — `harness survey | validate | sync | check | init | upgrade`.
+- **A zero-dependency CLI** — `harness survey | system-check | validate | sync | check | init | upgrade`.
 
 ## Why a shared base
 
@@ -42,9 +42,7 @@ node bin/harness.mjs survey --dir path/to/repo
 node bin/harness.mjs init --dir path/to/repo
 ```
 
-`survey` reports an unadopted repository's Git state, useful files, candidate
-commands, and external references. It does not write or execute anything. See
-[docs/survey.md](docs/survey.md).
+`survey` is read-only; see [docs/survey.md](docs/survey.md).
 
 ## Repository layout
 
@@ -70,6 +68,7 @@ test/                          node:test suites
 | Command | Effect |
 |---|---|
 | `survey --dir <path>` | Inspect an unadopted repository without writing or running discovered commands |
+| `system-check --manifest <path>` | Check a pinned multi-repository snapshot without running its commands |
 | `validate --manifest <path>` | Fail on any missing required field |
 | `sync --manifest <path>` | Compose outputs and rewrite the lock |
 | `check --manifest <path>` | Fail when a composed output drifted from `base@version + delta` |

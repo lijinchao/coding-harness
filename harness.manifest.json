@@ -300,7 +300,7 @@
       },
       {
         "path": "docs/contracts.md",
-        "maxWords": 1600
+        "maxWords": 1750
       },
       {
         "path": "docs/governance.md",
@@ -333,6 +333,10 @@
       {
         "path": "docs/survey.md",
         "maxWords": 300
+      },
+      {
+        "path": "docs/system-manifest.md",
+        "maxWords": 500
       }
     ],
     "instructions": [

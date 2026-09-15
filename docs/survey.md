@@ -24,3 +24,7 @@ manifest is never a healthy result. An adopted repository remains
 The JSON has no observation timestamp. Repeating survey against the same Git
 and filesystem state therefore produces a stable report suitable for review
 and comparison.
+
+After review, durable repository relationships and approved verification
+commands belong in a [system manifest](system-manifest.md), never back in the
+survey output.

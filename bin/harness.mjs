@@ -30,11 +30,13 @@ import { loadRequirements } from '../src/adopt.mjs'
 import { selectedGateIds } from '../src/select.mjs'
 import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
+import { checkSystemManifest } from '../src/system.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
 commands:
   survey     --dir <path>                inspect an unadopted repository without writing or running its commands
+  system-check --manifest <path>         check a multi-repository system snapshot without running its commands
   validate   --manifest <path>           validate manifest structure
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
@@ -444,6 +446,13 @@ function cmdSurvey(options) {
   console.log(JSON.stringify(surveyRepository(dir), null, 2))
 }
 
+function cmdSystemCheck(options) {
+  const path = resolve(requireOption(options, 'manifest'))
+  const report = checkSystemManifest(path)
+  console.log(JSON.stringify(report, null, 2))
+  if (!report.ready) process.exit(1)
+}
+
 async function cmdProve(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
@@ -582,7 +591,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

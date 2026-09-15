@@ -4,6 +4,23 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 
 ## Artifact contracts
 
+### System manifest
+
+| Field | Meaning |
+|---|---|
+| `repositories` | Repository id, role, checkout path, and full Git revision |
+| `contracts` | Producer, consumers, and repository-owned evidence path |
+| `verifications` | Reviewed command, repository, tier, and external-service boundary |
+
+`system-check` rejects unknown or duplicate identifiers, dangling repository
+references, escaping evidence paths, wildcard or multiline commands, and an
+external command outside `external-qualified`. It reports missing repositories,
+revision drift, dirty trees, missing evidence, and unresolved executables
+without running a command. Every repository needs a reviewed verification.
+`declared-ready` proves only snapshot alignment and evidence presence; command success remains unproved.
+The complete format is in [system-manifest.md](system-manifest.md).
+An unresolved member uses `revision: null` and prevents readiness.
+
 ### Skill
 
 | Field | Meaning |

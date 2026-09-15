@@ -1,5 +1,7 @@
 # Multi-repository system manifest
 
+Decision: docs/decisions/0040-system-readiness-is-a-pinned-snapshot.md
+
 ## Context
 
 Repository survey can discover sibling checkouts and candidate commands, but a
@@ -25,4 +27,8 @@ commands a human promoted into each verification tier.
 
 ## Verification
 
-Pending implementation.
+- `node --test test/system.test.mjs`
+- `npm test`
+- `node bin/harness.mjs doctor --manifest harness.manifest.json`
+- `./harness check --manifest examples/consumer/harness.manifest.json`
+- Read-only QIHOOAgent system snapshot run from `/private/tmp`.
