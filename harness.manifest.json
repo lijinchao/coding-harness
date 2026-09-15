@@ -329,6 +329,10 @@
       {
         "path": "docs/legibility.md",
         "maxWords": 500
+      },
+      {
+        "path": "docs/survey.md",
+        "maxWords": 300
       }
     ],
     "instructions": [

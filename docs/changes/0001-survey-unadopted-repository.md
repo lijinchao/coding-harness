@@ -26,4 +26,8 @@ manifest, CI declaration, or safe aggregate command.
 
 ## Verification
 
-Pending implementation.
+- `node --test test/survey.test.mjs`
+- `npm test`
+- `./harness check --manifest examples/consumer/harness.manifest.json`
+- Read-only real-repository run:
+  `node bin/harness.mjs survey --dir /Users/qihoo/pyworkspace/qihooagent`
