@@ -65,13 +65,25 @@
     "qualification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["required_tiers"],
+      "required": ["required_tiers", "max_receipt_age_seconds", "promotion"],
       "properties": {
         "required_tiers": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
           "items": { "enum": ["harness-check", "unit", "contract", "integration", "external-qualified"] }
+        },
+        "max_receipt_age_seconds": { "type": "integer", "minimum": 1 },
+        "promotion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["history_window", "minimum_runs", "minimum_healthy_rate", "minimum_consecutive_healthy_runs"],
+          "properties": {
+            "history_window": { "type": "integer", "minimum": 1 },
+            "minimum_runs": { "type": "integer", "minimum": 1 },
+            "minimum_healthy_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "minimum_consecutive_healthy_runs": { "type": "integer", "minimum": 1 }
+          }
         }
       }
     }

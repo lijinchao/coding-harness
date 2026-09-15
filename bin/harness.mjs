@@ -41,7 +41,7 @@ commands:
                                          run one reviewed tier and write a version-bound receipt
   system-receipt-check --manifest <path> --receipt <path>
                                          verify a receipt without rerunning commands
-  system-ci --manifest <path> --receipts <dir> [--enforce]
+  system-ci --manifest <path> --receipts <dir> [--history <dir>] [--enforce]
                                          check required receipts; Shadow mode is non-blocking by default
   validate   --manifest <path>           validate manifest structure
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
@@ -490,7 +490,10 @@ function cmdSystemCi(options) {
   const report = systemCiReport(
     resolve(requireOption(options, 'manifest')),
     resolve(requireOption(options, 'receipts')),
-    { enforce: options.enforce === true },
+    {
+      enforce: options.enforce === true,
+      historyDir: options.history === undefined ? undefined : resolve(options.history),
+    },
   )
   console.log(JSON.stringify(report, null, 2))
   if (report.blocking) process.exit(1)

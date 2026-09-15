@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { sha256 } from './compose.mjs'
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
@@ -10,7 +10,8 @@ export const SYSTEM_REPOSITORY_KEYS = ['id', 'role', 'path', 'revision']
 export const SYSTEM_CONTRACT_KEYS = ['id', 'producer', 'consumers', 'evidence']
 export const SYSTEM_EVIDENCE_KEYS = ['repository', 'path']
 export const SYSTEM_VERIFICATION_KEYS = ['id', 'repository', 'tier', 'command', 'external', 'reviewed_by']
-export const SYSTEM_QUALIFICATION_KEYS = ['required_tiers']
+export const SYSTEM_QUALIFICATION_KEYS = ['required_tiers', 'max_receipt_age_seconds', 'promotion']
+export const SYSTEM_PROMOTION_KEYS = ['history_window', 'minimum_runs', 'minimum_healthy_rate', 'minimum_consecutive_healthy_runs']
 export const SYSTEM_TIERS = ['harness-check', 'unit', 'contract', 'integration', 'external-qualified']
 export const SYSTEM_RECEIPT_KEYS = ['schema_version', 'system_id', 'manifest', 'tier', 'started_at', 'finished_at', 'repositories', 'results', 'status']
 export const SYSTEM_RECEIPT_MANIFEST_KEYS = ['sha256']
@@ -123,6 +124,18 @@ export function validateSystemManifest(manifest) {
         if (typeof tier === 'string' && !verifications.some((entry) => entry?.tier === tier)) issues.push('qualification.required_tiers[' + index + ']: tier has no reviewed verification ' + tier)
       })
     }
+    if (!Number.isInteger(manifest.qualification.max_receipt_age_seconds) || manifest.qualification.max_receipt_age_seconds < 1) issues.push('qualification.max_receipt_age_seconds: required integer >= 1')
+    const promotion = manifest.qualification.promotion
+    if (!object(promotion)) issues.push('qualification.promotion: required object')
+    else {
+      rejectUnknown(issues, promotion, SYSTEM_PROMOTION_KEYS, 'qualification.promotion')
+      for (const key of ['history_window', 'minimum_runs', 'minimum_consecutive_healthy_runs']) {
+        if (!Number.isInteger(promotion[key]) || promotion[key] < 1) issues.push('qualification.promotion.' + key + ': required integer >= 1')
+      }
+      if (typeof promotion.minimum_healthy_rate !== 'number' || !Number.isFinite(promotion.minimum_healthy_rate) || promotion.minimum_healthy_rate < 0 || promotion.minimum_healthy_rate > 1) issues.push('qualification.promotion.minimum_healthy_rate: required number from 0 to 1')
+      if (Number.isInteger(promotion.minimum_runs) && Number.isInteger(promotion.history_window) && promotion.minimum_runs > promotion.history_window) issues.push('qualification.promotion.minimum_runs: cannot exceed history_window')
+      if (Number.isInteger(promotion.minimum_consecutive_healthy_runs) && Number.isInteger(promotion.history_window) && promotion.minimum_consecutive_healthy_runs > promotion.history_window) issues.push('qualification.promotion.minimum_consecutive_healthy_runs: cannot exceed history_window')
+    }
   }
   return issues
 }
@@ -214,6 +227,8 @@ export function checkSystemManifest(path) {
     qualification: {
       status: ready ? 'declared-ready' : 'not-ready',
       required_tiers: manifest?.qualification?.required_tiers ?? [],
+      max_receipt_age_seconds: manifest?.qualification?.max_receipt_age_seconds ?? null,
+      promotion: manifest?.qualification?.promotion ?? null,
       commands_executed: false,
       note: 'declared-ready proves checkout alignment and evidence presence, not command success',
     },
@@ -373,6 +388,7 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       schema_version: 'coding-harness.system-ci/v1',
       mode: enforce ? 'enforce' : 'shadow',
       system_id: null,
+      observed_at: new Date(options.now ?? Date.now()).toISOString(),
       system_ready: false,
       system_problems: [error.message],
       receipts: [],
@@ -380,8 +396,23 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       would_block: true,
       blocking: enforce,
       commands_executed: false,
+      history: {
+        path: options.historyDir === undefined ? null : resolve(options.historyDir),
+        available: false,
+        window: 0,
+        prior_observations: 0,
+        ignored_files: 0,
+        sample_size: 0,
+        healthy_runs: 0,
+        healthy_rate: null,
+        consecutive_healthy_runs: 0,
+        promotion_eligible: false,
+        promotion_problems: ['system manifest unavailable'],
+      },
     }
   }
+  const now = new Date(options.now ?? Date.now())
+  if (!Number.isFinite(now.getTime())) throw new Error('system-ci now must be a valid timestamp')
   const systemProblems = [...check.structural.issues]
   for (const repository of check.repositories) {
     if (!repository.exists) systemProblems.push('repository missing: ' + repository.id)
@@ -392,6 +423,9 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
   for (const contract of check.contracts) if (!contract.evidence_exists) systemProblems.push('contract evidence missing: ' + contract.id)
   for (const verification of check.verifications) if (!verification.executable_resolvable) systemProblems.push('verification executable unresolved: ' + verification.id)
   const tiers = check.qualification.required_tiers
+  const maxReceiptAgeSeconds = Number.isInteger(check.qualification.max_receipt_age_seconds) && check.qualification.max_receipt_age_seconds >= 1
+    ? check.qualification.max_receipt_age_seconds
+    : null
   const receipts = tiers.map((tier) => {
     const path = resolve(receiptsDir, tier + '.receipt.json')
     if (!existsSync(path)) return { tier, path, present: false, valid: false, problems: ['receipt missing'] }
@@ -400,16 +434,71 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       const receipt = JSON.parse(readFileSync(path, 'utf8'))
       const problems = [...report.problems]
       if (receipt.tier !== tier) problems.push('receipt tier does not match required tier ' + tier)
-      return { tier, path, present: true, valid: problems.length === 0, problems }
+      const finishedAt = Date.parse(receipt.finished_at)
+      const ageSeconds = Number.isFinite(finishedAt) ? (now.getTime() - finishedAt) / 1000 : null
+      if (maxReceiptAgeSeconds === null) problems.push('receipt age budget unavailable')
+      if (ageSeconds !== null && ageSeconds < 0) problems.push('receipt finished_at is in the future')
+      if (ageSeconds !== null && maxReceiptAgeSeconds !== null && ageSeconds > maxReceiptAgeSeconds) problems.push('receipt exceeds max age of ' + maxReceiptAgeSeconds + ' seconds')
+      return {
+        tier,
+        path,
+        present: true,
+        finished_at: Number.isFinite(finishedAt) ? receipt.finished_at : null,
+        age_seconds: ageSeconds,
+        fresh: ageSeconds !== null && maxReceiptAgeSeconds !== null && ageSeconds >= 0 && ageSeconds <= maxReceiptAgeSeconds,
+        valid: problems.length === 0,
+        problems,
+      }
     } catch (error) {
       return { tier, path, present: true, valid: false, problems: [error.message] }
     }
   })
   const healthy = check.ready && tiers.length > 0 && receipts.every((entry) => entry.valid)
+  const observedAt = now.toISOString()
+  const historyPath = options.historyDir === undefined ? null : resolve(options.historyDir)
+  const historyAvailable = historyPath !== null && existsSync(historyPath) && statSync(historyPath).isDirectory()
+  const previous = []
+  let ignoredFiles = 0
+  if (historyAvailable) {
+    for (const name of readdirSync(historyPath).filter((entry) => entry.endsWith('.json')).sort()) {
+      try {
+        const value = JSON.parse(readFileSync(resolve(historyPath, name), 'utf8'))
+        const observed = Date.parse(value.observed_at)
+        if (value.schema_version !== 'coding-harness.system-ci/v1' || value.system_id !== check.system.id || !Number.isFinite(observed) || observed > now.getTime() || typeof value.healthy !== 'boolean') ignoredFiles += 1
+        else previous.push({ observed_at: value.observed_at, healthy: value.healthy })
+      } catch {
+        ignoredFiles += 1
+      }
+    }
+  }
+  const declaredPolicy = check.qualification.promotion
+  const policyValid = object(declaredPolicy)
+    && Number.isInteger(declaredPolicy.history_window) && declaredPolicy.history_window >= 1
+    && Number.isInteger(declaredPolicy.minimum_runs) && declaredPolicy.minimum_runs >= 1 && declaredPolicy.minimum_runs <= declaredPolicy.history_window
+    && typeof declaredPolicy.minimum_healthy_rate === 'number' && Number.isFinite(declaredPolicy.minimum_healthy_rate) && declaredPolicy.minimum_healthy_rate >= 0 && declaredPolicy.minimum_healthy_rate <= 1
+    && Number.isInteger(declaredPolicy.minimum_consecutive_healthy_runs) && declaredPolicy.minimum_consecutive_healthy_runs >= 1 && declaredPolicy.minimum_consecutive_healthy_runs <= declaredPolicy.history_window
+  const policy = policyValid ? declaredPolicy : {
+    history_window: 1,
+    minimum_runs: 1,
+    minimum_healthy_rate: 1,
+    minimum_consecutive_healthy_runs: 1,
+  }
+  const observations = [...previous, { observed_at: observedAt, healthy }]
+    .sort((left, right) => Date.parse(left.observed_at) - Date.parse(right.observed_at))
+    .slice(-policy.history_window)
+  const healthyRuns = observations.filter((entry) => entry.healthy).length
+  let consecutiveHealthyRuns = 0
+  for (let index = observations.length - 1; index >= 0 && observations[index].healthy; index -= 1) consecutiveHealthyRuns += 1
+  const healthyRate = observations.length === 0 ? null : healthyRuns / observations.length
+  const promotionProblems = policyValid ? [] : ['qualification promotion policy invalid']
+  if (observations.length < policy.minimum_runs) promotionProblems.push('needs at least ' + policy.minimum_runs + ' observations')
+  if (healthyRate === null || healthyRate < policy.minimum_healthy_rate) promotionProblems.push('healthy rate is below ' + policy.minimum_healthy_rate)
+  if (consecutiveHealthyRuns < policy.minimum_consecutive_healthy_runs) promotionProblems.push('needs at least ' + policy.minimum_consecutive_healthy_runs + ' consecutive healthy observations')
   return {
     schema_version: 'coding-harness.system-ci/v1',
     mode: enforce ? 'enforce' : 'shadow',
     system_id: check.system.id,
+    observed_at: observedAt,
     system_ready: check.ready,
     system_problems: systemProblems,
     receipts,
@@ -417,5 +506,18 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
     would_block: !healthy,
     blocking: enforce && !healthy,
     commands_executed: false,
+    history: {
+      path: historyPath,
+      available: historyAvailable,
+      window: policy.history_window,
+      prior_observations: previous.length,
+      ignored_files: ignoredFiles,
+      sample_size: observations.length,
+      healthy_runs: healthyRuns,
+      healthy_rate: healthyRate,
+      consecutive_healthy_runs: consecutiveHealthyRuns,
+      promotion_eligible: promotionProblems.length === 0,
+      promotion_problems: promotionProblems,
+    },
   }
 }

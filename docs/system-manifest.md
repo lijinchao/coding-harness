@@ -43,7 +43,14 @@ does not replace each repository's `harness.manifest.json`.
     }
   ],
   "qualification": {
-    "required_tiers": ["unit"]
+    "required_tiers": ["unit"],
+    "max_receipt_age_seconds": 86400,
+    "promotion": {
+      "history_window": 20,
+      "minimum_runs": 10,
+      "minimum_healthy_rate": 0.95,
+      "minimum_consecutive_healthy_runs": 5
+    }
   }
 }
 ```
@@ -113,7 +120,27 @@ reports `healthy`, `would_block`, and concrete problems, but exits zero even
 when evidence is missing or stale. It never invokes `system-run` or any declared
 command. This makes adoption observable before it affects merges.
 
+`max_receipt_age_seconds` is a hard freshness budget in `system-ci`: an older
+receipt or one timestamped in the future is unhealthy. The independent
+`system-receipt-check` remains an immutable binding check and does not apply a
+wall-clock policy.
+
+To measure Shadow stability, retain earlier `system-ci` JSON reports in a
+separate artifact directory and pass it read-only:
+
+```sh
+harness system-ci --manifest system.manifest.json --receipts ci-receipts \
+  --history previous-shadow-reports > current-shadow-report.json
+```
+
+The current observation joins valid earlier reports for the same system. The
+bounded window reports sample size, healthy count and rate, current healthy
+streak, ignored files, and `promotion_eligible`. Store the current report only
+after the command finishes so it becomes input to a later run.
+
 After a team has reviewed stable Shadow results, it may explicitly add
 `--enforce`; the same unhealthy report then exits non-zero. Enforcing is a CI
-policy change, not an automatic Harness transition. A missing or malformed
-manifest is also contained in Shadow and becomes blocking only under enforce.
+policy change, not an automatic Harness transition. `promotion_eligible` is
+advisory and never turns enforcement on or changes the current enforce result.
+A missing or malformed manifest is also contained in Shadow and becomes
+blocking only under enforce.

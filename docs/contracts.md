@@ -38,10 +38,15 @@ declared repository. External qualification additionally requires
 ### System CI observation
 
 `qualification.required_tiers` is the non-empty set of receipts a system needs.
+`qualification.max_receipt_age_seconds` is the CI freshness budget. Promotion
+criteria declare a bounded history window, minimum observations, minimum
+healthy rate, and minimum current healthy streak.
 `system-ci` reads the system snapshot and `<tier>.receipt.json` files without
-running commands. Shadow mode always exits zero while reporting whether it
-would block; `--enforce` makes the same unhealthy result non-zero. Promotion is
-therefore an explicit CI policy change, not a timer or automatic health claim.
+running commands. An optional history directory supplies earlier reports for
+advisory stability statistics; malformed, future, or foreign-system entries are
+ignored and counted. Shadow mode always exits zero while reporting whether it
+would block; `--enforce` makes the current unhealthy result non-zero. History
+eligibility cannot enable enforcement or override current evidence.
 
 ### Skill
 

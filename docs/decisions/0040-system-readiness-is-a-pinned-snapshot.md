@@ -37,6 +37,12 @@ reports the same unhealthy conditions as enforcement but exits zero;
 bind the manifest hash rather than its host-specific absolute path so a complete
 system bundle can move between workstations and CI.
 
+CI freshness is a declared maximum receipt age; future-dated evidence fails
+closed. Earlier CI reports may be supplied from a read-only artifact directory
+to calculate a bounded healthy rate and streak. These statistics are advisory:
+they help a person decide whether to change CI policy, but cannot activate
+enforcement or make an unhealthy current snapshot pass.
+
 ## Alternatives
 
 - Put sibling repositories in one repository manifest: this makes a portable

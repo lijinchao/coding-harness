@@ -13,6 +13,7 @@ import {
   SYSTEM_RECEIPT_RESULT_KEYS,
   SYSTEM_RECEIPT_STREAM_KEYS,
   SYSTEM_QUALIFICATION_KEYS,
+  SYSTEM_PROMOTION_KEYS,
   SYSTEM_REPOSITORY_KEYS,
   SYSTEM_ROOT_KEYS,
   SYSTEM_VERIFICATION_KEYS,
@@ -64,7 +65,16 @@ function fixture() {
       { id: 'control-check', repository: 'control', tier: 'harness-check', command: `touch ${marker}`, external: false, reviewed_by: '@owner' },
       { id: 'runtime-unit', repository: 'runtime', tier: 'unit', command: 'node --test', external: false, reviewed_by: '@owner' },
     ],
-    qualification: { required_tiers: ['unit'] },
+    qualification: {
+      required_tiers: ['unit'],
+      max_receipt_age_seconds: 3600,
+      promotion: {
+        history_window: 5,
+        minimum_runs: 1,
+        minimum_healthy_rate: 1,
+        minimum_consecutive_healthy_runs: 1,
+      },
+    },
   }
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
   return { root, control, runtime, marker, manifest, manifestPath }
@@ -118,6 +128,23 @@ test('system validator rejects unreviewed, wildcard, external, and dangling decl
   rmSync(value.root, { recursive: true, force: true })
 })
 
+test('system validator rejects unusable freshness and promotion budgets', () => {
+  const value = fixture()
+  value.manifest.qualification.max_receipt_age_seconds = 0
+  value.manifest.qualification.promotion = {
+    history_window: 2,
+    minimum_runs: 3,
+    minimum_healthy_rate: 1.1,
+    minimum_consecutive_healthy_runs: 4,
+  }
+  const issues = validateSystemManifest(value.manifest).join('\n')
+  assert.match(issues, /max_receipt_age_seconds: required integer >= 1/)
+  assert.match(issues, /minimum_runs: cannot exceed history_window/)
+  assert.match(issues, /minimum_healthy_rate: required number from 0 to 1/)
+  assert.match(issues, /minimum_consecutive_healthy_runs: cannot exceed history_window/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
 test('an unresolved repository is explicit, structurally valid, and never ready', () => {
   const value = fixture()
   value.manifest.repositories.push({ id: 'desktop', role: 'client', path: 'missing-desktop', revision: null })
@@ -151,12 +178,14 @@ test('system schema and executable validator expose the same object fields', () 
   assert.deepEqual([...SYSTEM_EVIDENCE_KEYS].sort(), Object.keys(SCHEMA.properties.contracts.items.properties.evidence.properties).sort())
   assert.deepEqual([...SYSTEM_VERIFICATION_KEYS].sort(), Object.keys(SCHEMA.properties.verifications.items.properties).sort())
   assert.deepEqual([...SYSTEM_QUALIFICATION_KEYS].sort(), Object.keys(SCHEMA.properties.qualification.properties).sort())
+  assert.deepEqual([...SYSTEM_PROMOTION_KEYS].sort(), Object.keys(SCHEMA.properties.qualification.properties.promotion.properties).sort())
   assert.deepEqual([...SYSTEM_ROOT_KEYS].sort(), [...SCHEMA.required].sort())
   assert.deepEqual([...SYSTEM_REPOSITORY_KEYS].sort(), [...SCHEMA.properties.repositories.items.required].sort())
   assert.deepEqual([...SYSTEM_CONTRACT_KEYS].sort(), [...SCHEMA.properties.contracts.items.required].sort())
   assert.deepEqual([...SYSTEM_EVIDENCE_KEYS].sort(), [...SCHEMA.properties.contracts.items.properties.evidence.required].sort())
   assert.deepEqual([...SYSTEM_VERIFICATION_KEYS].sort(), [...SCHEMA.properties.verifications.items.required].sort())
   assert.deepEqual([...SYSTEM_QUALIFICATION_KEYS].sort(), [...SCHEMA.properties.qualification.required].sort())
+  assert.deepEqual([...SYSTEM_PROMOTION_KEYS].sort(), [...SCHEMA.properties.qualification.properties.promotion.required].sort())
 })
 
 test('system run executes only the selected tier and writes a passing receipt', async () => {
@@ -284,7 +313,8 @@ test('system run and receipt check work through the CLI', () => {
 test('system CI shadow reports missing evidence without blocking or executing commands', () => {
   const value = fixture()
   const receipts = join(value.root, 'receipts')
-  const shadow = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts], { encoding: 'utf8' })
+  const history = join(value.root, 'history')
+  const shadow = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts, '--history', history], { encoding: 'utf8' })
   const report = JSON.parse(shadow.stdout)
   assert.equal(shadow.status, 0)
   assert.equal(report.mode, 'shadow')
@@ -294,6 +324,8 @@ test('system CI shadow reports missing evidence without blocking or executing co
   assert.equal(report.commands_executed, false)
   assert.deepEqual(report.receipts.map((entry) => [entry.tier, entry.present]), [['unit', false]])
   assert.equal(existsSync(value.marker), false)
+  assert.equal(report.history.available, false)
+  assert.equal(existsSync(history), false)
   const enforced = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts, '--enforce'], { encoding: 'utf8' })
   assert.equal(enforced.status, 1)
   assert.equal(JSON.parse(enforced.stdout).blocking, true)
@@ -316,6 +348,20 @@ test('system CI shadow contains a missing manifest while enforce blocks', () => 
   rmSync(root, { recursive: true, force: true })
 })
 
+test('system CI shadow contains an invalid qualification policy', () => {
+  const value = fixture()
+  delete value.manifest.qualification.promotion
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const shadow = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', value.root], { encoding: 'utf8' })
+  assert.equal(shadow.status, 0)
+  const report = JSON.parse(shadow.stdout)
+  assert.equal(report.healthy, false)
+  assert.match(report.system_problems.join('\n'), /qualification.promotion: required object/)
+  assert.equal(report.history.promotion_eligible, false)
+  assert.match(report.history.promotion_problems.join('\n'), /promotion policy invalid/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
 test('system CI accepts a fresh receipt for every required tier', async () => {
   const value = fixture()
   const receipts = join(value.root, 'receipts')
@@ -326,6 +372,83 @@ test('system CI accepts a fresh receipt for every required tier', async () => {
   assert.equal(report.healthy, true)
   assert.equal(report.would_block, false)
   assert.deepEqual(report.receipts.map((entry) => [entry.tier, entry.valid]), [['unit', true]])
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system CI rejects expired and future-dated receipts', async () => {
+  const value = fixture()
+  const receipts = join(value.root, 'receipts')
+  mkdirSync(receipts)
+  const receipt = await runSystemTier(value.manifestPath, 'unit', join(receipts, 'unit.receipt.json'), { timeoutMs: 5000 })
+  const finished = Date.parse(receipt.finished_at)
+  const boundary = systemCiReport(value.manifestPath, receipts, { now: finished + 3600 * 1000 })
+  assert.equal(boundary.receipts[0].fresh, true)
+  assert.equal(boundary.receipts[0].valid, true)
+  const expired = systemCiReport(value.manifestPath, receipts, { now: finished + 3601 * 1000 })
+  assert.equal(expired.receipts[0].fresh, false)
+  assert.equal(expired.receipts[0].valid, false)
+  assert.match(expired.receipts[0].problems.join('\n'), /exceeds max age of 3600 seconds/)
+  const future = systemCiReport(value.manifestPath, receipts, { now: finished - 1000 })
+  assert.equal(future.receipts[0].fresh, false)
+  assert.match(future.receipts[0].problems.join('\n'), /finished_at is in the future/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system CI computes bounded advisory history and isolates invalid observations', async () => {
+  const value = fixture()
+  value.manifest.qualification.promotion = {
+    history_window: 3,
+    minimum_runs: 3,
+    minimum_healthy_rate: 0.66,
+    minimum_consecutive_healthy_runs: 2,
+  }
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const receipts = join(value.root, 'receipts')
+  const history = join(value.root, 'history')
+  mkdirSync(receipts)
+  mkdirSync(history)
+  const receipt = await runSystemTier(value.manifestPath, 'unit', join(receipts, 'unit.receipt.json'), { timeoutMs: 5000 })
+  const now = Date.parse(receipt.finished_at) + 1000
+  const observation = (seconds, healthy, systemId = value.manifest.id) => ({
+    schema_version: 'coding-harness.system-ci/v1',
+    system_id: systemId,
+    observed_at: new Date(now - seconds * 1000).toISOString(),
+    healthy,
+  })
+  writeFileSync(join(history, '01.json'), JSON.stringify(observation(4, true)))
+  writeFileSync(join(history, '02.json'), JSON.stringify(observation(3, false)))
+  writeFileSync(join(history, '03.json'), JSON.stringify(observation(2, true)))
+  writeFileSync(join(history, 'foreign.json'), JSON.stringify(observation(1, true, 'another-system')))
+  writeFileSync(join(history, 'malformed.json'), '{')
+  const report = systemCiReport(value.manifestPath, receipts, { historyDir: history, now })
+  assert.equal(report.healthy, true)
+  assert.equal(report.history.prior_observations, 3)
+  assert.equal(report.history.ignored_files, 2)
+  assert.equal(report.history.sample_size, 3)
+  assert.equal(report.history.healthy_runs, 2)
+  assert.equal(report.history.healthy_rate, 2 / 3)
+  assert.equal(report.history.consecutive_healthy_runs, 2)
+  assert.equal(report.history.promotion_eligible, true)
+  const cli = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts, '--history', history], { encoding: 'utf8' })
+  assert.equal(cli.status, 0)
+  const cliReport = JSON.parse(cli.stdout)
+  assert.equal(cliReport.history.path, history)
+  assert.equal(cliReport.history.prior_observations, 3)
+  assert.equal(cliReport.history.ignored_files, 2)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('advisory history never changes enforcement of a currently healthy system', async () => {
+  const value = fixture()
+  value.manifest.qualification.promotion.minimum_runs = 5
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const receipts = join(value.root, 'receipts')
+  mkdirSync(receipts)
+  const receipt = await runSystemTier(value.manifestPath, 'unit', join(receipts, 'unit.receipt.json'), { timeoutMs: 5000 })
+  const report = systemCiReport(value.manifestPath, receipts, { enforce: true, now: Date.parse(receipt.finished_at) })
+  assert.equal(report.healthy, true)
+  assert.equal(report.history.promotion_eligible, false)
+  assert.equal(report.blocking, false)
   rmSync(value.root, { recursive: true, force: true })
 })
 
