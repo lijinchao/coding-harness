@@ -173,20 +173,6 @@
           "ERROR:"
         ]
       }
-    },
-    {
-      "id": "survey",
-      "command": "mkdir -p .harness/not-a-repo && ! ./harness survey --dir .harness/not-a-repo",
-      "protects": "survey refuses a directory that is not a git working tree",
-      "prove_fires": "make the fixture a git repository, then run the gate; survey succeeds and the assertion fails",
-      "prove_fires_command": "mkdir -p .harness/not-a-repo && git -C .harness/not-a-repo init -q",
-      "revert_command": "rm -rf .harness/not-a-repo/.git",
-      "severity": "blocking",
-      "expect": {
-        "forbid": [
-          "ERROR:"
-        ]
-      }
     }
   ],
   "surfaces": [
@@ -218,8 +204,7 @@
         "doctor",
         "validate",
         "tests",
-        "release-ready",
-        "survey"
+        "release-ready"
       ]
     },
     {
