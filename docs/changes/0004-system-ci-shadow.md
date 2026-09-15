@@ -26,4 +26,8 @@ The project is not ready to turn these observations into a blocking merge gate.
 
 ## Verification
 
-Pending implementation.
+- `node --test test/system.test.mjs`
+- `npm test`
+- `node bin/harness.mjs doctor --manifest harness.manifest.json`
+- `./harness check --manifest examples/consumer/harness.manifest.json`
+- Real QIHOOAgent Shadow report with no command execution.

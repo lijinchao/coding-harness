@@ -17,7 +17,7 @@ This project gives you three things:
 
 - **[docs/reference.md](docs/reference.md)** and **[docs/contracts.md](docs/contracts.md)** — the vocabulary and carrier rules, and the artifact contracts they admit.
 - **A base layer and a manifest** — `base/` declares the shared layer; each repository's `harness.manifest.json` declares what it pins and how the result is verified.
-- **A zero-dependency CLI** — `harness survey | system-check | system-run | system-receipt-check | validate | sync | check | init | upgrade`.
+- **A zero-dependency CLI** — `harness survey | system-check | system-run | system-ci | validate | sync | check | init | upgrade`.
 
 ## Why a shared base
 

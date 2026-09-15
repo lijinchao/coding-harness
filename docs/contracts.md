@@ -25,7 +25,7 @@ An unresolved member uses `revision: null` and prevents readiness.
 
 | Field | Meaning |
 |---|---|
-| `manifest` | Absolute path and SHA-256 of the system declaration |
+| `manifest` | Portable SHA-256 of the system declaration |
 | `repositories` | Exact revision combination used by the run |
 | `results` | Command identity, outcome, timeout, duration, and output hashes |
 
@@ -34,6 +34,14 @@ failing commands. `system-receipt-check` rejects manifest, revision, tier-comman
 or result drift without rerunning the tier. Receipt output stays outside every
 declared repository. External qualification additionally requires
 `--allow-external`; a manifest declaration alone is not execution authority.
+
+### System CI observation
+
+`qualification.required_tiers` is the non-empty set of receipts a system needs.
+`system-ci` reads the system snapshot and `<tier>.receipt.json` files without
+running commands. Shadow mode always exits zero while reporting whether it
+would block; `--enforce` makes the same unhealthy result non-zero. Promotion is
+therefore an explicit CI policy change, not a timer or automatic health claim.
 
 ### Skill
 

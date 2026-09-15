@@ -41,7 +41,10 @@ does not replace each repository's `harness.manifest.json`.
       "external": false,
       "reviewed_by": "@owner"
     }
-  ]
+  ],
+  "qualification": {
+    "required_tiers": ["unit"]
+  }
 }
 ```
 
@@ -85,7 +88,8 @@ An existing receipt is immutable by default; use another path or pass `--force`
 only when replacement is intentional. CLI runs show command output in the
 terminal, but the receipt retains hashes only.
 
-The receipt binds the manifest SHA-256, repository revisions, tier, exact
+The receipt binds the portable manifest SHA-256, system id, repository
+revisions, tier, exact
 commands, result and timeout state, duration, and separate stdout/stderr sizes
 and hashes. It does not store command output, which may contain secrets.
 `system-receipt-check` rejects changed manifests, repository drift, command-set
@@ -94,3 +98,22 @@ drift, failed results, and malformed receipts without rerunning anything.
 `external-qualified` remains disabled unless the caller separately passes
 `--allow-external`. That flag is execution authority for that invocation only;
 it is not persisted as production approval.
+
+## CI Shadow
+
+`qualification.required_tiers` names the receipts CI expects. Put each receipt
+in a CI artifact directory as `<tier>.receipt.json`, then run:
+
+```sh
+harness system-ci --manifest system.manifest.json --receipts ci-receipts
+```
+
+Shadow is the default. It checks snapshot readiness and every required receipt,
+reports `healthy`, `would_block`, and concrete problems, but exits zero even
+when evidence is missing or stale. It never invokes `system-run` or any declared
+command. This makes adoption observable before it affects merges.
+
+After a team has reviewed stable Shadow results, it may explicitly add
+`--enforce`; the same unhealthy report then exits non-zero. Enforcing is a CI
+policy change, not an automatic Harness transition. A missing or malformed
+manifest is also contained in Shadow and becomes blocking only under enforce.

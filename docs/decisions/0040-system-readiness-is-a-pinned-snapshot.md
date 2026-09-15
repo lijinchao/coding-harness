@@ -30,6 +30,13 @@ revisions, commands, results, timeouts, and output hashes. External-qualified
 execution requires a separate invocation flag. Receipt verification never
 reruns commands.
 
+System manifests name required qualification tiers. `system-ci` observes the
+snapshot and their receipts without running commands. Its default Shadow mode
+reports the same unhealthy conditions as enforcement but exits zero;
+`--enforce` is the explicit transition to a merge-affecting policy. Receipts
+bind the manifest hash rather than its host-specific absolute path so a complete
+system bundle can move between workstations and CI.
+
 ## Alternatives
 
 - Put sibling repositories in one repository manifest: this makes a portable

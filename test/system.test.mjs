@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
@@ -12,12 +12,14 @@ import {
   SYSTEM_RECEIPT_REPOSITORY_KEYS,
   SYSTEM_RECEIPT_RESULT_KEYS,
   SYSTEM_RECEIPT_STREAM_KEYS,
+  SYSTEM_QUALIFICATION_KEYS,
   SYSTEM_REPOSITORY_KEYS,
   SYSTEM_ROOT_KEYS,
   SYSTEM_VERIFICATION_KEYS,
   checkSystemManifest,
   checkSystemReceipt,
   runSystemTier,
+  systemCiReport,
   validateSystemManifest,
   validateSystemReceipt,
 } from '../src/system.mjs'
@@ -62,6 +64,7 @@ function fixture() {
       { id: 'control-check', repository: 'control', tier: 'harness-check', command: `touch ${marker}`, external: false, reviewed_by: '@owner' },
       { id: 'runtime-unit', repository: 'runtime', tier: 'unit', command: 'node --test', external: false, reviewed_by: '@owner' },
     ],
+    qualification: { required_tiers: ['unit'] },
   }
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
   return { root, control, runtime, marker, manifest, manifestPath }
@@ -147,11 +150,13 @@ test('system schema and executable validator expose the same object fields', () 
   assert.deepEqual([...SYSTEM_CONTRACT_KEYS].sort(), Object.keys(SCHEMA.properties.contracts.items.properties).sort())
   assert.deepEqual([...SYSTEM_EVIDENCE_KEYS].sort(), Object.keys(SCHEMA.properties.contracts.items.properties.evidence.properties).sort())
   assert.deepEqual([...SYSTEM_VERIFICATION_KEYS].sort(), Object.keys(SCHEMA.properties.verifications.items.properties).sort())
+  assert.deepEqual([...SYSTEM_QUALIFICATION_KEYS].sort(), Object.keys(SCHEMA.properties.qualification.properties).sort())
   assert.deepEqual([...SYSTEM_ROOT_KEYS].sort(), [...SCHEMA.required].sort())
   assert.deepEqual([...SYSTEM_REPOSITORY_KEYS].sort(), [...SCHEMA.properties.repositories.items.required].sort())
   assert.deepEqual([...SYSTEM_CONTRACT_KEYS].sort(), [...SCHEMA.properties.contracts.items.required].sort())
   assert.deepEqual([...SYSTEM_EVIDENCE_KEYS].sort(), [...SCHEMA.properties.contracts.items.properties.evidence.required].sort())
   assert.deepEqual([...SYSTEM_VERIFICATION_KEYS].sort(), [...SCHEMA.properties.verifications.items.required].sort())
+  assert.deepEqual([...SYSTEM_QUALIFICATION_KEYS].sort(), [...SCHEMA.properties.qualification.required].sort())
 })
 
 test('system run executes only the selected tier and writes a passing receipt', async () => {
@@ -274,4 +279,66 @@ test('system run and receipt check work through the CLI', () => {
   assert.equal(check.status, 0, check.stderr)
   assert.equal(JSON.parse(check.stdout).valid, true)
   rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system CI shadow reports missing evidence without blocking or executing commands', () => {
+  const value = fixture()
+  const receipts = join(value.root, 'receipts')
+  const shadow = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts], { encoding: 'utf8' })
+  const report = JSON.parse(shadow.stdout)
+  assert.equal(shadow.status, 0)
+  assert.equal(report.mode, 'shadow')
+  assert.equal(report.healthy, false)
+  assert.equal(report.would_block, true)
+  assert.equal(report.blocking, false)
+  assert.equal(report.commands_executed, false)
+  assert.deepEqual(report.receipts.map((entry) => [entry.tier, entry.present]), [['unit', false]])
+  assert.equal(existsSync(value.marker), false)
+  const enforced = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts, '--enforce'], { encoding: 'utf8' })
+  assert.equal(enforced.status, 1)
+  assert.equal(JSON.parse(enforced.stdout).blocking, true)
+  assert.equal(existsSync(value.marker), false)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system CI shadow contains a missing manifest while enforce blocks', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-system-ci-missing-'))
+  const manifest = join(root, 'missing.json')
+  const shadow = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', manifest, '--receipts', root], { encoding: 'utf8' })
+  assert.equal(shadow.status, 0)
+  const shadowReport = JSON.parse(shadow.stdout)
+  assert.equal(shadowReport.system_ready, false)
+  assert.equal(shadowReport.blocking, false)
+  assert.match(shadowReport.system_problems.join('\n'), /ENOENT/)
+  const enforced = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', manifest, '--receipts', root, '--enforce'], { encoding: 'utf8' })
+  assert.equal(enforced.status, 1)
+  assert.equal(JSON.parse(enforced.stdout).blocking, true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('system CI accepts a fresh receipt for every required tier', async () => {
+  const value = fixture()
+  const receipts = join(value.root, 'receipts')
+  mkdirSync(receipts)
+  await runSystemTier(value.manifestPath, 'unit', join(receipts, 'unit.receipt.json'), { timeoutMs: 5000 })
+  const report = systemCiReport(value.manifestPath, receipts)
+  assert.equal(report.system_ready, true)
+  assert.equal(report.healthy, true)
+  assert.equal(report.would_block, false)
+  assert.deepEqual(report.receipts.map((entry) => [entry.tier, entry.valid]), [['unit', true]])
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('receipt verification survives relocating the whole system bundle', async () => {
+  const value = fixture()
+  const receipts = join(value.root, 'receipts')
+  mkdirSync(receipts)
+  await runSystemTier(value.manifestPath, 'unit', join(receipts, 'unit.receipt.json'), { timeoutMs: 5000 })
+  const movedParent = mkdtempSync(join(tmpdir(), 'coding-harness-system-moved-'))
+  const moved = join(movedParent, 'bundle')
+  cpSync(value.root, moved, { recursive: true })
+  const report = systemCiReport(join(moved, 'system.manifest.json'), join(moved, 'receipts'))
+  assert.equal(report.healthy, true)
+  rmSync(value.root, { recursive: true, force: true })
+  rmSync(movedParent, { recursive: true, force: true })
 })

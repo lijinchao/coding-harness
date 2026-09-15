@@ -5,14 +5,15 @@ import { sha256 } from './compose.mjs'
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
 import { writeAtomic } from './state.mjs'
 
-export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications']
+export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications', 'qualification']
 export const SYSTEM_REPOSITORY_KEYS = ['id', 'role', 'path', 'revision']
 export const SYSTEM_CONTRACT_KEYS = ['id', 'producer', 'consumers', 'evidence']
 export const SYSTEM_EVIDENCE_KEYS = ['repository', 'path']
 export const SYSTEM_VERIFICATION_KEYS = ['id', 'repository', 'tier', 'command', 'external', 'reviewed_by']
+export const SYSTEM_QUALIFICATION_KEYS = ['required_tiers']
 export const SYSTEM_TIERS = ['harness-check', 'unit', 'contract', 'integration', 'external-qualified']
 export const SYSTEM_RECEIPT_KEYS = ['schema_version', 'system_id', 'manifest', 'tier', 'started_at', 'finished_at', 'repositories', 'results', 'status']
-export const SYSTEM_RECEIPT_MANIFEST_KEYS = ['path', 'sha256']
+export const SYSTEM_RECEIPT_MANIFEST_KEYS = ['sha256']
 export const SYSTEM_RECEIPT_REPOSITORY_KEYS = ['id', 'revision']
 export const SYSTEM_RECEIPT_RESULT_KEYS = ['id', 'repository', 'command', 'ok', 'exit_code', 'signal', 'timed_out', 'duration_ms', 'stdout', 'stderr']
 export const SYSTEM_RECEIPT_STREAM_KEYS = ['bytes', 'sha256']
@@ -107,6 +108,22 @@ export function validateSystemManifest(manifest) {
   for (const repository of repositories) {
     if (typeof repository?.id === 'string' && !verifications.some((entry) => entry?.repository === repository.id)) issues.push('repositories (' + repository.id + '): has no reviewed verification')
   }
+  if (!object(manifest.qualification)) issues.push('qualification: required object')
+  else {
+    rejectUnknown(issues, manifest.qualification, SYSTEM_QUALIFICATION_KEYS, 'qualification')
+    const tiers = manifest.qualification.required_tiers
+    if (!Array.isArray(tiers) || tiers.length === 0) issues.push('qualification.required_tiers: required non-empty array')
+    else {
+      const seen = new Set()
+      tiers.forEach((tier, index) => {
+        requiredString(issues, tier, 'qualification.required_tiers[' + index + ']')
+        if (typeof tier === 'string' && !SYSTEM_TIERS.includes(tier)) issues.push('qualification.required_tiers[' + index + ']: unknown tier ' + tier)
+        if (seen.has(tier)) issues.push('qualification.required_tiers[' + index + ']: duplicate tier ' + tier)
+        seen.add(tier)
+        if (typeof tier === 'string' && !verifications.some((entry) => entry?.tier === tier)) issues.push('qualification.required_tiers[' + index + ']: tier has no reviewed verification ' + tier)
+      })
+    }
+  }
   return issues
 }
 
@@ -196,6 +213,7 @@ export function checkSystemManifest(path) {
     ready,
     qualification: {
       status: ready ? 'declared-ready' : 'not-ready',
+      required_tiers: manifest?.qualification?.required_tiers ?? [],
       commands_executed: false,
       note: 'declared-ready proves checkout alignment and evidence presence, not command success',
     },
@@ -251,7 +269,7 @@ export async function runSystemTier(manifestPath, tier, outPath, options = {}) {
   const receipt = {
     schema_version: 'coding-harness.system-receipt/v1',
     system_id: check.system.id,
-    manifest: { path: resolve(manifestPath), sha256: sha256(rawManifest) },
+    manifest: { sha256: sha256(rawManifest) },
     tier,
     started_at: startedAt,
     finished_at: new Date().toISOString(),
@@ -325,7 +343,6 @@ export function checkSystemReceipt(manifestPath, receiptPath) {
   const problems = validateSystemReceipt(receipt)
   const absoluteManifest = resolve(manifestPath)
   const check = checkSystemManifest(absoluteManifest)
-  if (receipt?.manifest?.path !== absoluteManifest) problems.push('manifest path does not match receipt')
   if (receipt?.manifest?.sha256 !== sha256(readFileSync(absoluteManifest))) problems.push('manifest hash does not match receipt')
   if (receipt?.system_id !== check.system.id) problems.push('system id does not match manifest')
   const expectedRepositories = check.repositories.map((entry) => ({ id: entry.id, revision: entry.current_revision }))
@@ -342,5 +359,63 @@ export function checkSystemReceipt(manifestPath, receiptPath) {
     receipt: resolve(receiptPath),
     valid: problems.length === 0,
     problems,
+  }
+}
+
+export function systemCiReport(manifestPath, receiptsDir, options = {}) {
+  const absoluteManifest = resolve(manifestPath)
+  const enforce = options.enforce === true
+  let check
+  try {
+    check = checkSystemManifest(absoluteManifest)
+  } catch (error) {
+    return {
+      schema_version: 'coding-harness.system-ci/v1',
+      mode: enforce ? 'enforce' : 'shadow',
+      system_id: null,
+      system_ready: false,
+      system_problems: [error.message],
+      receipts: [],
+      healthy: false,
+      would_block: true,
+      blocking: enforce,
+      commands_executed: false,
+    }
+  }
+  const systemProblems = [...check.structural.issues]
+  for (const repository of check.repositories) {
+    if (!repository.exists) systemProblems.push('repository missing: ' + repository.id)
+    else if (!repository.git) systemProblems.push('repository is not Git: ' + repository.id)
+    else if (!repository.revision_match) systemProblems.push('repository revision mismatch: ' + repository.id)
+    if (repository.git && !repository.clean) systemProblems.push('repository is dirty: ' + repository.id)
+  }
+  for (const contract of check.contracts) if (!contract.evidence_exists) systemProblems.push('contract evidence missing: ' + contract.id)
+  for (const verification of check.verifications) if (!verification.executable_resolvable) systemProblems.push('verification executable unresolved: ' + verification.id)
+  const tiers = check.qualification.required_tiers
+  const receipts = tiers.map((tier) => {
+    const path = resolve(receiptsDir, tier + '.receipt.json')
+    if (!existsSync(path)) return { tier, path, present: false, valid: false, problems: ['receipt missing'] }
+    try {
+      const report = checkSystemReceipt(absoluteManifest, path)
+      const receipt = JSON.parse(readFileSync(path, 'utf8'))
+      const problems = [...report.problems]
+      if (receipt.tier !== tier) problems.push('receipt tier does not match required tier ' + tier)
+      return { tier, path, present: true, valid: problems.length === 0, problems }
+    } catch (error) {
+      return { tier, path, present: true, valid: false, problems: [error.message] }
+    }
+  })
+  const healthy = check.ready && tiers.length > 0 && receipts.every((entry) => entry.valid)
+  return {
+    schema_version: 'coding-harness.system-ci/v1',
+    mode: enforce ? 'enforce' : 'shadow',
+    system_id: check.system.id,
+    system_ready: check.ready,
+    system_problems: systemProblems,
+    receipts,
+    healthy,
+    would_block: !healthy,
+    blocking: enforce && !healthy,
+    commands_executed: false,
   }
 }

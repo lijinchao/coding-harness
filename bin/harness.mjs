@@ -30,7 +30,7 @@ import { loadRequirements } from '../src/adopt.mjs'
 import { selectedGateIds } from '../src/select.mjs'
 import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
-import { checkSystemManifest, checkSystemReceipt, runSystemTier } from '../src/system.mjs'
+import { checkSystemManifest, checkSystemReceipt, runSystemTier, systemCiReport } from '../src/system.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -41,6 +41,8 @@ commands:
                                          run one reviewed tier and write a version-bound receipt
   system-receipt-check --manifest <path> --receipt <path>
                                          verify a receipt without rerunning commands
+  system-ci --manifest <path> --receipts <dir> [--enforce]
+                                         check required receipts; Shadow mode is non-blocking by default
   validate   --manifest <path>           validate manifest structure
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
@@ -65,7 +67,7 @@ commands:
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce'])
 const REPEATABLE_FLAGS = new Set(['changed'])
 
 function parseOptions(argv) {
@@ -484,6 +486,16 @@ function cmdSystemReceiptCheck(options) {
   if (!report.valid) process.exit(1)
 }
 
+function cmdSystemCi(options) {
+  const report = systemCiReport(
+    resolve(requireOption(options, 'manifest')),
+    resolve(requireOption(options, 'receipts')),
+    { enforce: options.enforce === true },
+  )
+  console.log(JSON.stringify(report, null, 2))
+  if (report.blocking) process.exit(1)
+}
+
 async function cmdProve(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
@@ -622,7 +634,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)
