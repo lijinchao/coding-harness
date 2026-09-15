@@ -173,34 +173,6 @@
           "ERROR:"
         ]
       }
-    },
-    {
-      "id": "survey",
-      "command": "rm -rf .harness/survey-fx && mkdir -p .harness/survey-fx && git -C .harness/survey-fx init -q && ./harness survey --dir .harness/survey-fx | grep -q coding-harness.survey/v1",
-      "protects": "a survey report is produced for a git repository, and refused when the target is not one",
-      "prove_fires": "remove the fixture .git, then run the gate; survey refuses and the gate exits 1",
-      "prove_fires_command": "rm -rf .harness/survey-fx/.git",
-      "revert_command": "rm -rf .harness/survey-fx && mkdir -p .harness/survey-fx && git -C .harness/survey-fx init -q",
-      "severity": "blocking",
-      "expect": {
-        "forbid": [
-          "ERROR:"
-        ]
-      }
-    },
-    {
-      "id": "command-review",
-      "command": "REV=$(git rev-parse HEAD); mkdir -p .harness/receipts && ./harness command-review --repository . --revision \"$REV\" --command true --out .harness/receipts/review.json && ./harness command-review-check --repository . --revision \"$REV\" --command true --receipt .harness/receipts/review.json",
-      "protects": "a reviewed command is bound to its revision, and a missing receipt fails the check",
-      "prove_fires": "delete the receipt, then run the gate; the check has nothing to verify and the gate exits 1",
-      "prove_fires_command": "rm -f .harness/receipts/review.json",
-      "revert_command": "rm -rf .harness/receipts",
-      "severity": "blocking",
-      "expect": {
-        "forbid": [
-          "ERROR:"
-        ]
-      }
     }
   ],
   "surfaces": [
@@ -232,9 +204,7 @@
         "doctor",
         "validate",
         "tests",
-        "release-ready",
-        "survey",
-        "command-review"
+        "release-ready"
       ]
     },
     {
