@@ -47,6 +47,15 @@ advisory stability statistics; malformed, future, or foreign-system entries are
 ignored and counted. Shadow mode always exits zero while reporting whether it
 would block; `--enforce` makes the current unhealthy result non-zero. History
 eligibility cannot enable enforcement or override current evidence.
+Archived observations conform to `schema/system-ci-report.schema.json`; every
+receipt summary has a normalized shape even when evidence is absent or
+malformed. History accepts only complete reports for the same system.
+
+The GitHub and GitLab scaffolds share `.harness/system-ci/receipts`,
+`.harness/system-ci/history`, and
+`.harness/system-ci/current/system-ci.json`. They archive current evidence but
+only document the provider-specific checkout and prior-artifact restoration
+steps; those deployment facts are never inferred.
 
 ### Skill
 

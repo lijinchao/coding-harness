@@ -29,4 +29,8 @@ from an earlier pipeline.
 
 ## Verification
 
-Pending implementation.
+- `node --test test/system.test.mjs test/system-ci-template.test.mjs`
+- `npm test`
+- `node bin/harness.mjs doctor --manifest harness.manifest.json`
+- `./harness check --manifest examples/consumer/harness.manifest.json`
+- Render and inspect both provider scaffolds; no repository installation.

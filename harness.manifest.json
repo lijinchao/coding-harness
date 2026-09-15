@@ -292,7 +292,7 @@
     "docs": [
       {
         "path": "README.md",
-        "maxWords": 800
+        "maxWords": 820
       },
       {
         "path": "docs/reference.md",
@@ -336,7 +336,7 @@
       },
       {
         "path": "docs/system-manifest.md",
-        "maxWords": 850
+        "maxWords": 1000
       }
     ],
     "instructions": [

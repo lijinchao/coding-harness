@@ -18,6 +18,9 @@ export const SYSTEM_RECEIPT_MANIFEST_KEYS = ['sha256']
 export const SYSTEM_RECEIPT_REPOSITORY_KEYS = ['id', 'revision']
 export const SYSTEM_RECEIPT_RESULT_KEYS = ['id', 'repository', 'command', 'ok', 'exit_code', 'signal', 'timed_out', 'duration_ms', 'stdout', 'stderr']
 export const SYSTEM_RECEIPT_STREAM_KEYS = ['bytes', 'sha256']
+export const SYSTEM_CI_REPORT_KEYS = ['schema_version', 'mode', 'system_id', 'observed_at', 'system_ready', 'system_problems', 'receipts', 'healthy', 'would_block', 'blocking', 'commands_executed', 'history']
+export const SYSTEM_CI_RECEIPT_KEYS = ['tier', 'path', 'present', 'finished_at', 'age_seconds', 'fresh', 'valid', 'problems']
+export const SYSTEM_CI_HISTORY_KEYS = ['path', 'available', 'window', 'prior_observations', 'ignored_files', 'sample_size', 'healthy_runs', 'healthy_rate', 'consecutive_healthy_runs', 'promotion_eligible', 'promotion_problems']
 
 const EXTERNAL_SIGNAL = /\b(curl|docker|https?|kubectl|llm|mcp|oauth|openai|provider|socket|ssh|uvicorn)\b/i
 
@@ -377,6 +380,51 @@ export function checkSystemReceipt(manifestPath, receiptPath) {
   }
 }
 
+function stringArray(issues, value, where) {
+  if (!Array.isArray(value)) { issues.push(where + ': required array'); return }
+  value.forEach((entry, index) => receiptString(issues, entry, where + '[' + index + ']'))
+}
+
+export function validateSystemCiReport(report) {
+  const issues = []
+  if (!object(report)) return ['root: required object']
+  rejectUnknown(issues, report, SYSTEM_CI_REPORT_KEYS, 'root')
+  if (report.schema_version !== 'coding-harness.system-ci/v1') issues.push('schema_version: must be coding-harness.system-ci/v1')
+  if (!['shadow', 'enforce'].includes(report.mode)) issues.push('mode: must be shadow or enforce')
+  if (report.system_id !== null) receiptString(issues, report.system_id, 'system_id')
+  if (!Number.isFinite(Date.parse(report.observed_at))) issues.push('observed_at: required timestamp')
+  for (const key of ['system_ready', 'healthy', 'would_block', 'blocking', 'commands_executed']) if (typeof report[key] !== 'boolean') issues.push(key + ': required boolean')
+  stringArray(issues, report.system_problems, 'system_problems')
+  if (!Array.isArray(report.receipts)) issues.push('receipts: required array')
+  else report.receipts.forEach((entry, index) => {
+    const where = 'receipts[' + index + ']'
+    if (!object(entry)) { issues.push(where + ': required object'); return }
+    rejectUnknown(issues, entry, SYSTEM_CI_RECEIPT_KEYS, where)
+    for (const key of ['tier', 'path']) receiptString(issues, entry[key], where + '.' + key)
+    if (!SYSTEM_TIERS.includes(entry.tier)) issues.push(where + '.tier: unknown tier')
+    for (const key of ['present', 'fresh', 'valid']) if (typeof entry[key] !== 'boolean') issues.push(where + '.' + key + ': required boolean')
+    if (entry.finished_at !== null && !Number.isFinite(Date.parse(entry.finished_at))) issues.push(where + '.finished_at: required timestamp or null')
+    if (entry.age_seconds !== null && (typeof entry.age_seconds !== 'number' || !Number.isFinite(entry.age_seconds))) issues.push(where + '.age_seconds: required finite number or null')
+    stringArray(issues, entry.problems, where + '.problems')
+    if (entry.valid === true && (entry.present !== true || entry.fresh !== true || !Array.isArray(entry.problems) || entry.problems.length !== 0)) issues.push(where + ': valid requires present fresh evidence without problems')
+  })
+  const history = report.history
+  if (!object(history)) issues.push('history: required object')
+  else {
+    rejectUnknown(issues, history, SYSTEM_CI_HISTORY_KEYS, 'history')
+    if (history.path !== null) receiptString(issues, history.path, 'history.path')
+    for (const key of ['available', 'promotion_eligible']) if (typeof history[key] !== 'boolean') issues.push('history.' + key + ': required boolean')
+    for (const key of ['window', 'prior_observations', 'ignored_files', 'sample_size', 'healthy_runs', 'consecutive_healthy_runs']) if (!Number.isInteger(history[key]) || history[key] < 0) issues.push('history.' + key + ': required integer >= 0')
+    if (history.healthy_rate !== null && (typeof history.healthy_rate !== 'number' || !Number.isFinite(history.healthy_rate) || history.healthy_rate < 0 || history.healthy_rate > 1)) issues.push('history.healthy_rate: required number from 0 to 1 or null')
+    stringArray(issues, history.promotion_problems, 'history.promotion_problems')
+    if (history.promotion_eligible === true && (!Array.isArray(history.promotion_problems) || history.promotion_problems.length !== 0)) issues.push('history: promotion eligible requires no promotion problems')
+  }
+  if (report.would_block !== !report.healthy) issues.push('would_block: must be the inverse of healthy')
+  if (report.blocking !== (report.mode === 'enforce' && !report.healthy)) issues.push('blocking: must reflect enforce mode and current health')
+  if (report.commands_executed !== false) issues.push('commands_executed: system CI must remain read-only')
+  return issues
+}
+
 export function systemCiReport(manifestPath, receiptsDir, options = {}) {
   const absoluteManifest = resolve(manifestPath)
   const enforce = options.enforce === true
@@ -428,7 +476,7 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
     : null
   const receipts = tiers.map((tier) => {
     const path = resolve(receiptsDir, tier + '.receipt.json')
-    if (!existsSync(path)) return { tier, path, present: false, valid: false, problems: ['receipt missing'] }
+    if (!existsSync(path)) return { tier, path, present: false, finished_at: null, age_seconds: null, fresh: false, valid: false, problems: ['receipt missing'] }
     try {
       const report = checkSystemReceipt(absoluteManifest, path)
       const receipt = JSON.parse(readFileSync(path, 'utf8'))
@@ -450,7 +498,7 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
         problems,
       }
     } catch (error) {
-      return { tier, path, present: true, valid: false, problems: [error.message] }
+      return { tier, path, present: true, finished_at: null, age_seconds: null, fresh: false, valid: false, problems: [error.message] }
     }
   })
   const healthy = check.ready && tiers.length > 0 && receipts.every((entry) => entry.valid)
@@ -464,7 +512,7 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       try {
         const value = JSON.parse(readFileSync(resolve(historyPath, name), 'utf8'))
         const observed = Date.parse(value.observed_at)
-        if (value.schema_version !== 'coding-harness.system-ci/v1' || value.system_id !== check.system.id || !Number.isFinite(observed) || observed > now.getTime() || typeof value.healthy !== 'boolean') ignoredFiles += 1
+        if (validateSystemCiReport(value).length !== 0 || value.system_id !== check.system.id || observed > now.getTime()) ignoredFiles += 1
         else previous.push({ observed_at: value.observed_at, healthy: value.healthy })
       } catch {
         ignoredFiles += 1

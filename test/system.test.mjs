@@ -5,6 +5,9 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
+  SYSTEM_CI_HISTORY_KEYS,
+  SYSTEM_CI_RECEIPT_KEYS,
+  SYSTEM_CI_REPORT_KEYS,
   SYSTEM_CONTRACT_KEYS,
   SYSTEM_EVIDENCE_KEYS,
   SYSTEM_RECEIPT_KEYS,
@@ -21,6 +24,7 @@ import {
   checkSystemReceipt,
   runSystemTier,
   systemCiReport,
+  validateSystemCiReport,
   validateSystemManifest,
   validateSystemReceipt,
 } from '../src/system.mjs'
@@ -28,6 +32,7 @@ import {
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 const SCHEMA = JSON.parse(readFileSync(resolve(import.meta.dirname, '../schema/system.manifest.schema.json'), 'utf8'))
 const RECEIPT_SCHEMA = JSON.parse(readFileSync(resolve(import.meta.dirname, '../schema/system-receipt.schema.json'), 'utf8'))
+const CI_SCHEMA = JSON.parse(readFileSync(resolve(import.meta.dirname, '../schema/system-ci-report.schema.json'), 'utf8'))
 
 function commit(root, message = 'fixture') {
   execFileSync('git', ['init', '-q'], { cwd: root })
@@ -188,6 +193,15 @@ test('system schema and executable validator expose the same object fields', () 
   assert.deepEqual([...SYSTEM_PROMOTION_KEYS].sort(), [...SCHEMA.properties.qualification.properties.promotion.required].sort())
 })
 
+test('system CI report schema and executable validator expose the same fields', () => {
+  assert.deepEqual([...SYSTEM_CI_REPORT_KEYS].sort(), Object.keys(CI_SCHEMA.properties).sort())
+  assert.deepEqual([...SYSTEM_CI_RECEIPT_KEYS].sort(), Object.keys(CI_SCHEMA.properties.receipts.items.properties).sort())
+  assert.deepEqual([...SYSTEM_CI_HISTORY_KEYS].sort(), Object.keys(CI_SCHEMA.properties.history.properties).sort())
+  assert.deepEqual([...SYSTEM_CI_REPORT_KEYS].sort(), [...CI_SCHEMA.required].sort())
+  assert.deepEqual([...SYSTEM_CI_RECEIPT_KEYS].sort(), [...CI_SCHEMA.properties.receipts.items.required].sort())
+  assert.deepEqual([...SYSTEM_CI_HISTORY_KEYS].sort(), [...CI_SCHEMA.properties.history.required].sort())
+})
+
 test('system run executes only the selected tier and writes a passing receipt', async () => {
   const value = fixture()
   const unitMarker = join(value.root, 'unit-ran')
@@ -326,6 +340,7 @@ test('system CI shadow reports missing evidence without blocking or executing co
   assert.equal(existsSync(value.marker), false)
   assert.equal(report.history.available, false)
   assert.equal(existsSync(history), false)
+  assert.deepEqual(validateSystemCiReport(report), [])
   const enforced = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts, '--enforce'], { encoding: 'utf8' })
   assert.equal(enforced.status, 1)
   assert.equal(JSON.parse(enforced.stdout).blocking, true)
@@ -409,11 +424,14 @@ test('system CI computes bounded advisory history and isolates invalid observati
   mkdirSync(history)
   const receipt = await runSystemTier(value.manifestPath, 'unit', join(receipts, 'unit.receipt.json'), { timeoutMs: 5000 })
   const now = Date.parse(receipt.finished_at) + 1000
+  const baseObservation = systemCiReport(value.manifestPath, receipts, { now })
   const observation = (seconds, healthy, systemId = value.manifest.id) => ({
-    schema_version: 'coding-harness.system-ci/v1',
+    ...baseObservation,
     system_id: systemId,
     observed_at: new Date(now - seconds * 1000).toISOString(),
     healthy,
+    would_block: !healthy,
+    blocking: false,
   })
   writeFileSync(join(history, '01.json'), JSON.stringify(observation(4, true)))
   writeFileSync(join(history, '02.json'), JSON.stringify(observation(3, false)))
@@ -429,6 +447,7 @@ test('system CI computes bounded advisory history and isolates invalid observati
   assert.equal(report.history.healthy_rate, 2 / 3)
   assert.equal(report.history.consecutive_healthy_runs, 2)
   assert.equal(report.history.promotion_eligible, true)
+  assert.deepEqual(validateSystemCiReport(report), [])
   const cli = spawnSync(process.execPath, [CLI, 'system-ci', '--manifest', value.manifestPath, '--receipts', receipts, '--history', history], { encoding: 'utf8' })
   assert.equal(cli.status, 0)
   const cliReport = JSON.parse(cli.stdout)

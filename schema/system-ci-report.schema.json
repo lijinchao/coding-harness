@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/coding-harness/system-ci-report.schema.json",
+  "title": "Coding harness system CI report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "mode", "system_id", "observed_at", "system_ready", "system_problems", "receipts", "healthy", "would_block", "blocking", "commands_executed", "history"],
+  "properties": {
+    "schema_version": { "const": "coding-harness.system-ci/v1" },
+    "mode": { "enum": ["shadow", "enforce"] },
+    "system_id": { "type": ["string", "null"], "minLength": 1 },
+    "observed_at": { "type": "string", "minLength": 1 },
+    "system_ready": { "type": "boolean" },
+    "system_problems": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "receipts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tier", "path", "present", "finished_at", "age_seconds", "fresh", "valid", "problems"],
+        "properties": {
+          "tier": { "enum": ["harness-check", "unit", "contract", "integration", "external-qualified"] },
+          "path": { "type": "string", "minLength": 1 },
+          "present": { "type": "boolean" },
+          "finished_at": { "type": ["string", "null"] },
+          "age_seconds": { "type": ["number", "null"] },
+          "fresh": { "type": "boolean" },
+          "valid": { "type": "boolean" },
+          "problems": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "healthy": { "type": "boolean" },
+    "would_block": { "type": "boolean" },
+    "blocking": { "type": "boolean" },
+    "commands_executed": { "const": false },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "available", "window", "prior_observations", "ignored_files", "sample_size", "healthy_runs", "healthy_rate", "consecutive_healthy_runs", "promotion_eligible", "promotion_problems"],
+      "properties": {
+        "path": { "type": ["string", "null"], "minLength": 1 },
+        "available": { "type": "boolean" },
+        "window": { "type": "integer", "minimum": 0 },
+        "prior_observations": { "type": "integer", "minimum": 0 },
+        "ignored_files": { "type": "integer", "minimum": 0 },
+        "sample_size": { "type": "integer", "minimum": 0 },
+        "healthy_runs": { "type": "integer", "minimum": 0 },
+        "healthy_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "consecutive_healthy_runs": { "type": "integer", "minimum": 0 },
+        "promotion_eligible": { "type": "boolean" },
+        "promotion_problems": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    }
+  }
+}

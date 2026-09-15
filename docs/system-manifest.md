@@ -144,3 +144,20 @@ policy change, not an automatic Harness transition. `promotion_eligible` is
 advisory and never turns enforcement on or changes the current enforce result.
 A missing or malformed manifest is also contained in Shadow and becomes
 blocking only under enforce.
+
+## CI scaffolds and artifact layout
+
+Print a reviewable provider scaffold, or explicitly write one into an existing
+parent directory:
+
+```sh
+harness system-ci-template --provider github
+harness system-ci-template --provider gitlab --out system-ci-shadow.yml
+```
+
+Both use `.harness/system-ci/receipts`, `.harness/system-ci/history`, and
+`.harness/system-ci/current/system-ci.json`. They never include `--enforce` and
+refuse to replace `--out` unless `--force` is explicit. The provider must still
+restore prior reports and checkout every repository at the paths declared by
+the system manifest; comments in the scaffold mark those integration points.
+The current report and receipts are archived with an always-run artifact step.

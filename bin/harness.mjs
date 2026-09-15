@@ -31,6 +31,7 @@ import { selectedGateIds } from '../src/select.mjs'
 import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
 import { checkSystemManifest, checkSystemReceipt, runSystemTier, systemCiReport } from '../src/system.mjs'
+import { renderSystemCiTemplate, writeSystemCiTemplate } from '../src/system-ci-template.mjs'
 
 const USAGE = `usage: harness <command> [options]
 
@@ -43,6 +44,8 @@ commands:
                                          verify a receipt without rerunning commands
   system-ci --manifest <path> --receipts <dir> [--history <dir>] [--enforce]
                                          check required receipts; Shadow mode is non-blocking by default
+  system-ci-template --provider github|gitlab [--out <path>] [--force]
+                                         print or explicitly write a reviewable Shadow scaffold
   validate   --manifest <path>           validate manifest structure
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
@@ -499,6 +502,12 @@ function cmdSystemCi(options) {
   if (report.blocking) process.exit(1)
 }
 
+function cmdSystemCiTemplate(options) {
+  const provider = requireOption(options, 'provider')
+  if (options.out === undefined) process.stdout.write(renderSystemCiTemplate(provider))
+  else console.log('wrote ' + writeSystemCiTemplate(provider, resolve(options.out), { force: options.force === true }))
+}
+
 async function cmdProve(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const manifest = readValidManifest(path)
@@ -637,7 +646,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)
