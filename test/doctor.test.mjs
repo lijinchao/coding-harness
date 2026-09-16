@@ -100,3 +100,12 @@ test('--strict turns a recommended gap into a failure', () => {
   assert.throws(() => run(['--strict']))
   rmSync(root, { recursive: true, force: true })
 })
+test('two change records may not share a number', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-changes-'))
+  mkdirSync(join(root, 'docs', 'changes'), { recursive: true })
+  writeFileSync(join(root, 'docs', 'changes', '0001-first.md'), '## Verification\n\nran it\n')
+  writeFileSync(join(root, 'docs', 'changes', '0001-second.md'), '## Verification\n\nran it\n')
+  const problems = doctorReport(root, { version: '1.0.0', gates: [], lock: {}, governance: { changes: 'docs/changes' } }).problems
+  assert.match(problems.join('\n'), /0001-second\.md: change number 0001 is already used/)
+  rmSync(root, { recursive: true, force: true })
+})
