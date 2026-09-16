@@ -21,11 +21,13 @@ project's survey currently collapses the repository into the ordinary
 3. Keep readiness false and qualification unavailable. Direct the operator to
    restore the matching runtime or review migration; never imply that this
    project's CLI can consume the foreign manifest.
-4. Add a shared Skill that tells consumers to use the repository-local pinned
-   `./harness` bootstrap and to distinguish another Harness contract from a
-   missing installation.
-5. Cover marker detection, missing and available foreign runtime, ordinary
-   unadopted repositories, and the no-execution boundary with isolated tests.
+4. Document that this project's consumers use the repository-local pinned
+   `./harness` bootstrap. Leave correction of a foreign generated Skill to its
+   owning KIT release; copying that Skill into this base would not repair its
+   consumers.
+5. Cover marker detection, missing and available foreign runtime, untracked
+   marker rejection, ordinary unadopted repositories, and the no-execution
+   boundary with isolated tests.
 
 ## Verification
 
