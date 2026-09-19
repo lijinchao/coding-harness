@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
  * Prose such as `protects` is deliberately excluded: rewording what a gate
  * defends does not invalidate the run that watched it fail.
  */
-const DEFINITION_KEYS = ['id', 'command', 'prove_fires_command', 'revert_command', 'expect', 'severity', 'phase', 'needs', 'after', 'always']
+const DEFINITION_KEYS = ['id', 'command', 'setup_command', 'prove_fires_command', 'revert_command', 'expect', 'severity', 'phase', 'needs', 'after', 'always']
 
 /**
  * The behavioural definition of a gate.

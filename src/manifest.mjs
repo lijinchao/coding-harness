@@ -18,7 +18,7 @@ export const ROOT_KEYS = ['version', 'tool', 'base', 'product', 'governance', 'c
 export const EVAL_KEYS = ['id', 'fixture', 'task', 'assert', 'evidence', 'feedback', 'retries']
 export const COMPOSITION_KEYS = ['output', 'sources']
 export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-export const GATE_KEYS = ['id', 'command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after', 'override']
+export const GATE_KEYS = ['id', 'command', 'setup_command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after', 'override']
 export const EXPECT_KEYS = ['forbid', 'allow']
 export const BASE_KEYS = ['source', 'registry', 'cache']
 export const TOOL_KEYS = ['version', 'commit', 'source']
@@ -162,6 +162,10 @@ function validateGovernance(errors, governance) {
         if (!isObject(value)) continue
         requireString(errors, value.command, where + '.command')
         if (typeof value.command === 'string' && value.command.includes('\n')) errors.push(where + '.command: required single line')
+        if (value.setup_command !== undefined) {
+          requireString(errors, value.setup_command, where + '.setup_command')
+          if (typeof value.setup_command === 'string' && value.setup_command.includes('\n')) errors.push(where + '.setup_command: required single line')
+        }
         if (value.evidence !== undefined) {
           requireString(errors, value.evidence, where + '.evidence')
           if (typeof value.evidence === 'string' && (value.evidence.startsWith('/') || value.evidence.split('/').includes('..'))) {

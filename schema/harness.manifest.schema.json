@@ -176,7 +176,8 @@
           "always": { "type": "boolean" },
           "needs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "after": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-          "override": { "type": "boolean" }
+          "override": { "type": "boolean" },
+          "setup_command": { "type": "string", "minLength": 1 }
         }
       }
     },
