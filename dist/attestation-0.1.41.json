@@ -1,0 +1,51 @@
+{
+  "at": "2026-09-19T07:00:56.287Z",
+  "version": "0.1.41",
+  "toolCommit": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+  "tag": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+  "base": {
+    "version": "0.1.41",
+    "release": "39112bbbec49f40f243084e0a98aeaa3a334101f01504784e36a9abdb306bcee"
+  },
+  "locks": {
+    "self": "9506a464c562a9b15ae3f00858af6c5f6a9a2c9eaa98483b40c79c4b999cc200"
+  },
+  "proofs": {
+    "harness-drift": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
+    },
+    "doctor": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "213d4e3325a35af950e2e7528dc2efc43933f198b00a994347e242f16ac48bad"
+    },
+    "validate": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
+    },
+    "tests": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
+    },
+    "release": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "0b003dc204854ed88316fa96f1ed06a8e4b06614bf8f43e6a7f644fa5e76b02e"
+    },
+    "example": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
+    },
+    "metrics": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
+    },
+    "release-ready": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
+    },
+    "command-review": {
+      "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+      "definition": "e8c30565bc5ef10672eece0d39e69635f41bfb2ca6198ae5a26dc80ca617f52e"
+    }
+  }
+}
