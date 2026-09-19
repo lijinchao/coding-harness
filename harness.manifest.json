@@ -173,6 +173,21 @@
           "ERROR:"
         ]
       }
+    },
+    {
+      "id": "command-review",
+      "setup_command": "./harness command-review --repository . --revision \"$(git rev-parse HEAD)\" --command true --out \"${TMPDIR:-/tmp}/cr.json\"",
+      "command": "REV=$(git rev-parse HEAD); ./harness command-review-check --repository . --revision \"$REV\" --command true --receipt \"${TMPDIR:-/tmp}/cr.json\"",
+      "protects": "a review receipt binds a command to its revision, and the check fails without one",
+      "prove_fires": "delete the receipt outside the repository, then run the gate; the check has nothing to verify and the gate exits 1",
+      "prove_fires_command": "rm -f \"${TMPDIR:-/tmp}/cr.json\"",
+      "revert_command": "rm -f \"${TMPDIR:-/tmp}/cr.json\"",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "ERROR:"
+        ]
+      }
     }
   ],
   "surfaces": [
@@ -204,7 +219,8 @@
         "doctor",
         "validate",
         "tests",
-        "release-ready"
+        "release-ready",
+        "command-review"
       ]
     },
     {
