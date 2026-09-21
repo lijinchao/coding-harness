@@ -307,3 +307,24 @@ test('prove times out a hung proof command', () => {
   assert.throws(() => run(['prove', '--manifest', manifestPath(root), '--gate', 'hang', '--timeout', '1']))
   rmSync(root, { recursive: true, force: true })
 })
+test('a gate whose product cannot be committed declares the setup that makes it', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-prove-setup-'))
+  const product = join(tmpdir(), 'coding-harness-setup-product-' + Date.now())
+  writeFileSync(join(root, 'AGENTS.delta.md'), '# Delta\n')
+  writeFileSync(manifestPath(root), JSON.stringify({
+    version: '0.1.0',
+    compositions: [{ output: 'AGENTS.md', sources: ['AGENTS.delta.md'] }],
+    skills: [],
+    gates: [gate({
+      id: 'receipt',
+      command: `test -f '${product}'`,
+      setup_command: `touch '${product}'`,
+      prove_fires_command: `rm -f '${product}'`,
+      revert_command: `rm -f '${product}'`,
+    })],
+  }, null, 2) + '\n')
+  gitRepo(root)
+  run(['prove', '--manifest', manifestPath(root), '--gate', 'receipt', '--timeout', '60'])
+  rmSync(root, { recursive: true, force: true })
+  rmSync(product, { force: true })
+})

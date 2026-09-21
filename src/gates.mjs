@@ -17,7 +17,10 @@ function skippedResult(gate, reason) {
 }
 
 async function runOne(root, gate, timeoutMs) {
-  const result = await runCommand(root, gate.command, timeoutMs)
+  // A gate may need a product the repository cannot commit; the setup runs
+  // first, in the same shell contract, and a setup failure is a gate failure.
+  const command = gate.setup_command === undefined ? gate.command : gate.setup_command + ' && ' + gate.command
+  const result = await runCommand(root, command, timeoutMs)
   const violations = outputViolations(result.output, gate.expect)
   return {
     id: gate.id,

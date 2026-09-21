@@ -49,10 +49,22 @@ export async function proveGate(root, gate, timeoutMs = 0, options = {}) {
   const revert = async () => {
     const result = await runCommand(root, gate.revert_command, timeoutMs)
     if (result.code !== 0) return 'the revert exited ' + result.code + (result.timedOut ? ' (timeout)' : '')
+    // A gate may need a product the repository cannot commit; the revert
+    // restores the state, and the setup that produced the product runs again.
+    if (gate.setup_command !== undefined) {
+      const setup = await runCommand(root, gate.setup_command, timeoutMs)
+      if (setup.code !== 0) return 'the setup exited ' + setup.code + (setup.timedOut ? ' (timeout)' : '')
+    }
     const dirty = dirtyPaths(root, { untracked })
     if (dirty === null) return 'the revert could not be verified'
     if (dirty.length > 0) return 'the revert left the working tree dirty: ' + dirty.slice(0, 3).join(', ')
     return null
+  }
+  if (gate.setup_command !== undefined) {
+    const setup = await runCommand(root, gate.setup_command, timeoutMs)
+    if (setup.code !== 0) {
+      return { status: 'error', detail: 'the setup exited ' + setup.code + (setup.timedOut ? ' (timeout)' : '') }
+    }
   }
   const introduced = await runCommand(root, gate.prove_fires_command, timeoutMs)
   if (introduced.code !== 0) {
