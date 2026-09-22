@@ -39,7 +39,7 @@ To add the harness to an existing repository:
 
 ```sh
 node bin/harness.mjs survey --dir path/to/repo
-node bin/harness.mjs init --dir path/to/repo
+node bin/harness.mjs init --dir path/to/repo --base-source <reviewed-release-registry> --provider github
 ```
 
 `survey` is read-only; see [docs/survey.md](docs/survey.md).
@@ -65,23 +65,14 @@ test/                          node:test suites
 
 ## CLI
 
-| Command | Effect |
+The executable inventory is grouped below; `./harness --help` has options.
+
+| Area | Commands |
 |---|---|
-| `survey --dir <path>` | Inspect an unadopted repository without writing or running discovered commands |
-| `command-review ...` | Review an exact-revision command without approving it |
-| `command-review-check ...` | Check that receipt without rerunning |
-| `system-check --manifest <path>` | Check a pinned multi-repository snapshot without running its commands |
-| `validate --manifest <path>` | Fail on any missing required field |
-| `sync --manifest <path>` | Compose outputs and rewrite the lock |
-| `check --manifest <path>` | Fail when a composed output drifted from `base@version + delta` |
-| `init --dir <path>` | Scaffold a delta, manifest, bootstrap, and CI, then compose it |
-| `upgrade --manifest <path> --to <version>` | Pin a new base version and re-sync |
-| `release --base <dir> --out <dir>` | Build a versioned, hashed base release under `<out>/base@<version>/` |
-| `gates --manifest <path>` | Run every declared gate; one list drives local and CI |
-| `scan --root <dir>` | List consumers whose harness is stale or diverged |
-| `prove --manifest <path>` | Run the three-step proof for each gate action |
-| `diff --manifest <path> --to <version>` | Preview what a base upgrade changes |
-| `metrics --log <file>` | First-pass rate and per-gate failures from gate reports |
+| Adoption | `survey` `init` `validate` `sync` `check` `doctor` `scan` `upgrade` |
+| Gates and releases | `gates` `select` `prove` `diff` `metrics` `packs` `release` `attest` |
+| Multi-repository | `system-check` `system-snapshot` `system-run` `system-receipt-check` `system-ci` `system-ci-template` `system-gitlab-observe` |
+| Command review | `command-review` `command-review-check` |
 
 ## Make the harness evolve
 
@@ -95,4 +86,12 @@ A gate is admitted only with a `prove_fires` action you have actually run. A gat
 
 ## Status
 
-v0.1.41. The manifest is JSON to keep the CLI dependency-free; YAML support is deliberately deferred.
+The pinned base/tool release is v0.1.41. The table above inventories this
+checkout; its test compares it with the executable CLI. Working-only commands:
+`system-snapshot`, `system-gitlab-observe`. The self-governance test compares
+these names with the tool commit pinned in `harness.manifest.json`.
+
+The pinned tool includes packs, legibility and eval declarations, and system
+checks, runs and CI observations. GitLab collaboration observation is local
+and tested with a fake transport; target-instance compatibility and CI artifact
+provenance remain unverified. YAML manifest support is deferred.

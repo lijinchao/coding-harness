@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: v0.1.41 — the released kernel remains unchanged; the working tool surveys repositories, checks pinned multi-repository snapshots, runs reviewed tiers into portable receipts, applies receipt age budgets, measures CI Shadow stability, and emits reviewable GitHub/GitLab scaffolds. External-qualified execution and CI enforcement remain separately authorized. Base and tool releases are versioned, hashed, and commit-pinned; the manifest carries gates, governance, changed-surface selection, proof records, metrics, packs, legibility declarations, and eval declarations. The detailed current contracts live in [reference.md](reference.md) and [contracts.md](contracts.md).
+The [README status](../README.md#status) distinguishes the pinned v0.1.41 release from the working checkout. The detailed current contracts live in [reference.md](reference.md) and [contracts.md](contracts.md).
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)), the artifact contracts ([contracts.md](contracts.md)), and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
@@ -8,9 +8,9 @@ This page carries the forward plan: the next three actions, the milestones ahead
 
 Three things, in order.
 
-1. **Survey and adopt one real repository.** Run `node bin/harness.mjs survey --dir <repo>`, review its context and command candidates, then run `init`, author that repository's `AGENTS.delta.md`, and add `harness check` to CI. Hand-edit the composed `AGENTS.md` once and watch the job fail; that failure is the gate's proof.
-2. **Make the base distributable.** The base is a released version plus per-file hashes and a commit pin; a consumer fetches it from a git tag and the bootstrap verifies the commit before running. What remains is signed releases.
-3. **Collect the first effectiveness signals.** `harness gates --report <file>` appends a run summary and `harness metrics --log <file>` turns those into a first-pass rate and per-gate failures; a CI step passes `--report`. Record every review finding that cites a policy already covered by a guide; two weeks of those two numbers tell you which guide is not working.
+1. **Qualify self-governance.** Keep the documented command inventory tied to the executable CLI, and check status claims when capabilities change. Record a failing case before trusting the gate.
+2. **Exercise one GitLab multi-repository pilot.** Pin the tool and each member revision, run the named local tiers, then validate the read-only collaboration observer against the target GitLab instance. Review the CI artifact provenance separately.
+3. **Measure actual adoption.** Keep gate and eval results bound to their version and snapshot; use consumer failures to decide which rules belong in the base, a pack, or a repository delta.
 
 ## Milestones
 

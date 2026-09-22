@@ -42,3 +42,28 @@ patterns are duplicated across three modules.
 The current changes are to the working tool, not a new pinned base release.
 Real GitLab compatibility and trusted CI provenance remain separate rollout
 checks.
+
+## Result
+
+- System CI reports now bind Change ID and manifest SHA-256. The advisory
+  history window ignores old reports lacking those fields and reports from a
+  different pinned change, even when the system ID is unchanged.
+- GitLab results distinguish a consistent API observation (`observed`) from
+  the declared policy result (`ok`). The existing strict approval and MR
+  Pipeline policy remains the default; target files can explicitly choose an
+  observation-only approval policy or a successful MR head Pipeline on the
+  source SHA. Required Jobs remain mandatory.
+- `init` now requires an explicit base source and CI provider. GitLab gets a
+  native CI file and root CODEOWNERS; conflicting re-initialization fails
+  before writing. The external-service hint is shared across the three call
+  sites and documented as an incomplete signal.
+- README is the current command and release-status inventory. A repository
+  test compares every documented command with the live CLI and compares
+  working-only commands with the pinned tool commit. Documentation changes
+  select the test gate. Direction and roadmap link to that inventory.
+
+Verification: `npm test` 227/227, self `doctor` and `validate` OK, pinned
+example `check` OK, and `git diff --check` clean. A missing command row and
+an older snapshot were exercised as negative controls. These tests catch
+command/status inventory drift, but cannot prove every semantic product claim;
+human review still owns the meaning of capability and deployment status.

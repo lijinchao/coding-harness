@@ -61,15 +61,14 @@ declared repository. External qualification additionally requires
 `qualification.max_receipt_age_seconds` is the CI freshness budget. Promotion
 criteria declare a bounded history window, minimum observations, minimum
 healthy rate, and minimum current healthy streak.
-`system-ci` reads the system snapshot and `<tier>.receipt.json` files without
-running commands. An optional history directory supplies earlier reports for
-advisory stability statistics; malformed, future, or foreign-system entries are
-ignored and counted. Shadow mode always exits zero while reporting whether it
-would block; `--enforce` makes the current unhealthy result non-zero. History
-eligibility cannot enable enforcement or override current evidence.
+`system-ci` reads the snapshot and receipts without running commands. History
+supplies advisory statistics; malformed, future, or foreign entries are ignored.
+Shadow exits zero and reports `would_block`; `--enforce` fails on current
+unhealthy evidence. History cannot enable enforcement or override that evidence.
 Archived observations conform to `schema/system-ci-report.schema.json`; every
 receipt summary has a normalized shape even when evidence is absent or
-malformed. History accepts only complete reports for the same system.
+malformed. History requires the same Change ID and manifest digest. Legacy
+reports are ignored, so a new pinned change starts a new advisory window.
 
 The GitHub and GitLab scaffolds share `.harness/system-ci/receipts`,
 `.harness/system-ci/history`, and

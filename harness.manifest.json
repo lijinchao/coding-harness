@@ -292,6 +292,7 @@
       "requires": [
         "doctor",
         "validate",
+        "tests",
         "metrics"
       ]
     }

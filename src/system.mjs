@@ -4,6 +4,7 @@ import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path
 import { sha256 } from './compose.mjs'
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
 import { writeAtomic } from './state.mjs'
+import { hasExternalHint } from './external-hints.mjs'
 
 export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications', 'qualification', 'change']
 export const SYSTEM_CHANGE_KEYS = ['id', 'records', 'bases']
@@ -21,11 +22,10 @@ export const SYSTEM_RECEIPT_MANIFEST_KEYS = ['sha256']
 export const SYSTEM_RECEIPT_REPOSITORY_KEYS = ['id', 'revision']
 export const SYSTEM_RECEIPT_RESULT_KEYS = ['id', 'repository', 'command', 'ok', 'exit_code', 'signal', 'timed_out', 'duration_ms', 'stdout', 'stderr']
 export const SYSTEM_RECEIPT_STREAM_KEYS = ['bytes', 'sha256']
-export const SYSTEM_CI_REPORT_KEYS = ['schema_version', 'mode', 'system_id', 'observed_at', 'system_ready', 'system_problems', 'receipts', 'healthy', 'would_block', 'blocking', 'commands_executed', 'history']
+export const SYSTEM_CI_REPORT_KEYS = ['schema_version', 'mode', 'system_id', 'change_id', 'manifest_sha256', 'observed_at', 'system_ready', 'system_problems', 'receipts', 'healthy', 'would_block', 'blocking', 'commands_executed', 'history']
 export const SYSTEM_CI_RECEIPT_KEYS = ['tier', 'path', 'present', 'finished_at', 'age_seconds', 'fresh', 'valid', 'problems']
 export const SYSTEM_CI_HISTORY_KEYS = ['path', 'available', 'window', 'prior_observations', 'ignored_files', 'sample_size', 'healthy_runs', 'healthy_rate', 'consecutive_healthy_runs', 'promotion_eligible', 'promotion_problems']
 
-const EXTERNAL_SIGNAL = /\b(curl|docker|https?|kubectl|llm|mcp|oauth|openai|provider|socket|ssh|uvicorn)\b/i
 const CHANGE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 
 function safeRecordPath(path) {
@@ -152,7 +152,7 @@ export function validateSystemManifest(manifest) {
     if (typeof entry.command === 'string') {
       if (entry.command.includes('\n')) issues.push(where + '.command: required single line')
       if (/[*?[\]]/.test(entry.command)) issues.push(where + '.command: wildcards are not executable command arguments')
-      if (EXTERNAL_SIGNAL.test(entry.command) && entry.external !== true) issues.push(where + '.external: command has an external-service signal; declare external-qualified and external true')
+      if (hasExternalHint(entry.command) && entry.external !== true) issues.push(where + '.external: command has an external-service hint; declare external-qualified and external true')
     }
     if (typeof entry.external !== 'boolean') issues.push(where + '.external: required boolean')
     if (entry.external === true && entry.tier !== 'external-qualified') issues.push(where + '.tier: external commands belong in external-qualified')
@@ -567,6 +567,9 @@ export function validateSystemCiReport(report) {
   if (report.schema_version !== 'coding-harness.system-ci/v1') issues.push('schema_version: must be coding-harness.system-ci/v1')
   if (!['shadow', 'enforce'].includes(report.mode)) issues.push('mode: must be shadow or enforce')
   if (report.system_id !== null) receiptString(issues, report.system_id, 'system_id')
+  if (report.change_id !== null && (typeof report.change_id !== 'string' || !CHANGE_ID.test(report.change_id))) issues.push('change_id: required safe Change ID or null')
+  if (report.manifest_sha256 !== null && (typeof report.manifest_sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(report.manifest_sha256))) issues.push('manifest_sha256: required SHA-256 or null')
+  if (report.system_id !== null && report.manifest_sha256 === null) issues.push('manifest_sha256: required for an available system')
   if (!Number.isFinite(Date.parse(report.observed_at))) issues.push('observed_at: required timestamp')
   for (const key of ['system_ready', 'healthy', 'would_block', 'blocking', 'commands_executed']) if (typeof report[key] !== 'boolean') issues.push(key + ': required boolean')
   stringArray(issues, report.system_problems, 'system_problems')
@@ -611,6 +614,8 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       schema_version: 'coding-harness.system-ci/v1',
       mode: enforce ? 'enforce' : 'shadow',
       system_id: null,
+      change_id: null,
+      manifest_sha256: null,
       observed_at: new Date(options.now ?? Date.now()).toISOString(),
       system_ready: false,
       system_problems: [error.message],
@@ -636,6 +641,7 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
   }
   const now = new Date(options.now ?? Date.now())
   if (!Number.isFinite(now.getTime())) throw new Error('system-ci now must be a valid timestamp')
+  const manifestSha256 = sha256(readFileSync(absoluteManifest))
   const systemProblems = [...check.structural.issues]
   for (const repository of check.repositories) {
     if (!repository.exists) systemProblems.push('repository missing: ' + repository.id)
@@ -698,7 +704,9 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       try {
         const value = JSON.parse(readFileSync(resolve(historyPath, name), 'utf8'))
         const observed = Date.parse(value.observed_at)
-        if (validateSystemCiReport(value).length !== 0 || value.system_id !== check.system.id || observed > now.getTime()) ignoredFiles += 1
+        if (validateSystemCiReport(value).length !== 0 || value.system_id !== check.system.id
+          || value.change_id !== (check.change?.id ?? null) || value.manifest_sha256 !== manifestSha256
+          || observed > now.getTime()) ignoredFiles += 1
         else previous.push({ observed_at: value.observed_at, healthy: value.healthy })
       } catch {
         ignoredFiles += 1
@@ -732,6 +740,8 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
     schema_version: 'coding-harness.system-ci/v1',
     mode: enforce ? 'enforce' : 'shadow',
     system_id: check.system.id,
+    change_id: check.change?.id ?? null,
+    manifest_sha256: manifestSha256,
     observed_at: observedAt,
     system_ready: check.ready,
     system_problems: systemProblems,

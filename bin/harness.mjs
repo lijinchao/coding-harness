@@ -16,7 +16,7 @@ import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
 import { toolCommit, toolRoot, toolVersion } from '../src/tool.mjs'
 import { SHIM } from '../src/shim.mjs'
-import { WORKFLOW } from '../src/workflow.mjs'
+import { GITLAB_WORKFLOW, WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
@@ -60,7 +60,7 @@ commands:
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
   doctor     --manifest <path>           fail when declared governance facts drift
-  init       --dir <path> [--base-source <dir>] [--version <v>]
+  init       --dir <path> --base-source <registry-or-git-url> --provider github|gitlab [--version <v>]
                                          scaffold a delta, manifest, and bootstrap
   upgrade    --manifest <path> --to <v> [--tool-commit <sha>]
                                          move the pins, rewrite version references, re-sync, and check
@@ -173,8 +173,16 @@ function cmdCheck(options) {
 function cmdInit(options) {
   const dir = resolve(requireOption(options, 'dir'))
   const version = options.version ?? toolVersion()
-  const source = options['base-source'] ?? 'git:https://github.com/lijinchao/coding-harness.git'
+  const source = requireOption(options, 'base-source')
+  const provider = requireOption(options, 'provider')
+  if (!['github', 'gitlab'].includes(provider)) throw new Error('--provider must be github or gitlab')
   const toolSource = options['tool-source'] ?? (source.startsWith('git:') ? source : toolRoot())
+  const manifestPath = resolve(dir, 'harness.manifest.json')
+  if (existsSync(manifestPath)) {
+    const existing = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    if (existing.base?.source !== source) throw new Error('existing manifest uses a different base source; use upgrade or edit it explicitly')
+    if (!(existing.governance?.ci ?? []).includes(provider === 'github' ? '.github/workflows/harness.yml' : '.gitlab-ci.yml')) throw new Error('existing manifest does not declare the selected CI provider')
+  }
   mkdirSync(dir, { recursive: true })
 
   const delta = resolve(dir, 'AGENTS.delta.md')
@@ -185,7 +193,6 @@ function cmdInit(options) {
   const shim = resolve(dir, 'harness')
   if (!existsSync(shim)) writeFileSync(shim, SHIM, { mode: 0o755 })
 
-  const manifestPath = resolve(dir, 'harness.manifest.json')
   if (!existsSync(manifestPath)) {
     const tool = { version: toolVersion(), source: toolSource }
     const commit = toolCommit()
@@ -194,7 +201,7 @@ function cmdInit(options) {
       version,
       tool,
       base: { source, registry: 'dist', cache: '.harness' },
-      governance: { owners: ['@owner'], ci: ['.github/workflows/harness.yml'] },
+      governance: { owners: ['@owner'], ci: [provider === 'github' ? '.github/workflows/harness.yml' : '.gitlab-ci.yml'] },
       compositions: [
         { output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] },
         { output: 'REVIEW.md', sources: ['base:REVIEW.base.md'] },
@@ -207,7 +214,7 @@ function cmdInit(options) {
       gates: [
         { id: 'harness-drift', command: './harness check --manifest harness.manifest.json', protects: `composed files match base@${version} plus this delta`, prove_fires: 'hand-edit AGENTS.md, then run ./harness check; expect exit 1', prove_fires_command: "printf '<!-- prove -->' >> AGENTS.md", revert_command: './harness sync --manifest harness.manifest.json', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
         { id: 'validate', command: './harness validate --manifest harness.manifest.json', protects: 'declared skills and gates carry their required sections', prove_fires: 'corrupt the manifest, then run ./harness validate; expect exit 1', prove_fires_command: "printf '{' >> harness.manifest.json", revert_command: 'git checkout -- harness.manifest.json', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
-        { id: 'doctor', command: './harness doctor --manifest harness.manifest.json', protects: 'declared governance facts stay consistent', prove_fires: 'empty CODEOWNERS, then run ./harness doctor; expect exit 1', prove_fires_command: "printf '' > .github/CODEOWNERS", revert_command: 'git checkout -- .github/CODEOWNERS', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
+        { id: 'doctor', command: './harness doctor --manifest harness.manifest.json', protects: 'declared governance facts stay consistent', prove_fires: 'empty CODEOWNERS, then run ./harness doctor; expect exit 1', prove_fires_command: "printf '' > CODEOWNERS", revert_command: 'git checkout -- CODEOWNERS', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
       ],
     }
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
@@ -221,15 +228,14 @@ function cmdInit(options) {
     writeFileSync(gitignore, '.harness/\n')
   }
 
-  const workflowPath = resolve(dir, '.github/workflows/harness.yml')
+  const workflowPath = resolve(dir, provider === 'github' ? '.github/workflows/harness.yml' : '.gitlab-ci.yml')
   if (!existsSync(workflowPath)) {
     mkdirSync(dirname(workflowPath), { recursive: true })
-    writeFileSync(workflowPath, WORKFLOW)
+    writeFileSync(workflowPath, provider === 'github' ? WORKFLOW : GITLAB_WORKFLOW)
   }
 
-  const codeowners = resolve(dir, '.github/CODEOWNERS')
+  const codeowners = resolve(dir, 'CODEOWNERS')
   if (!existsSync(codeowners)) {
-    mkdirSync(dirname(codeowners), { recursive: true })
     writeFileSync(codeowners, '# Base owner: base changes are reviewed here.\n* @owner\n')
   }
 
@@ -717,6 +723,10 @@ try {
   if (command === undefined || command === '--help' || command === '-h') {
     console.log(USAGE)
     process.exit(command === undefined ? 1 : 0)
+  }
+  if (command === '--list-commands') {
+    console.log(JSON.stringify(Object.keys(COMMANDS).sort()))
+    process.exit(0)
   }
   const handler = COMMANDS[command]
   if (handler === undefined) throw new Error(`unknown command: ${command}`)

@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, lstatSync, readFileSync, readdirSync } from 'node:fs'
 import { basename, dirname, extname, relative, resolve, sep } from 'node:path'
+import { hasExternalHint } from './external-hints.mjs'
 
 const IGNORED_DIRECTORIES = new Set([
   '.codegraph', '.git', '.harness', '.next', '.tmp-registry', '.venv', '.wiscode', 'build', 'coverage', 'dist',
@@ -8,7 +9,6 @@ const IGNORED_DIRECTORIES = new Set([
 ])
 
 const SAFE_SCRIPT_NAMES = new Set(['check', 'lint', 'test', 'typecheck', 'verify'])
-const EXTERNAL_SIGNAL = /\b(curl|docker|http|https|kubectl|llm|mcp|mongo|mysql|oauth|openai|postgres|provider|redis|requests|socket|urllib|uvicorn)\b/i
 const HIGH_IMPACT_SIGNAL = /\b(delete|deploy|drop|migrat(?:e|ion)|npm publish|production|push|release|remove|rm)\b/i
 
 function git(root, args, options = {}) {
@@ -172,7 +172,7 @@ function commandCandidate(root, candidate) {
   const riskSignals = []
   if (/[*?[\]]/.test(commandMaterial)) issues.push('wildcards-are-not-executable-command-arguments')
   if (!commandAvailable(root, candidate.command[0])) issues.push('executable-not-resolvable')
-  if (EXTERNAL_SIGNAL.test(riskMaterial)) riskSignals.push('external-service')
+  if (hasExternalHint(riskMaterial)) riskSignals.push('external-service')
   if (HIGH_IMPACT_SIGNAL.test(riskMaterial)) riskSignals.push('high-impact')
   // Discovery is evidence about what exists, not authorization to run it.
   // A repository owner promotes a reviewed candidate into the manifest.

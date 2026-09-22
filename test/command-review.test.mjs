@@ -97,7 +97,7 @@ test('command review records timeout and leaves no temporary archive', async () 
 test('command review refuses unsafe declaration and receipt overwrite by default', async () => {
   const value = repositoryFixture()
   const out = join(value.root, 'review.json')
-  await assert.rejects(runCommandReview(value.repository, value.revision, 'curl https://example.test', out), /external-service signal/)
+  await assert.rejects(runCommandReview(value.repository, value.revision, 'curl https://example.test', out), /external-service hint/)
   await assert.rejects(runCommandReview(value.repository, value.revision, 'node *.mjs', out), /wildcard/)
   await assert.rejects(runCommandReview(value.repository, value.revision, 'node check.mjs', join(value.repository, 'review.json')), /outside the source repository/)
   await runCommandReview(value.repository, value.revision, 'node check.mjs', out)

@@ -19,7 +19,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["repository", "project_id", "project_path", "mr_iid", "expected_revision", "mr_sha", "approval_rules", "pipeline", "jobs", "ok", "problems"],
+        "required": ["repository", "project_id", "project_path", "mr_iid", "expected_revision", "mr_sha", "mr_author_id", "approval_rules_overwritten", "approval_rules", "pipeline", "jobs", "policy", "observed", "ok", "problems"],
         "properties": {
           "repository": { "type": "string", "minLength": 1 },
           "project_id": { "type": "integer", "minimum": 1 },
@@ -27,6 +27,8 @@
           "mr_iid": { "type": "integer", "minimum": 1 },
           "expected_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
           "mr_sha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+          "mr_author_id": { "type": ["integer", "null"], "minimum": 1 },
+          "approval_rules_overwritten": { "type": ["boolean", "null"] },
           "approval_rules": {
             "type": "array",
             "items": {
@@ -58,15 +60,28 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["id", "name", "status", "pipeline_id"],
+              "required": ["id", "name", "status", "pipeline_id", "allow_failure", "retried"],
               "properties": {
                 "id": { "type": ["integer", "null"], "minimum": 1 },
                 "name": { "type": "string", "minLength": 1 },
                 "status": { "type": ["string", "null"] },
-                "pipeline_id": { "type": ["integer", "null"], "minimum": 1 }
+                "pipeline_id": { "type": ["integer", "null"], "minimum": 1 },
+                "allow_failure": { "type": ["boolean", "null"] },
+                "retried": { "type": ["boolean", "null"] }
               }
             }
           },
+          "policy": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["approval", "pipeline", "required_jobs"],
+            "properties": {
+              "approval": { "enum": ["all-positive", "observe-only"] },
+              "pipeline": { "enum": ["detached-mr", "mr-head-success"] },
+              "required_jobs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+            }
+          },
+          "observed": { "type": "boolean" },
           "ok": { "type": "boolean" },
           "problems": { "type": "array", "items": { "type": "string", "minLength": 1 } }
         }

@@ -49,6 +49,9 @@ and outside-tree writes as `not-observed`. The receipt separately records
 whether `--allow-external` was present. An obvious external-service command
 is refused unless the caller separately passes `--allow-external`; that flag is
 authority for one invocation, not proof that every side effect is contained.
+The keyword hint is shared with survey and system validation. It catches
+obvious cases but cannot inspect scripts or subprocesses; an absent hint is
+not a no-egress qualification.
 
 Every receipt fixes `authorizes_verification` to `false`. A repository owner
 must still assess meaning, environment, side effects, and coverage before

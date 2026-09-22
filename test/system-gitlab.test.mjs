@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { checkSystemManifest } from '../src/system.mjs'
-import { GITLAB_JOB_KEYS, GITLAB_MR_KEYS, GITLAB_OBSERVATION_KEYS, GITLAB_PIPELINE_KEYS, GITLAB_RESULT_KEYS, GITLAB_RULE_KEYS, GITLAB_TARGET_KEYS, observeSystemGitlab, validateGitlabHost, validateGitlabObservation, validateGitlabTargets } from '../src/system-gitlab.mjs'
+import { GITLAB_JOB_KEYS, GITLAB_MR_KEYS, GITLAB_OBSERVATION_KEYS, GITLAB_PIPELINE_KEYS, GITLAB_POLICY_KEYS, GITLAB_RESULT_KEYS, GITLAB_RESULT_POLICY_KEYS, GITLAB_RULE_KEYS, GITLAB_TARGET_KEYS, observeSystemGitlab, validateGitlabHost, validateGitlabObservation, validateGitlabTargets } from '../src/system-gitlab.mjs'
 
 const HOST = 'ai.code.geelib.qihoo.net'
 const TOKEN = 'secret-never-write-this'
@@ -93,10 +93,14 @@ test('GitLab observation binds real project, MR HEAD, rules, Pipeline and Job wi
     assert.equal(report.results[0].mr_sha, value.head)
     assert.equal(report.results[0].pipeline.id, 456)
     assert.deepEqual(report.results[0].approval_rules[0].approver_ids, [92])
-    assert.deepEqual(report.results[0].jobs[0], { id: 789, name: 'unit', status: 'success', pipeline_id: 456 })
+    assert.deepEqual(report.results[0].jobs[0], { id: 789, name: 'unit', status: 'success', pipeline_id: 456, allow_failure: false, retried: null })
+    assert.equal(report.results[0].observed, true)
     assert.equal(report.remote_reads, true)
     assert.equal(report.commands_executed, false)
     assert.deepEqual(validateGitlabObservation(report), [])
+    const forged = structuredClone(report)
+    forged.results[0].jobs[0].status = 'failed'
+    assert.match(validateGitlabObservation(forged).join(' '), /contradicts declared policy/)
     assert.equal(calls.length, 7)
     const raw = readFileSync(value.output, 'utf8')
     assert.ok(!raw.includes(TOKEN))
@@ -123,11 +127,47 @@ test('GitLab observation rejects stale source SHA, wrong project, and changed MR
 test('GitLab observation does not accept a true flag without positive satisfied approval rules', async () => {
   const value = fixture()
   try {
-    const transport = api(value, { approval: { approval_rules_overwritten: false, approved: true, rules: [] } })
+    const empty = { approval_rules_overwritten: false, approved: true, rules: [] }
+    const transport = api(value, { approval: empty, approvalAfter: empty })
     const report = await observeSystemGitlab(value.manifestPath, value.targetsPath, value.output, { host: HOST, token: TOKEN, fetchImpl: transport.fetchImpl })
     assert.equal(report.valid, false)
+    assert.equal(report.results[0].observed, true)
     assert.match(report.results[0].problems.join(' '), /no positive approval rule/)
   } finally { rmSync(value.root, { recursive: true, force: true }) }
+})
+
+test('a declared observation policy can record missing approval without treating transport as failed', async () => {
+  const value = fixture()
+  try {
+    value.targets.merge_requests[0].policy = { approval: 'observe-only', pipeline: 'mr-head-success' }
+    writeFileSync(value.targetsPath, JSON.stringify(value.targets) + '\n')
+    const empty = { approval_rules_overwritten: false, rules: [] }
+    const { report } = await observe(value, {
+      approval: empty, approvalAfter: empty,
+      pipeline: { id: 456, project_id: 123, sha: value.head, source: 'push', status: 'success' },
+    })
+    assert.equal(report.results[0].observed, true)
+    assert.equal(report.results[0].ok, true)
+    assert.deepEqual(report.results[0].policy, { ...value.targets.merge_requests[0].policy, required_jobs: ['unit'] })
+    assert.deepEqual(report.results[0].approval_rules, [])
+    assert.deepEqual(validateGitlabObservation(report), [])
+  } finally { rmSync(value.root, { recursive: true, force: true }) }
+})
+
+test('an explicit policy cannot hide a failed Pipeline or required Job', async () => {
+  for (const overrides of [
+    { pipeline: { id: 456, project_id: 123, sha: null, source: 'push', status: 'success' } },
+    { pipeline: { id: 456, project_id: 123, sha: '0'.repeat(40), source: 'push', status: 'success' } },
+    { jobs: [{ id: 789, name: 'unit', status: 'failed', allow_failure: false, pipeline: { id: 456 } }] },
+  ]) {
+    const value = fixture()
+    try {
+      value.targets.merge_requests[0].policy = { approval: 'observe-only', pipeline: 'mr-head-success' }
+      writeFileSync(value.targetsPath, JSON.stringify(value.targets) + '\n')
+      const { report } = await observe(value, overrides)
+      assert.equal(report.valid, false)
+    } finally { rmSync(value.root, { recursive: true, force: true }) }
+  }
 })
 
 test('GitLab observation rejects self-approval, unsatisfied rules and overwritten rules', async () => {
@@ -138,8 +178,9 @@ test('GitLab observation rejects self-approval, unsatisfied rules and overwritte
   ]) {
     const value = fixture()
     try {
-      const { report } = await observe(value, { approval })
+      const { report } = await observe(value, { approval, approvalAfter: approval })
       assert.equal(report.valid, false)
+      assert.equal(report.results[0].observed, true)
     } finally { rmSync(value.root, { recursive: true, force: true }) }
   }
 })
@@ -233,7 +274,8 @@ test('GitLab targets schema and validator expose the same exact object fields', 
   assert.deepEqual([...GITLAB_TARGET_KEYS].sort(), Object.keys(TARGET_SCHEMA.properties).sort())
   assert.deepEqual([...GITLAB_TARGET_KEYS].sort(), [...TARGET_SCHEMA.required].sort())
   assert.deepEqual([...GITLAB_MR_KEYS].sort(), Object.keys(TARGET_SCHEMA.properties.merge_requests.items.properties).sort())
-  assert.deepEqual([...GITLAB_MR_KEYS].sort(), [...TARGET_SCHEMA.properties.merge_requests.items.required].sort())
+  assert.deepEqual([...GITLAB_MR_KEYS].filter((key) => key !== 'policy').sort(), [...TARGET_SCHEMA.properties.merge_requests.items.required].sort())
+  assert.deepEqual([...GITLAB_POLICY_KEYS].sort(), Object.keys(TARGET_SCHEMA.properties.merge_requests.items.properties.policy.properties).sort())
 })
 
 test('GitLab observation schema and validator expose exact nested fields', () => {
@@ -246,6 +288,7 @@ test('GitLab observation schema and validator expose exact nested fields', () =>
     [GITLAB_RULE_KEYS, result.properties.approval_rules.items],
     [GITLAB_PIPELINE_KEYS, result.properties.pipeline],
     [GITLAB_JOB_KEYS, result.properties.jobs.items],
+    [GITLAB_RESULT_POLICY_KEYS, result.properties.policy],
   ]) {
     assert.deepEqual([...keys].sort(), Object.keys(schema.properties).sort())
     assert.deepEqual([...keys].sort(), [...schema.required].sort())

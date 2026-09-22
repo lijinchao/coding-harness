@@ -19,7 +19,8 @@ members have none:
       "project_path": "team/runtime",
       "iid": 42,
       "target_branch": "main",
-      "required_jobs": ["unit", "contract"]
+      "required_jobs": ["unit", "contract"],
+      "policy": { "approval": "all-positive", "pipeline": "detached-mr" }
     }
   ]
 }
@@ -37,12 +38,17 @@ The CLI only issues bounded HTTPS `GET` requests to the explicit host, refuses
 redirects, and never prints the token. It checks the local Git remote and
 GitLab project identity before reading the MR. The MR must be open, in the
 same project (fork MRs are not supported), target the declared branch, and
-have a source SHA equal to the pinned repository revision. It checks positive
-approval rules and distinct approver IDs, not the top-level `approved` flag;
-overwritten, absent, unsatisfied or self-approved rules fail. It requires a
-successful detached MR Pipeline on the source SHA, and exactly one current,
-non-retried, non-allow-failure successful Job for each required name. MR and
-approval state are read again before reporting success. Pagination is bounded.
+have a source SHA equal to the pinned repository revision. The report's
+`observed` field means the API identities were read consistently; `ok` means
+the declared policy also passed. The default policy is `all-positive` approval
+and `detached-mr` Pipeline: positive rules must be satisfied by distinct
+non-author approvers, with no overwritten rules, and the successful MR
+Pipeline must have source `merge_request_event`. A target may explicitly use
+`approval: observe-only` or `pipeline: mr-head-success` when those rules do
+not fit its workflow. The chosen policy is recorded in the result. Every
+declared required Job must still succeed, belong to the Pipeline, and not
+allow failure or be a retried instance. MR and approval state are read again
+before reporting. Pagination is bounded.
 
 The JSON observation binds the portable manifest and targets SHA-256 digests,
 system/Change IDs, and project/MR/Pipeline/Job identities. It excludes MR

@@ -6,15 +6,18 @@ import { sha256 } from './compose.mjs'
 import { checkSystemManifest } from './system.mjs'
 
 export const GITLAB_TARGET_KEYS = ['schema_version', 'merge_requests']
-export const GITLAB_MR_KEYS = ['repository', 'project_id', 'project_path', 'iid', 'target_branch', 'required_jobs']
+export const GITLAB_MR_KEYS = ['repository', 'project_id', 'project_path', 'iid', 'target_branch', 'required_jobs', 'policy']
+export const GITLAB_POLICY_KEYS = ['approval', 'pipeline']
+export const GITLAB_RESULT_POLICY_KEYS = ['approval', 'pipeline', 'required_jobs']
 export const GITLAB_OBSERVATION_KEYS = ['schema_version', 'system_id', 'change_id', 'manifest_sha256', 'targets_sha256', 'observed_at', 'host', 'results', 'valid', 'remote_reads', 'commands_executed', 'note']
-export const GITLAB_RESULT_KEYS = ['repository', 'project_id', 'project_path', 'mr_iid', 'expected_revision', 'mr_sha', 'approval_rules', 'pipeline', 'jobs', 'ok', 'problems']
+export const GITLAB_RESULT_KEYS = ['repository', 'project_id', 'project_path', 'mr_iid', 'expected_revision', 'mr_sha', 'mr_author_id', 'approval_rules_overwritten', 'approval_rules', 'pipeline', 'jobs', 'policy', 'observed', 'ok', 'problems']
 export const GITLAB_RULE_KEYS = ['id', 'name', 'required', 'approved', 'approver_ids']
 export const GITLAB_PIPELINE_KEYS = ['id', 'sha', 'source', 'status']
-export const GITLAB_JOB_KEYS = ['id', 'name', 'status', 'pipeline_id']
+export const GITLAB_JOB_KEYS = ['id', 'name', 'status', 'pipeline_id', 'allow_failure', 'retried']
 const COMMIT = /^[0-9a-f]{40}$/
 const HOST = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/
 const PROJECT_SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/
+const DEFAULT_POLICY = Object.freeze({ approval: 'all-positive', pipeline: 'detached-mr' })
 
 function object(value) { return value !== null && typeof value === 'object' && !Array.isArray(value) }
 function positive(value) { return Number.isSafeInteger(value) && value > 0 }
@@ -50,6 +53,14 @@ export function validateGitlabTargets(value, check) {
     if (!positive(entry.iid)) issues.push(where + '.iid: required positive integer')
     if (typeof entry.target_branch !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(entry.target_branch) || entry.target_branch.includes('..')) issues.push(where + '.target_branch: required safe branch name')
     if (!Array.isArray(entry.required_jobs) || entry.required_jobs.length === 0 || entry.required_jobs.some((name) => typeof name !== 'string' || name.length === 0 || name.includes('\n')) || new Set(entry.required_jobs).size !== entry.required_jobs.length) issues.push(where + '.required_jobs: required unique non-empty job names')
+    if (entry.policy !== undefined) {
+      if (!object(entry.policy)) issues.push(where + '.policy: required object')
+      else {
+        for (const key of Object.keys(entry.policy)) if (!GITLAB_POLICY_KEYS.includes(key)) issues.push(where + '.policy.' + key + ': unknown field')
+        if (!['all-positive', 'observe-only'].includes(entry.policy.approval)) issues.push(where + '.policy.approval: unsupported policy')
+        if (!['detached-mr', 'mr-head-success'].includes(entry.policy.pipeline)) issues.push(where + '.policy.pipeline: unsupported policy')
+      }
+    }
   })
   for (const id of changed) if (!seen.has(id)) issues.push('merge_requests: missing changed repository ' + id)
   return issues
@@ -77,6 +88,8 @@ export function validateGitlabObservation(report) {
     if (!exactFields(issues, entry, GITLAB_RESULT_KEYS, where)) return
     if (typeof entry.repository !== 'string' || !entry.repository || !positive(entry.project_id) || typeof entry.project_path !== 'string' || !positive(entry.mr_iid) || !COMMIT.test(entry.expected_revision ?? '')) issues.push(where + ': invalid identity')
     if (entry.mr_sha !== null && !COMMIT.test(entry.mr_sha ?? '')) issues.push(where + '.mr_sha: invalid SHA')
+    if (entry.mr_author_id !== null && !positive(entry.mr_author_id)) issues.push(where + '.mr_author_id: invalid identity')
+    if (entry.approval_rules_overwritten !== null && typeof entry.approval_rules_overwritten !== 'boolean') issues.push(where + '.approval_rules_overwritten: invalid flag')
     if (!Array.isArray(entry.approval_rules)) issues.push(where + '.approval_rules: required array')
     else entry.approval_rules.forEach((rule, i) => {
       if (!exactFields(issues, rule, GITLAB_RULE_KEYS, where + '.approval_rules[' + i + ']')) return
@@ -90,13 +103,20 @@ export function validateGitlabObservation(report) {
     else entry.jobs.forEach((job, i) => {
       if (!exactFields(issues, job, GITLAB_JOB_KEYS, where + '.jobs[' + i + ']')) return
       if (job.id !== null && !positive(job.id)) issues.push(where + '.jobs[' + i + '].id: invalid id')
+      if (job.allow_failure !== null && typeof job.allow_failure !== 'boolean') issues.push(where + '.jobs[' + i + '].allow_failure: invalid flag')
+      if (job.retried !== null && typeof job.retried !== 'boolean') issues.push(where + '.jobs[' + i + '].retried: invalid flag')
     })
+    if (exactFields(issues, entry.policy, GITLAB_RESULT_POLICY_KEYS, where + '.policy')) {
+      if (!['all-positive', 'observe-only'].includes(entry.policy.approval) || !['detached-mr', 'mr-head-success'].includes(entry.policy.pipeline)) issues.push(where + '.policy: unsupported policy')
+      if (!Array.isArray(entry.policy.required_jobs) || entry.policy.required_jobs.length === 0 || entry.policy.required_jobs.some((name) => typeof name !== 'string' || !name) || new Set(entry.policy.required_jobs).size !== entry.policy.required_jobs.length) issues.push(where + '.policy.required_jobs: invalid job list')
+    }
+    if (typeof entry.observed !== 'boolean') issues.push(where + '.observed: required boolean')
     if (typeof entry.ok !== 'boolean' || !Array.isArray(entry.problems) || entry.problems.some((problem) => typeof problem !== 'string' || !problem)) issues.push(where + ': invalid outcome')
     if (entry.ok === true && (
-      !Array.isArray(entry.problems) || entry.problems.length !== 0 || entry.mr_sha !== entry.expected_revision
-      || !Array.isArray(entry.approval_rules) || entry.approval_rules.length === 0
+      entry.observed !== true || !Array.isArray(entry.problems) || entry.problems.length !== 0 || entry.mr_sha !== entry.expected_revision
       || entry.pipeline?.status !== 'success' || !Array.isArray(entry.jobs) || entry.jobs.length === 0
     )) issues.push(where + ': passing result lacks evidence')
+    if (entry.ok === true && entry.observed === true && object(entry.pipeline) && Array.isArray(entry.jobs) && Array.isArray(entry.approval_rules) && object(entry.policy) && Array.isArray(entry.policy.required_jobs) && policyProblems(entry).length > 0) issues.push(where + ': passing result contradicts declared policy')
   })
   if (typeof report.valid !== 'boolean' || report.valid !== report.results.every((entry) => entry?.ok === true)) issues.push('valid: must match every result')
   return issues
@@ -133,18 +153,33 @@ function remoteMatches(repositoryPath, host, projectPath) {
   return candidates.size === 1 && candidates.has(projectPath)
 }
 
-function normalizeApproval(value, authorId) {
-  if (!object(value) || value.approval_rules_overwritten !== false || !Array.isArray(value.rules)) throw new Error('approval rules unavailable or overwritten')
+function normalizeApproval(value) {
+  if (!object(value) || typeof value.approval_rules_overwritten !== 'boolean' || !Array.isArray(value.rules)) throw new Error('approval rules unavailable')
   const rules = value.rules.filter((rule) => positive(rule?.approvals_required)).map((rule) => {
     if (!positive(rule.id) || typeof rule.name !== 'string' || typeof rule.approved !== 'boolean' || !Array.isArray(rule.approved_by)) throw new Error('approval rule is malformed')
     const ids = rule.approved_by.map((user) => user?.id)
     if (ids.some((id) => !positive(id))) throw new Error('approval identities unavailable')
     return { id: rule.id, name: rule.name, required: rule.approvals_required, approved: rule.approved, approver_ids: [...new Set(ids)].sort((a, b) => a - b) }
   }).sort((a, b) => a.id - b.id)
-  if (rules.length === 0) throw new Error('no positive approval rule applies')
   if (new Set(rules.map((rule) => rule.id)).size !== rules.length) throw new Error('duplicate approval rule id')
-  if (rules.some((rule) => !rule.approved || rule.approver_ids.length < rule.required || rule.approver_ids.includes(authorId))) throw new Error('approval rules are unsatisfied or self-approved')
-  return rules
+  return { overwritten: value.approval_rules_overwritten, rules }
+}
+
+function policyProblems(result) {
+  const problems = []
+  if (result.policy.approval === 'all-positive') {
+    if (result.approval_rules_overwritten) problems.push('approval rules are overwritten')
+    if (result.approval_rules.length === 0) problems.push('no positive approval rule applies')
+    if (result.approval_rules.some((rule) => !rule.approved || rule.approver_ids.length < rule.required || rule.approver_ids.includes(result.mr_author_id))) problems.push('approval rules are unsatisfied or self-approved')
+  }
+  if (result.pipeline.status !== 'success' ||
+    (result.policy.pipeline === 'detached-mr' && result.pipeline.source !== 'merge_request_event')) problems.push('GitLab MR Pipeline does not satisfy declared policy')
+  for (const name of result.policy.required_jobs) {
+    const matching = result.jobs.filter((job) => job.name === name)
+    if (matching.length !== 1 || matching[0].id === null || matching[0].status !== 'success' ||
+      matching[0].allow_failure !== false || matching[0].retried === true || matching[0].pipeline_id !== result.pipeline.id) problems.push('required GitLab Job did not pass: ' + name)
+  }
+  return problems
 }
 
 async function readJson(fetchImpl, host, token, path, timeoutMs) {
@@ -165,8 +200,9 @@ async function readJson(fetchImpl, host, token, path, timeoutMs) {
 async function observeOne(fetchImpl, host, token, target, repository, timeoutMs) {
   const result = {
     repository: target.repository, project_id: target.project_id, project_path: target.project_path,
-    mr_iid: target.iid, expected_revision: repository.expected_revision, mr_sha: null,
-    approval_rules: [], pipeline: null, jobs: [], ok: false, problems: [],
+    mr_iid: target.iid, expected_revision: repository.expected_revision, mr_sha: null, mr_author_id: null,
+    approval_rules_overwritten: null, approval_rules: [], pipeline: null, jobs: [],
+    policy: { ...(target.policy ?? DEFAULT_POLICY), required_jobs: [...target.required_jobs] }, observed: false, ok: false, problems: [],
   }
   try {
     if (!remoteMatches(repository.path, host, target.project_path)) throw new Error('local repository remote does not match GitLab project')
@@ -179,8 +215,10 @@ async function observeOne(fetchImpl, host, token, target, repository, timeoutMs)
     result.mr_sha = typeof mr.sha === 'string' && COMMIT.test(mr.sha) ? mr.sha : null
     if (mr.sha !== repository.expected_revision) throw new Error('GitLab MR HEAD differs from pinned repository revision')
     if (!positive(mr.author?.id)) throw new Error('GitLab MR author identity unavailable')
-    const rules = normalizeApproval((await readJson(fetchImpl, host, token, mrPath + '/approval_state', timeoutMs)).value, mr.author.id)
-    result.approval_rules = rules
+    result.mr_author_id = mr.author.id
+    const approval = normalizeApproval((await readJson(fetchImpl, host, token, mrPath + '/approval_state', timeoutMs)).value)
+    result.approval_rules_overwritten = approval.overwritten
+    result.approval_rules = approval.rules
     if (!positive(mr.head_pipeline?.id)) throw new Error('GitLab MR head Pipeline unavailable')
     const pipelineId = mr.head_pipeline.id
     const pipeline = (await readJson(fetchImpl, host, token, prefix + '/pipelines/' + pipelineId, timeoutMs)).value
@@ -190,7 +228,7 @@ async function observeOne(fetchImpl, host, token, target, repository, timeoutMs)
       source: typeof pipeline?.source === 'string' ? pipeline.source : null,
       status: typeof pipeline?.status === 'string' ? pipeline.status : null,
     }
-    if (pipeline?.id !== pipelineId || pipeline?.project_id !== target.project_id || pipeline?.sha !== mr.sha || pipeline?.source !== 'merge_request_event' || pipeline?.status !== 'success') throw new Error('GitLab detached MR Pipeline is not successful on pinned HEAD')
+    if (pipeline?.id !== pipelineId || pipeline?.project_id !== target.project_id || pipeline?.sha !== mr.sha) throw new Error('GitLab MR Pipeline identity differs from pinned HEAD')
     const jobs = []
     let page = 1
     for (;;) {
@@ -204,16 +242,21 @@ async function observeOne(fetchImpl, host, token, target, repository, timeoutMs)
     }
     for (const name of target.required_jobs) {
       const matches = jobs.filter((job) => job?.name === name)
-      if (matches.length !== 1) throw new Error('required GitLab Job is missing or ambiguous: ' + name)
-      const job = matches[0]
-      result.jobs.push({ id: positive(job.id) ? job.id : null, name, status: typeof job.status === 'string' ? job.status : null, pipeline_id: positive(job.pipeline?.id) ? job.pipeline.id : null })
-      if (!positive(job.id) || job.pipeline?.id !== pipelineId || job.status !== 'success' || job.allow_failure !== false || job.retried === true) throw new Error('required GitLab Job did not pass: ' + name)
+      for (const job of matches) result.jobs.push({
+        id: positive(job.id) ? job.id : null, name,
+        status: typeof job.status === 'string' ? job.status : null,
+        pipeline_id: positive(job.pipeline?.id) ? job.pipeline.id : null,
+        allow_failure: typeof job.allow_failure === 'boolean' ? job.allow_failure : null,
+        retried: typeof job.retried === 'boolean' ? job.retried : null,
+      })
     }
     const mrAfter = (await readJson(fetchImpl, host, token, mrPath, timeoutMs)).value
     if (mrAfter?.sha !== mr.sha || mrAfter?.head_pipeline?.id !== pipelineId || mrAfter?.target_branch !== mr.target_branch || mrAfter?.state !== mr.state) throw new Error('GitLab MR changed during observation')
-    const rulesAfter = normalizeApproval((await readJson(fetchImpl, host, token, mrPath + '/approval_state', timeoutMs)).value, mr.author.id)
-    if (JSON.stringify(rulesAfter) !== JSON.stringify(rules)) throw new Error('GitLab approvals changed during observation')
-    result.ok = true
+    const approvalAfter = normalizeApproval((await readJson(fetchImpl, host, token, mrPath + '/approval_state', timeoutMs)).value)
+    if (JSON.stringify(approvalAfter) !== JSON.stringify(approval)) throw new Error('GitLab approvals changed during observation')
+    result.observed = true
+    result.problems.push(...policyProblems(result))
+    result.ok = result.problems.length === 0
   } catch (error) {
     result.problems.push(error.message)
   }

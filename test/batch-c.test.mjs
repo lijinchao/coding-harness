@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -78,12 +78,37 @@ test('init scaffolds a bootstrap, manifest, CI and is green when the base resolv
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-init-'))
   const target = join(root, 'repo')
   run(['release', '--base', 'base', '--out', join(root, 'dist'), '--version', toolVersion()])
-  run(['init', '--dir', target, '--base-source', join(root, 'dist'), '--version', toolVersion()])
+  run(['init', '--dir', target, '--base-source', join(root, 'dist'), '--provider', 'github', '--version', toolVersion()])
   assert.ok(existsSync(join(target, 'harness')))
   assert.ok(existsSync(join(target, 'harness.manifest.json')))
   assert.ok(existsSync(join(target, '.github/workflows/harness.yml')))
+  assert.ok(existsSync(join(target, 'CODEOWNERS')))
   assert.ok(existsSync(join(target, '.gitignore')))
   run(['validate', '--manifest', join(target, 'harness.manifest.json')])
   run(['check', '--manifest', join(target, 'harness.manifest.json')])
   rmSync(root, { recursive: true, force: true })
+})
+
+test('init can select GitLab without creating GitHub files or defaulting the distribution source', () => {
+  const root = mkdtempSync(join(tmpdir(), 'coding-harness-init-gitlab-'))
+  const target = join(root, 'repo')
+  try {
+    const missing = spawnSync(process.execPath, [CLI, 'init', '--dir', target, '--provider', 'gitlab'], { encoding: 'utf8' })
+    assert.notEqual(missing.status, 0)
+    assert.match(missing.stderr, /--base-source/)
+    assert.equal(existsSync(target), false)
+    run(['release', '--base', 'base', '--out', join(root, 'dist'), '--version', toolVersion()])
+    run(['init', '--dir', target, '--base-source', join(root, 'dist'), '--provider', 'gitlab', '--version', toolVersion()])
+    const manifest = JSON.parse(readFileSync(join(target, 'harness.manifest.json'), 'utf8'))
+    assert.deepEqual(manifest.governance.ci, ['.gitlab-ci.yml'])
+    assert.ok(existsSync(join(target, '.gitlab-ci.yml')))
+    assert.match(readFileSync(join(target, '.gitlab-ci.yml'), 'utf8'), /attest --manifest harness\.manifest\.json --verify/)
+    assert.equal(existsSync(join(target, '.github')), false)
+    assert.ok(existsSync(join(target, 'CODEOWNERS')))
+    run(['check', '--manifest', join(target, 'harness.manifest.json')])
+    const mismatch = spawnSync(process.execPath, [CLI, 'init', '--dir', target, '--base-source', join(root, 'dist'), '--provider', 'github'], { encoding: 'utf8' })
+    assert.notEqual(mismatch.status, 0)
+    assert.match(mismatch.stderr, /does not declare the selected CI provider/)
+    assert.equal(existsSync(join(target, '.github')), false)
+  } finally { rmSync(root, { recursive: true, force: true }) }
 })

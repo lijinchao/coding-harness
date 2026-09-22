@@ -164,7 +164,8 @@ harness system-ci --manifest system.manifest.json --receipts ci-receipts \
   --history previous-shadow-reports > current-shadow-report.json
 ```
 
-The current observation joins valid earlier reports for the same system. The
+The current observation joins valid earlier reports for the same system,
+Change ID and manifest digest; unbound reports are ignored. The
 bounded window reports sample size, healthy count and rate, current healthy
 streak, ignored files, and `promotion_eligible`. Store the current report only
 after the command finishes so it becomes input to a later run.
