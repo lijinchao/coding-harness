@@ -32,3 +32,9 @@ not authenticated multi-person approval.
 - `npm test`
 - `node bin/harness.mjs doctor --manifest harness.manifest.json`
 - `./harness check --manifest examples/consumer/harness.manifest.json`
+
+Result: focused system tests 36/36, `npm test` 209/209, `doctor: ok`,
+example `check` reports two matching compositions, and `git diff --check`
+passes. The optional field preserves identity-only checks for older Change ID
+snapshots. No real multi-repository system was enrolled or qualified, and no
+external command or authenticated review was performed.

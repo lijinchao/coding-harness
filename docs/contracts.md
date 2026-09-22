@@ -11,7 +11,7 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `repositories` | Repository id, role, checkout path, and full Git revision |
 | `contracts` | Producer, consumers, and repository-owned evidence path |
 | `verifications` | Reviewed command, repository, tier, and external-service boundary |
-| `change` | Optional shared Change ID and repository-owned record references at pinned revisions |
+| `change` | Shared ID, owned records, optional per-member Git baselines and diff coverage |
 
 `system-check` rejects unknown or duplicate identifiers, dangling repository
 references, escaping evidence paths, wildcard or multiline commands, and an

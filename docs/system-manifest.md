@@ -6,6 +6,7 @@ does not replace each repository's `harness.manifest.json`.
 For a cross-repository change, the optional `change` field binds one shared
 ID to repository-owned records at pinned commits. See
 [system-change.md](system-change.md) for the format and evidence boundary.
+Optional per-member baselines add actual-diff coverage before review.
 
 When the governance repository is itself a system member, a committed manifest
 cannot pin its own containing commit. Keep a reviewed declaration in that

@@ -6,8 +6,9 @@ import { installForwarding, removeForwarding, runCommand, terminateAll } from '.
 import { writeAtomic } from './state.mjs'
 
 export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications', 'qualification', 'change']
-export const SYSTEM_CHANGE_KEYS = ['id', 'records']
+export const SYSTEM_CHANGE_KEYS = ['id', 'records', 'bases']
 export const SYSTEM_CHANGE_RECORD_KEYS = ['repository', 'path']
+export const SYSTEM_CHANGE_BASE_KEYS = ['repository', 'revision']
 export const SYSTEM_REPOSITORY_KEYS = ['id', 'role', 'path', 'revision']
 export const SYSTEM_CONTRACT_KEYS = ['id', 'producer', 'consumers', 'evidence']
 export const SYSTEM_EVIDENCE_KEYS = ['repository', 'path']
@@ -93,6 +94,23 @@ export function validateSystemManifest(manifest) {
           seen.add(record.repository)
           if (!safeRecordPath(record.path)) issues.push(where + '.path: must be a safe repository-relative path')
         })
+      }
+      if (manifest.change.bases !== undefined) {
+        if (!Array.isArray(manifest.change.bases) || manifest.change.bases.length === 0) issues.push('change.bases: required non-empty array')
+        else {
+          const seen = new Set()
+          manifest.change.bases.forEach((base, index) => {
+            const where = 'change.bases[' + index + ']'
+            if (!object(base)) { issues.push(where + ': required object'); return }
+            rejectUnknown(issues, base, SYSTEM_CHANGE_BASE_KEYS, where)
+            requiredString(issues, base.repository, where + '.repository')
+            if (typeof base.repository === 'string' && !repositoryIds.has(base.repository)) issues.push(where + '.repository: unknown repository ' + base.repository)
+            if (typeof base.repository === 'string' && seen.has(base.repository)) issues.push(where + '.repository: duplicate repository ' + base.repository)
+            seen.add(base.repository)
+            if (typeof base.revision !== 'string' || !/^[0-9a-f]{40}$/.test(base.revision)) issues.push(where + '.revision: required full 40-character lowercase Git commit')
+          })
+          for (const id of repositoryIds) if (!seen.has(id)) issues.push('change.bases: missing repository ' + id)
+        }
       }
     }
   }
@@ -193,6 +211,17 @@ function gitFile(path, revision, file) {
   }
 }
 
+function gitChangedPaths(path, base, revision) {
+  try {
+    const output = execFileSync('git', ['-C', path, 'diff', '--name-only', '--no-renames', '-z', base, revision, '--'], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 4 * 1024 * 1024,
+    })
+    return output === '' ? [] : output.slice(0, -1).split('\0')
+  } catch {
+    return null
+  }
+}
+
 function commandAvailable(root, command) {
   if (typeof command !== 'string' || command.length === 0 || root === undefined) return false
   const executable = command.trim().split(/\s+/)[0]
@@ -232,8 +261,27 @@ function inspectSystemManifest(manifest, absoluteManifest) {
     }
   })
   const byId = new Map(repositories.map((entry) => [entry.id, entry]))
+  const bases = manifest.change?.bases === undefined ? null : (Array.isArray(manifest.change.bases) ? manifest.change.bases : []).map((entry) => {
+    const repository = byId.get(entry?.repository)
+    const revision = entry?.revision
+    const head = repository?.expected_revision
+    const valid = repository?.git && /^[0-9a-f]{40}$/.test(revision ?? '')
+      && git(repository.path, ['rev-parse', '--verify', revision + '^{commit}']) === revision
+    const ancestor = valid && /^[0-9a-f]{40}$/.test(head ?? '')
+      && git(repository.path, ['merge-base', '--is-ancestor', revision, head]) !== null
+    return {
+      repository: entry?.repository ?? null,
+      revision: revision ?? null,
+      pinned_revision: head ?? null,
+      exists: valid === true,
+      ancestor: ancestor === true,
+      changed_paths: ancestor ? gitChangedPaths(repository.path, revision, head) : null,
+    }
+  })
+  const basesById = new Map((bases ?? []).map((entry) => [entry.repository, entry]))
   const change = manifest.change === undefined ? null : {
     id: manifest.change?.id ?? null,
+    bases,
     records: (Array.isArray(manifest.change?.records) ? manifest.change.records : []).map((record) => {
       const repository = byId.get(record?.repository)
       const revision = repository?.expected_revision
@@ -250,9 +298,18 @@ function inspectSystemManifest(manifest, absoluteManifest) {
         revision: revision ?? null,
         tracked: tracked && content !== null,
         change_id_match: content !== null && content.split(/\r?\n/).includes('Change-ID: ' + manifest.change.id),
+        record_changed: bases === null ? null : (basesById.get(record?.repository)?.changed_paths?.includes(path) ?? false),
       }
     }),
   }
+  const diffCoverage = change?.bases === null || change === null || (
+    change.bases.length === repositories.length
+    && change.bases.every((entry) => entry.exists && entry.ancestor && entry.changed_paths !== null)
+    && change.bases.every((entry) => {
+      const record = change.records.find((item) => item.repository === entry.repository)
+      return entry.changed_paths.length === 0 ? record === undefined : record?.record_changed === true
+    })
+  )
   const contracts = (Array.isArray(manifest.contracts) ? manifest.contracts : []).map((entry) => {
     const repository = byId.get(entry?.evidence?.repository)
     const evidencePath = repository?.path && typeof entry?.evidence?.path === 'string'
@@ -280,6 +337,7 @@ function inspectSystemManifest(manifest, absoluteManifest) {
     && repositories.every((entry) => entry.exists && entry.git && entry.revision_match && entry.clean)
     && contracts.every((entry) => entry.evidence_exists)
     && (change === null || change.records.length > 0 && change.records.every((entry) => entry.tracked && entry.change_id_match))
+    && diffCoverage
     && verifications.every((entry) => entry.executable_resolvable)
   return {
     schema_version: 'coding-harness.system-check/v1',
@@ -589,6 +647,13 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
   for (const record of check.change?.records ?? []) {
     if (!record.tracked) systemProblems.push('change record missing at pinned revision: ' + record.repository + ':' + record.path)
     else if (!record.change_id_match) systemProblems.push('change id missing from pinned record: ' + record.repository + ':' + record.path)
+    if (record.record_changed === false) systemProblems.push('change record not changed since baseline: ' + record.repository + ':' + record.path)
+  }
+  for (const base of check.change?.bases ?? []) {
+    if (!base.exists) systemProblems.push('change baseline missing: ' + base.repository)
+    else if (!base.ancestor) systemProblems.push('change baseline is not ancestor: ' + base.repository)
+    else if (base.changed_paths === null) systemProblems.push('change diff unavailable: ' + base.repository)
+    else if (base.changed_paths.length > 0 && !check.change.records.some((record) => record.repository === base.repository)) systemProblems.push('changed repository has no Change ID record: ' + base.repository)
   }
   for (const verification of check.verifications) if (!verification.executable_resolvable) systemProblems.push('verification executable unresolved: ' + verification.id)
   const tiers = check.qualification.required_tiers
