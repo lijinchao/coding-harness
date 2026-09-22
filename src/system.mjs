@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { sha256 } from './compose.mjs'
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
 import { writeAtomic } from './state.mjs'
@@ -167,9 +167,7 @@ function resolveRepository(base, declaredPath) {
   return resolve(base, declaredPath)
 }
 
-export function checkSystemManifest(path) {
-  const absoluteManifest = resolve(path)
-  const manifest = JSON.parse(readFileSync(absoluteManifest, 'utf8'))
+function inspectSystemManifest(manifest, absoluteManifest) {
   const structuralIssues = validateSystemManifest(manifest)
   const base = dirname(absoluteManifest)
   const repositories = (Array.isArray(manifest.repositories) ? manifest.repositories : []).map((entry) => {
@@ -238,9 +236,60 @@ export function checkSystemManifest(path) {
   }
 }
 
+export function checkSystemManifest(path) {
+  const absoluteManifest = resolve(path)
+  return inspectSystemManifest(JSON.parse(readFileSync(absoluteManifest, 'utf8')), absoluteManifest)
+}
+
 function inside(path, root) {
   const rel = relative(root, path)
   return rel === '' || (!rel.startsWith('..' + sep) && rel !== '..' && !isAbsolute(rel))
+}
+
+export function materializeSystemSnapshot(declarationPath, revisions, outPath) {
+  const source = resolve(declarationPath)
+  const output = resolve(outPath)
+  const declaration = JSON.parse(readFileSync(source, 'utf8'))
+  const issues = validateSystemManifest(declaration)
+  if (issues.length > 0) throw new Error('invalid system declaration: ' + issues.join('; '))
+  if (existsSync(output)) throw new Error('snapshot already exists; choose another output path')
+
+  const repositories = new Map(declaration.repositories.map((entry) => [entry.id, entry]))
+  const bindings = new Map()
+  for (const item of revisions) {
+    if (typeof item !== 'string' || !/^[^=]+=[0-9a-f]{40}$/.test(item)) throw new Error('--bind requires <id>=<full-lowercase-sha>')
+    const index = item.indexOf('=')
+    const id = item.slice(0, index)
+    const revision = item.slice(index + 1)
+    if (!repositories.has(id)) throw new Error('unknown repository binding: ' + id)
+    if (bindings.has(id)) throw new Error('duplicate repository binding: ' + id)
+    if (repositories.get(id).revision !== null) throw new Error('repository already has a declared revision: ' + id)
+    bindings.set(id, revision)
+  }
+  for (const entry of declaration.repositories) {
+    if (entry.revision === null && !bindings.has(entry.id)) throw new Error('missing explicit revision binding: ' + entry.id)
+  }
+
+  const sourceDir = dirname(source)
+  const outputDir = dirname(output)
+  const effectiveOutput = resolve(realpathSync(outputDir), basename(output))
+  const snapshot = {
+    ...declaration,
+    repositories: declaration.repositories.map((entry) => {
+      const repositoryPath = resolve(sourceDir, entry.path)
+      const effectiveRepository = existsSync(repositoryPath) ? realpathSync(repositoryPath) : repositoryPath
+      if (inside(effectiveOutput, effectiveRepository)) throw new Error('snapshot output must be outside every declared repository')
+      return {
+        ...entry,
+        path: relative(outputDir, repositoryPath) || '.',
+        revision: entry.revision ?? bindings.get(entry.id),
+      }
+    }),
+  }
+  const report = inspectSystemManifest(snapshot, output)
+  if (!report.ready) throw new Error('pinned system snapshot is not ready; check revisions, clean trees, contract evidence, and reviewed commands')
+  writeFileSync(output, JSON.stringify(snapshot, null, 2) + '\n', { flag: 'wx' })
+  return { snapshot: output, system_id: snapshot.id, repositories: report.repositories.map(({ id, current_revision }) => ({ id, revision: current_revision })), ready: true, commands_executed: false }
 }
 
 function streamReceipt(value) {

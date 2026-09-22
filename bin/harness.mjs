@@ -30,7 +30,7 @@ import { loadRequirements } from '../src/adopt.mjs'
 import { selectedGateIds } from '../src/select.mjs'
 import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
-import { checkSystemManifest, checkSystemReceipt, runSystemTier, systemCiReport } from '../src/system.mjs'
+import { checkSystemManifest, checkSystemReceipt, materializeSystemSnapshot, runSystemTier, systemCiReport } from '../src/system.mjs'
 import { renderSystemCiTemplate, writeSystemCiTemplate } from '../src/system-ci-template.mjs'
 import { checkCommandReview, runCommandReview } from '../src/command-review.mjs'
 
@@ -39,6 +39,8 @@ const USAGE = `usage: harness <command> [options]
 commands:
   survey     --dir <path>                inspect an unadopted repository without writing or running its commands
   system-check --manifest <path>         check a multi-repository system snapshot without running its commands
+  system-snapshot --manifest <declaration> --bind <id>=<full-sha> [--bind ...] --out <path>
+                                         bind reviewed revisions into a snapshot outside all declared repositories
   system-run --manifest <path> --tier <tier> --out <receipt> [--timeout <s>] [--allow-external] [--force]
                                          run one reviewed tier and write a version-bound receipt
   system-receipt-check --manifest <path> --receipt <path>
@@ -76,7 +78,7 @@ commands:
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
 const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce'])
-const REPEATABLE_FLAGS = new Set(['changed'])
+const REPEATABLE_FLAGS = new Set(['changed', 'bind'])
 
 function parseOptions(argv) {
   const options = {}
@@ -467,6 +469,15 @@ function cmdSystemCheck(options) {
   if (!report.ready) process.exit(1)
 }
 
+function cmdSystemSnapshot(options) {
+  const report = materializeSystemSnapshot(
+    resolve(requireOption(options, 'manifest')),
+    options.bind ?? [],
+    resolve(requireOption(options, 'out')),
+  )
+  console.log(JSON.stringify(report, null, 2))
+}
+
 async function cmdSystemRun(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const tier = requireOption(options, 'tier')
@@ -681,7 +692,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, 'command-review': cmdCommandReview, 'command-review-check': cmdCommandReviewCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-snapshot': cmdSystemSnapshot, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, 'command-review': cmdCommandReview, 'command-review-check': cmdCommandReviewCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

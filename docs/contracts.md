@@ -20,6 +20,8 @@ without running a command. Every repository needs a reviewed verification.
 `declared-ready` proves only snapshot alignment and evidence presence; command success remains unproved.
 The complete format is in [system-manifest.md](system-manifest.md).
 An unresolved member uses `revision: null` and prevents readiness.
+`system-snapshot` binds explicit revisions outside member repositories; it
+neither approves revisions nor runs commands. See [system-manifest.md](system-manifest.md).
 
 ### Command review receipt
 

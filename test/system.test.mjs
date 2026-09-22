@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
@@ -22,6 +22,7 @@ import {
   SYSTEM_VERIFICATION_KEYS,
   checkSystemManifest,
   checkSystemReceipt,
+  materializeSystemSnapshot,
   runSystemTier,
   systemCiReport,
   validateSystemCiReport,
@@ -84,6 +85,78 @@ function fixture() {
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
   return { root, control, runtime, marker, manifest, manifestPath }
 }
+
+function governanceFixture({ unresolvedRuntime = false } = {}) {
+  const value = fixture()
+  const declarationPath = join(value.control, 'system.manifest.json')
+  const declaration = {
+    ...value.manifest,
+    repositories: [
+      { id: 'control', role: 'contracts and governance', path: '.', revision: null },
+      { id: 'runtime', role: 'runtime implementation', path: '../runtime', revision: unresolvedRuntime ? null : value.manifest.repositories[1].revision },
+    ],
+  }
+  writeFileSync(declarationPath, JSON.stringify(declaration, null, 2) + '\n')
+  execFileSync('git', ['add', 'system.manifest.json'], { cwd: value.control })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'declare system'], { cwd: value.control })
+  const controlRevision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: value.control, encoding: 'utf8' }).trim()
+  return { ...value, declarationPath, declaration, controlRevision, snapshotPath: join(value.root, 'pinned-system.json') }
+}
+
+test('a committed governance declaration materializes an exact self-inclusive snapshot without executing commands', () => {
+  const value = governanceFixture()
+  assert.equal(checkSystemManifest(value.declarationPath).ready, false)
+  const result = materializeSystemSnapshot(value.declarationPath, [`control=${value.controlRevision}`], value.snapshotPath)
+  assert.equal(result.ready, true)
+  assert.equal(result.commands_executed, false)
+  assert.equal(existsSync(value.marker), false)
+  const snapshot = JSON.parse(readFileSync(value.snapshotPath, 'utf8'))
+  assert.equal(snapshot.repositories[0].revision, value.controlRevision)
+  assert.equal(snapshot.repositories[0].path, 'control')
+  assert.equal(snapshot.repositories[1].path, 'runtime')
+  assert.deepEqual(snapshot.verifications, value.declaration.verifications)
+  assert.deepEqual(snapshot.contracts, value.declaration.contracts)
+  assert.equal(checkSystemManifest(value.snapshotPath).ready, true)
+  assert.equal(JSON.parse(readFileSync(value.declarationPath, 'utf8')).repositories[0].revision, null)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system snapshot refuses missing, unknown, duplicate, and already declared bindings', () => {
+  const value = governanceFixture()
+  const binding = `control=${value.controlRevision}`
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [], value.snapshotPath), /missing explicit revision binding: control/)
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [`missing=${value.controlRevision}`], value.snapshotPath), /unknown repository binding/)
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [binding, binding], value.snapshotPath), /duplicate repository binding/)
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [`runtime=${value.controlRevision}`, binding], value.snapshotPath), /already has a declared revision/)
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, ['control=short'], value.snapshotPath), /full-lowercase-sha/)
+  assert.equal(existsSync(value.snapshotPath), false)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system snapshot fails closed on drift, dirty checkout, in-repository output, and overwrite', () => {
+  const value = governanceFixture()
+  const binding = `control=${value.controlRevision}`
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [`control=${'0'.repeat(40)}`], value.snapshotPath), /not ready/)
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [binding], join(value.control, 'snapshot.json')), /outside every declared repository/)
+  const alias = join(value.root, 'control-alias')
+  symlinkSync(value.control, alias)
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [binding], join(alias, 'snapshot.json')), /outside every declared repository/)
+  writeFileSync(join(value.runtime, 'dirty.txt'), 'dirty\n')
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [binding], value.snapshotPath), /not ready/)
+  rmSync(join(value.runtime, 'dirty.txt'))
+  materializeSystemSnapshot(value.declarationPath, [binding], value.snapshotPath)
+  assert.throws(() => materializeSystemSnapshot(value.declarationPath, [binding], value.snapshotPath), /already exists/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('system snapshot works through the CLI with repeated explicit revisions', () => {
+  const value = governanceFixture({ unresolvedRuntime: true })
+  const result = spawnSync(process.execPath, [CLI, 'system-snapshot', '--manifest', value.declarationPath, '--bind', `control=${value.controlRevision}`, '--bind', `runtime=${value.manifest.repositories[1].revision}`, '--out', value.snapshotPath], { encoding: 'utf8' })
+  assert.equal(result.status, 0, result.stderr)
+  assert.equal(JSON.parse(result.stdout).ready, true)
+  assert.equal(checkSystemManifest(value.snapshotPath).ready, true)
+  rmSync(value.root, { recursive: true, force: true })
+})
 
 test('system check proves snapshot alignment without executing reviewed commands', () => {
   const value = fixture()

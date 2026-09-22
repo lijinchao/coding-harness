@@ -3,6 +3,27 @@
 `system.manifest.json` describes one reviewed combination of repositories. It
 does not replace each repository's `harness.manifest.json`.
 
+When the governance repository is itself a system member, a committed manifest
+cannot pin its own containing commit. Keep a reviewed declaration in that
+repository with `revision: null` for the governance member. After committing
+it, explicitly bind the full revision of every null member into a separate
+snapshot outside all declared repositories:
+
+```sh
+harness system-snapshot --manifest control/system.manifest.json \
+  --bind control=<full-commit-sha> --out snapshots/system-pinned.json
+harness system-check --manifest snapshots/system-pinned.json
+```
+
+The snapshot builder refuses unknown, duplicate, missing, or overriding
+bindings; it verifies every repository is clean and at the exact revision,
+rebases repository paths to the snapshot location, and refuses in-repository
+output or overwrite. It runs no declared command. Put the snapshot in a
+reviewed CI artifact or a stable system bundle whose relative repository layout
+is retained. An explicit revision argument is not Owner approval: the
+declaration's commands and relationships still need review, and the resulting
+`declared-ready` status remains weaker than a passing tier receipt.
+
 ```json
 {
   "schema_version": "coding-harness.system/v1",
