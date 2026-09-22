@@ -8,6 +8,8 @@ import {
   SYSTEM_CI_HISTORY_KEYS,
   SYSTEM_CI_RECEIPT_KEYS,
   SYSTEM_CI_REPORT_KEYS,
+  SYSTEM_CHANGE_KEYS,
+  SYSTEM_CHANGE_RECORD_KEYS,
   SYSTEM_CONTRACT_KEYS,
   SYSTEM_EVIDENCE_KEYS,
   SYSTEM_RECEIPT_KEYS,
@@ -223,6 +225,110 @@ test('system validator rejects unusable freshness and promotion budgets', () => 
   rmSync(value.root, { recursive: true, force: true })
 })
 
+test('shared Change ID checks repository-owned records at pinned commits and binds receipts', async () => {
+  const value = fixture()
+  writeFileSync(join(value.control, 'docs', 'change.md'), 'Change-ID: CHG-42\nControl decision\n')
+  writeFileSync(join(value.runtime, 'change.md'), 'Change-ID: CHG-42\nRuntime decision\n')
+  for (const [id, path] of [['control', value.control], ['runtime', value.runtime]]) {
+    execFileSync('git', ['add', '-A'], { cwd: path })
+    execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'record change'], { cwd: path })
+    value.manifest.repositories.find((entry) => entry.id === id).revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: path, encoding: 'utf8' }).trim()
+  }
+  value.manifest.change = { id: 'CHG-42', records: [
+    { repository: 'control', path: 'docs/change.md' },
+    { repository: 'runtime', path: 'change.md' },
+  ] }
+  value.manifest.verifications[1].command = `touch ${join(value.root, 'unit-ran')}`
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const check = checkSystemManifest(value.manifestPath)
+  assert.equal(check.ready, true)
+  assert.equal(check.change.id, 'CHG-42')
+  assert.equal(check.change.records.every((entry) => entry.tracked && entry.change_id_match), true)
+  const receiptPath = join(value.root, 'receipt.json')
+  const receipt = await runSystemTier(value.manifestPath, 'unit', receiptPath, { timeoutMs: 5000 })
+  assert.equal(receipt.change_id, 'CHG-42')
+  assert.equal(checkSystemReceipt(value.manifestPath, receiptPath).valid, true)
+  receipt.change_id = 'CHG-OTHER'
+  writeFileSync(receiptPath, JSON.stringify(receipt) + '\n')
+  assert.match(checkSystemReceipt(value.manifestPath, receiptPath).problems.join('\n'), /change id does not match manifest/)
+  delete receipt.change_id
+  writeFileSync(receiptPath, JSON.stringify(receipt) + '\n')
+  assert.match(checkSystemReceipt(value.manifestPath, receiptPath).problems.join('\n'), /change id does not match manifest/)
+  assert.equal(existsSync(value.marker), false)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('change records fail closed on wrong ID, old revision, and ignored files', () => {
+  const value = fixture()
+  value.manifest.change = { id: 'CHG-42', records: [{ repository: 'runtime', path: 'change.md' }] }
+  writeFileSync(join(value.runtime, '.gitignore'), 'change.md\n')
+  execFileSync('git', ['add', '.gitignore'], { cwd: value.runtime })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'ignore record'], { cwd: value.runtime })
+  value.manifest.repositories[1].revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: value.runtime, encoding: 'utf8' }).trim()
+  writeFileSync(join(value.runtime, 'change.md'), 'Change-ID: CHG-42\n')
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  assert.equal(checkSystemManifest(value.manifestPath).change.records[0].tracked, false)
+  assert.match(systemCiReport(value.manifestPath, join(value.root, 'receipts')).system_problems.join('\n'), /change record missing at pinned revision/)
+  execFileSync('git', ['add', '-f', 'change.md'], { cwd: value.runtime })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'commit record'], { cwd: value.runtime })
+  assert.equal(checkSystemManifest(value.manifestPath).change.records[0].tracked, false)
+  value.manifest.repositories[1].revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: value.runtime, encoding: 'utf8' }).trim()
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  assert.equal(checkSystemManifest(value.manifestPath).ready, true)
+  value.manifest.change.id = 'CHG-OTHER'
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  assert.equal(checkSystemManifest(value.manifestPath).change.records[0].change_id_match, false)
+  assert.match(systemCiReport(value.manifestPath, join(value.root, 'receipts')).system_problems.join('\n'), /change id missing from pinned record/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('a tracked symlink cannot impersonate a repository-owned Change ID record', () => {
+  const value = fixture()
+  symlinkSync('main.js', join(value.runtime, 'change.md'))
+  execFileSync('git', ['add', 'change.md'], { cwd: value.runtime })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'link record'], { cwd: value.runtime })
+  value.manifest.repositories[1].revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: value.runtime, encoding: 'utf8' }).trim()
+  value.manifest.change = { id: 'CHG-42', records: [{ repository: 'runtime', path: 'change.md' }] }
+  writeFileSync(value.manifestPath, JSON.stringify(value.manifest, null, 2) + '\n')
+  const report = checkSystemManifest(value.manifestPath)
+  assert.equal(report.ready, false)
+  assert.equal(report.change.records[0].tracked, false)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('self-inclusive governance snapshot retains Change ID references at the bound commit', () => {
+  const value = governanceFixture()
+  writeFileSync(join(value.control, 'docs', 'change.md'), 'Change-ID: CHG-42\n')
+  execFileSync('git', ['add', 'docs/change.md'], { cwd: value.control })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'record change'], { cwd: value.control })
+  value.declaration.change = { id: 'CHG-42', records: [{ repository: 'control', path: 'docs/change.md' }] }
+  writeFileSync(value.declarationPath, JSON.stringify(value.declaration, null, 2) + '\n')
+  execFileSync('git', ['add', 'system.manifest.json'], { cwd: value.control })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'bind change'], { cwd: value.control })
+  const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: value.control, encoding: 'utf8' }).trim()
+  assert.equal(checkSystemManifest(value.declarationPath).ready, false)
+  materializeSystemSnapshot(value.declarationPath, [`control=${revision}`], value.snapshotPath)
+  const report = checkSystemManifest(value.snapshotPath)
+  assert.equal(report.ready, true)
+  assert.equal(report.change.records[0].revision, revision)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
+test('change declaration rejects unsafe paths, duplicate repositories, and unknown members', () => {
+  const value = fixture()
+  value.manifest.change = { id: 'bad\nchange', records: [
+    { repository: 'runtime', path: '../escape.md' },
+    { repository: 'runtime', path: 'docs/other.md' },
+    { repository: 'unknown', path: 'record.md' },
+  ] }
+  const issues = validateSystemManifest(value.manifest).join('\n')
+  assert.match(issues, /safe single-line Change ID/)
+  assert.match(issues, /safe repository-relative path/)
+  assert.match(issues, /duplicate repository runtime/)
+  assert.match(issues, /unknown repository unknown/)
+  rmSync(value.root, { recursive: true, force: true })
+})
+
 test('an unresolved repository is explicit, structurally valid, and never ready', () => {
   const value = fixture()
   value.manifest.repositories.push({ id: 'desktop', role: 'client', path: 'missing-desktop', revision: null })
@@ -251,13 +357,17 @@ test('an unresolved repository is explicit, structurally valid, and never ready'
 
 test('system schema and executable validator expose the same object fields', () => {
   assert.deepEqual([...SYSTEM_ROOT_KEYS].sort(), Object.keys(SCHEMA.properties).sort())
+  assert.deepEqual([...SYSTEM_CHANGE_KEYS].sort(), Object.keys(SCHEMA.properties.change.properties).sort())
+  assert.deepEqual([...SYSTEM_CHANGE_RECORD_KEYS].sort(), Object.keys(SCHEMA.properties.change.properties.records.items.properties).sort())
   assert.deepEqual([...SYSTEM_REPOSITORY_KEYS].sort(), Object.keys(SCHEMA.properties.repositories.items.properties).sort())
   assert.deepEqual([...SYSTEM_CONTRACT_KEYS].sort(), Object.keys(SCHEMA.properties.contracts.items.properties).sort())
   assert.deepEqual([...SYSTEM_EVIDENCE_KEYS].sort(), Object.keys(SCHEMA.properties.contracts.items.properties.evidence.properties).sort())
   assert.deepEqual([...SYSTEM_VERIFICATION_KEYS].sort(), Object.keys(SCHEMA.properties.verifications.items.properties).sort())
   assert.deepEqual([...SYSTEM_QUALIFICATION_KEYS].sort(), Object.keys(SCHEMA.properties.qualification.properties).sort())
   assert.deepEqual([...SYSTEM_PROMOTION_KEYS].sort(), Object.keys(SCHEMA.properties.qualification.properties.promotion.properties).sort())
-  assert.deepEqual([...SYSTEM_ROOT_KEYS].sort(), [...SCHEMA.required].sort())
+  assert.deepEqual([...SYSTEM_ROOT_KEYS].filter((key) => key !== 'change').sort(), [...SCHEMA.required].sort())
+  assert.deepEqual([...SYSTEM_CHANGE_KEYS].sort(), [...SCHEMA.properties.change.required].sort())
+  assert.deepEqual([...SYSTEM_CHANGE_RECORD_KEYS].sort(), [...SCHEMA.properties.change.properties.records.items.required].sort())
   assert.deepEqual([...SYSTEM_REPOSITORY_KEYS].sort(), [...SCHEMA.properties.repositories.items.required].sort())
   assert.deepEqual([...SYSTEM_CONTRACT_KEYS].sort(), [...SCHEMA.properties.contracts.items.required].sort())
   assert.deepEqual([...SYSTEM_EVIDENCE_KEYS].sort(), [...SCHEMA.properties.contracts.items.properties.evidence.required].sort())
@@ -378,7 +488,7 @@ test('receipt schema and validator expose the same object fields', () => {
   assert.deepEqual([...SYSTEM_RECEIPT_REPOSITORY_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.properties.repositories.items.properties).sort())
   assert.deepEqual([...SYSTEM_RECEIPT_RESULT_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.properties.results.items.properties).sort())
   assert.deepEqual([...SYSTEM_RECEIPT_STREAM_KEYS].sort(), Object.keys(RECEIPT_SCHEMA.definitions.stream.properties).sort())
-  assert.deepEqual([...SYSTEM_RECEIPT_KEYS].sort(), [...RECEIPT_SCHEMA.required].sort())
+  assert.deepEqual([...SYSTEM_RECEIPT_KEYS].filter((key) => key !== 'change_id').sort(), [...RECEIPT_SCHEMA.required].sort())
   assert.deepEqual([...SYSTEM_RECEIPT_MANIFEST_KEYS].sort(), [...RECEIPT_SCHEMA.properties.manifest.required].sort())
   assert.deepEqual([...SYSTEM_RECEIPT_REPOSITORY_KEYS].sort(), [...RECEIPT_SCHEMA.properties.repositories.items.required].sort())
   assert.deepEqual([...SYSTEM_RECEIPT_RESULT_KEYS].sort(), [...RECEIPT_SCHEMA.properties.results.items.required].sort())

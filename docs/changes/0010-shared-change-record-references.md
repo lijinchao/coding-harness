@@ -31,3 +31,10 @@ reference local decisions, not copy them.
 - `npm test`
 - `node bin/harness.mjs doctor --manifest harness.manifest.json`
 - `./harness check --manifest examples/consumer/harness.manifest.json`
+
+Result: `npm test` 206/206, `doctor: ok`, example `check` reports two
+matching compositions, and `git diff --check` is clean. The focused system
+suite is included in the full run. Change-specific details live in
+`docs/system-change.md` to respect the existing documentation word budgets.
+No real multi-repository system was enrolled or qualified; no external command
+was run. The records bind identity, not human approval.

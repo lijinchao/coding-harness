@@ -11,17 +11,18 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `repositories` | Repository id, role, checkout path, and full Git revision |
 | `contracts` | Producer, consumers, and repository-owned evidence path |
 | `verifications` | Reviewed command, repository, tier, and external-service boundary |
+| `change` | Optional shared Change ID and repository-owned record references at pinned revisions |
 
 `system-check` rejects unknown or duplicate identifiers, dangling repository
 references, escaping evidence paths, wildcard or multiline commands, and an
 external command outside `external-qualified`. It reports missing repositories,
 revision drift, dirty trees, missing evidence, and unresolved executables
 without running a command. Every repository needs a reviewed verification.
-`declared-ready` proves only snapshot alignment and evidence presence; command success remains unproved.
+`declared-ready` proves alignment and evidence presence, not command success.
 The complete format is in [system-manifest.md](system-manifest.md).
-An unresolved member uses `revision: null` and prevents readiness.
-`system-snapshot` binds explicit revisions outside member repositories; it
-neither approves revisions nor runs commands. See [system-manifest.md](system-manifest.md).
+`revision: null` prevents readiness.
+`system-snapshot` binds revisions outside member repositories without
+approving them or running commands. See [system-manifest.md](system-manifest.md).
 
 ### Command review receipt
 

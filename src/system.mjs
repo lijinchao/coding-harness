@@ -5,7 +5,9 @@ import { sha256 } from './compose.mjs'
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
 import { writeAtomic } from './state.mjs'
 
-export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications', 'qualification']
+export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications', 'qualification', 'change']
+export const SYSTEM_CHANGE_KEYS = ['id', 'records']
+export const SYSTEM_CHANGE_RECORD_KEYS = ['repository', 'path']
 export const SYSTEM_REPOSITORY_KEYS = ['id', 'role', 'path', 'revision']
 export const SYSTEM_CONTRACT_KEYS = ['id', 'producer', 'consumers', 'evidence']
 export const SYSTEM_EVIDENCE_KEYS = ['repository', 'path']
@@ -13,7 +15,7 @@ export const SYSTEM_VERIFICATION_KEYS = ['id', 'repository', 'tier', 'command', 
 export const SYSTEM_QUALIFICATION_KEYS = ['required_tiers', 'max_receipt_age_seconds', 'promotion']
 export const SYSTEM_PROMOTION_KEYS = ['history_window', 'minimum_runs', 'minimum_healthy_rate', 'minimum_consecutive_healthy_runs']
 export const SYSTEM_TIERS = ['harness-check', 'unit', 'contract', 'integration', 'external-qualified']
-export const SYSTEM_RECEIPT_KEYS = ['schema_version', 'system_id', 'manifest', 'tier', 'started_at', 'finished_at', 'repositories', 'results', 'status']
+export const SYSTEM_RECEIPT_KEYS = ['schema_version', 'system_id', 'change_id', 'manifest', 'tier', 'started_at', 'finished_at', 'repositories', 'results', 'status']
 export const SYSTEM_RECEIPT_MANIFEST_KEYS = ['sha256']
 export const SYSTEM_RECEIPT_REPOSITORY_KEYS = ['id', 'revision']
 export const SYSTEM_RECEIPT_RESULT_KEYS = ['id', 'repository', 'command', 'ok', 'exit_code', 'signal', 'timed_out', 'duration_ms', 'stdout', 'stderr']
@@ -23,6 +25,13 @@ export const SYSTEM_CI_RECEIPT_KEYS = ['tier', 'path', 'present', 'finished_at',
 export const SYSTEM_CI_HISTORY_KEYS = ['path', 'available', 'window', 'prior_observations', 'ignored_files', 'sample_size', 'healthy_runs', 'healthy_rate', 'consecutive_healthy_runs', 'promotion_eligible', 'promotion_problems']
 
 const EXTERNAL_SIGNAL = /\b(curl|docker|https?|kubectl|llm|mcp|oauth|openai|provider|socket|ssh|uvicorn)\b/i
+const CHANGE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
+
+function safeRecordPath(path) {
+  return typeof path === 'string' && path.length > 0 && !isAbsolute(path)
+    && !/[\\:\x00-\x1f\x7f]/.test(path)
+    && path.split('/').every((part) => part !== '' && part !== '.' && part !== '..')
+}
 
 function object(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -64,6 +73,29 @@ export function validateSystemManifest(manifest) {
   })
   uniqueIds(issues, repositories, 'repositories')
   const repositoryIds = new Set(repositories.map((entry) => entry?.id).filter((id) => typeof id === 'string'))
+
+  if (manifest.change !== undefined) {
+    if (!object(manifest.change)) issues.push('change: required object')
+    else {
+      rejectUnknown(issues, manifest.change, SYSTEM_CHANGE_KEYS, 'change')
+      if (typeof manifest.change.id !== 'string' || !CHANGE_ID.test(manifest.change.id)) issues.push('change.id: required safe single-line Change ID')
+      if (!Array.isArray(manifest.change.records) || manifest.change.records.length === 0) issues.push('change.records: required non-empty array')
+      else {
+        const seen = new Set()
+        manifest.change.records.forEach((record, index) => {
+          const where = 'change.records[' + index + ']'
+          if (!object(record)) { issues.push(where + ': required object'); return }
+          rejectUnknown(issues, record, SYSTEM_CHANGE_RECORD_KEYS, where)
+          requiredString(issues, record.repository, where + '.repository')
+          requiredString(issues, record.path, where + '.path')
+          if (typeof record.repository === 'string' && !repositoryIds.has(record.repository)) issues.push(where + '.repository: unknown repository ' + record.repository)
+          if (typeof record.repository === 'string' && seen.has(record.repository)) issues.push(where + '.repository: duplicate repository ' + record.repository)
+          seen.add(record.repository)
+          if (!safeRecordPath(record.path)) issues.push(where + '.path: must be a safe repository-relative path')
+        })
+      }
+    }
+  }
 
   const contracts = Array.isArray(manifest.contracts) ? manifest.contracts : []
   if (!Array.isArray(manifest.contracts)) issues.push('contracts: required array')
@@ -151,6 +183,16 @@ function git(path, args) {
   }
 }
 
+function gitFile(path, revision, file) {
+  try {
+    return execFileSync('git', ['-C', path, 'show', revision + ':' + file], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1024 * 1024,
+    })
+  } catch {
+    return null
+  }
+}
+
 function commandAvailable(root, command) {
   if (typeof command !== 'string' || command.length === 0 || root === undefined) return false
   const executable = command.trim().split(/\s+/)[0]
@@ -190,6 +232,27 @@ function inspectSystemManifest(manifest, absoluteManifest) {
     }
   })
   const byId = new Map(repositories.map((entry) => [entry.id, entry]))
+  const change = manifest.change === undefined ? null : {
+    id: manifest.change?.id ?? null,
+    records: (Array.isArray(manifest.change?.records) ? manifest.change.records : []).map((record) => {
+      const repository = byId.get(record?.repository)
+      const revision = repository?.expected_revision
+      const path = record?.path
+      const safe = safeRecordPath(path)
+      const treeEntry = repository?.git && /^[0-9a-f]{40}$/.test(revision ?? '') && safe
+        ? git(repository.path, ['ls-tree', revision, '--', path]) : null
+      const tracked = treeEntry !== null && /^100(644|755) blob [0-9a-f]{40}\t/.test(treeEntry)
+        && treeEntry.slice(treeEntry.indexOf('\t') + 1) === path
+      const content = tracked ? gitFile(repository.path, revision, path) : null
+      return {
+        repository: record?.repository ?? null,
+        path: path ?? null,
+        revision: revision ?? null,
+        tracked: tracked && content !== null,
+        change_id_match: content !== null && content.split(/\r?\n/).includes('Change-ID: ' + manifest.change.id),
+      }
+    }),
+  }
   const contracts = (Array.isArray(manifest.contracts) ? manifest.contracts : []).map((entry) => {
     const repository = byId.get(entry?.evidence?.repository)
     const evidencePath = repository?.path && typeof entry?.evidence?.path === 'string'
@@ -216,12 +279,14 @@ function inspectSystemManifest(manifest, absoluteManifest) {
   const ready = structuralIssues.length === 0
     && repositories.every((entry) => entry.exists && entry.git && entry.revision_match && entry.clean)
     && contracts.every((entry) => entry.evidence_exists)
+    && (change === null || change.records.length > 0 && change.records.every((entry) => entry.tracked && entry.change_id_match))
     && verifications.every((entry) => entry.executable_resolvable)
   return {
     schema_version: 'coding-harness.system-check/v1',
     system: { id: manifest?.id ?? null, manifest: absoluteManifest },
     structural: { valid: structuralIssues.length === 0, issues: structuralIssues },
     repositories,
+    change,
     contracts,
     verifications,
     ready,
@@ -336,6 +401,7 @@ export async function runSystemTier(manifestPath, tier, outPath, options = {}) {
   const receipt = {
     schema_version: 'coding-harness.system-receipt/v1',
     system_id: check.system.id,
+    ...(check.change === null ? {} : { change_id: check.change.id }),
     manifest: { sha256: sha256(rawManifest) },
     tier,
     started_at: startedAt,
@@ -358,6 +424,7 @@ export function validateSystemReceipt(receipt) {
   rejectUnknown(issues, receipt, SYSTEM_RECEIPT_KEYS, 'root')
   if (receipt.schema_version !== 'coding-harness.system-receipt/v1') issues.push('schema_version: must be coding-harness.system-receipt/v1')
   for (const key of ['system_id', 'tier', 'started_at', 'finished_at', 'status']) receiptString(issues, receipt[key], key)
+  if (receipt.change_id !== undefined && (typeof receipt.change_id !== 'string' || !CHANGE_ID.test(receipt.change_id))) issues.push('change_id: required safe single-line Change ID')
   if (!SYSTEM_TIERS.includes(receipt.tier)) issues.push('tier: must be one of ' + SYSTEM_TIERS.join(', '))
   if (!['passed', 'failed'].includes(receipt.status)) issues.push('status: must be passed or failed')
   const started = Date.parse(receipt.started_at)
@@ -412,6 +479,7 @@ export function checkSystemReceipt(manifestPath, receiptPath) {
   const check = checkSystemManifest(absoluteManifest)
   if (receipt?.manifest?.sha256 !== sha256(readFileSync(absoluteManifest))) problems.push('manifest hash does not match receipt')
   if (receipt?.system_id !== check.system.id) problems.push('system id does not match manifest')
+  if (receipt?.change_id !== (check.change?.id ?? undefined)) problems.push('change id does not match manifest')
   const expectedRepositories = check.repositories.map((entry) => ({ id: entry.id, revision: entry.current_revision }))
   if (JSON.stringify(receipt?.repositories) !== JSON.stringify(expectedRepositories)) problems.push('repository revision set does not match current snapshot')
   const expectedResults = check.verifications.filter((entry) => entry.tier === receipt?.tier).map((entry) => ({ id: entry.id, repository: entry.repository, command: entry.command }))
@@ -518,6 +586,10 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
     if (repository.git && !repository.clean) systemProblems.push('repository is dirty: ' + repository.id)
   }
   for (const contract of check.contracts) if (!contract.evidence_exists) systemProblems.push('contract evidence missing: ' + contract.id)
+  for (const record of check.change?.records ?? []) {
+    if (!record.tracked) systemProblems.push('change record missing at pinned revision: ' + record.repository + ':' + record.path)
+    else if (!record.change_id_match) systemProblems.push('change id missing from pinned record: ' + record.repository + ':' + record.path)
+  }
   for (const verification of check.verifications) if (!verification.executable_resolvable) systemProblems.push('verification executable unresolved: ' + verification.id)
   const tiers = check.qualification.required_tiers
   const maxReceiptAgeSeconds = Number.isInteger(check.qualification.max_receipt_age_seconds) && check.qualification.max_receipt_age_seconds >= 1
