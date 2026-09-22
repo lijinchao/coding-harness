@@ -32,6 +32,7 @@ import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
 import { checkSystemManifest, checkSystemReceipt, materializeSystemSnapshot, runSystemTier, systemCiReport } from '../src/system.mjs'
 import { renderSystemCiTemplate, writeSystemCiTemplate } from '../src/system-ci-template.mjs'
+import { observeSystemGitlab } from '../src/system-gitlab.mjs'
 import { checkCommandReview, runCommandReview } from '../src/command-review.mjs'
 
 const USAGE = `usage: harness <command> [options]
@@ -49,6 +50,8 @@ commands:
                                          check required receipts; Shadow mode is non-blocking by default
   system-ci-template --provider github|gitlab [--out <path>] [--force]
                                          print or explicitly write a reviewable Shadow scaffold
+  system-gitlab-observe --manifest <path> --targets <path> --host <hostname> --token-env <name> --out <report> [--timeout <s>]
+                                         read GitLab collaboration evidence against a pinned system snapshot
   command-review --repository <path> --revision <commit> --command <command> --out <receipt> [--timeout <s>] [--allow-external] [--force]
                                          run one candidate in an exact-revision archive; never grants approval
   command-review-check --repository <path> --revision <commit> --command <command> --receipt <path>
@@ -524,6 +527,21 @@ function cmdSystemCiTemplate(options) {
   else console.log('wrote ' + writeSystemCiTemplate(provider, resolve(options.out), { force: options.force === true }))
 }
 
+async function cmdSystemGitlabObserve(options) {
+  const envName = requireOption(options, 'token-env')
+  if (!/^[A-Z][A-Z0-9_]*$/.test(envName)) throw new Error('--token-env must be an environment variable name')
+  const timeoutSeconds = options.timeout === undefined ? 10 : Number(options.timeout)
+  if (!Number.isInteger(timeoutSeconds) || timeoutSeconds < 1 || timeoutSeconds > 60) throw new Error('--timeout must be 1-60 seconds')
+  const report = await observeSystemGitlab(
+    resolve(requireOption(options, 'manifest')),
+    resolve(requireOption(options, 'targets')),
+    resolve(requireOption(options, 'out')),
+    { host: requireOption(options, 'host'), token: process.env[envName], timeoutMs: timeoutSeconds * 1000 },
+  )
+  console.log(JSON.stringify(report, null, 2))
+  if (!report.valid) process.exit(1)
+}
+
 async function cmdCommandReview(options) {
   const repository = resolve(requireOption(options, 'repository'))
   const revision = requireOption(options, 'revision')
@@ -692,7 +710,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-snapshot': cmdSystemSnapshot, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, 'command-review': cmdCommandReview, 'command-review-check': cmdCommandReviewCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-snapshot': cmdSystemSnapshot, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, 'system-gitlab-observe': cmdSystemGitlabObserve, 'command-review': cmdCommandReview, 'command-review-check': cmdCommandReviewCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)

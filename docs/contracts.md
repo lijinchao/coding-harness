@@ -73,9 +73,9 @@ malformed. History accepts only complete reports for the same system.
 
 The GitHub and GitLab scaffolds share `.harness/system-ci/receipts`,
 `.harness/system-ci/history`, and
-`.harness/system-ci/current/system-ci.json`. They archive current evidence but
-only document the provider-specific checkout and prior-artifact restoration
-steps; those deployment facts are never inferred.
+`.harness/system-ci/current/system-ci.json`. Checkout and history restoration
+remain provider-owned, not inferred. GitLab observations use separate target
+and report schemas; they do not affect `system-ci` health.
 
 ### Skill
 

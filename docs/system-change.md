@@ -45,3 +45,6 @@ baselines fail readiness and appear in `system-ci` problems. The check does not
 decide whether the diff is correct, whether other repositories should have
 changed, or who approved it. Without `bases`, older Change ID snapshots retain
 the prior identity-only check and do not claim diff coverage.
+
+GitLab MR, approval and Pipeline evidence can be observed separately with
+[system-gitlab-observe](system-gitlab.md); it is not yet part of `system-ci` health.

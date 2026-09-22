@@ -42,3 +42,17 @@ top-level `approved` flag can be true with no applicable rule.
 This slice does not modify CI templates or `system-ci` health. Live GitLab
 permissions, self-managed API compatibility, and artifact provenance remain
 explicitly unverified until a scoped deployment exercises them.
+
+## Result
+
+Implemented the opt-in read-only observer, exact targets/observation schemas,
+CLI entry point, and a separate usage guide. The observer rejects an unready
+snapshot or incomplete target mapping before egress, binds each GitLab project
+to its local remote and pinned revision, and records a failed observation for
+MR, approval, Pipeline, or Job mismatches. No business repository or CI
+template was changed.
+
+Local verification: focused tests 13/13, repository tests 222/222,
+`doctor --manifest harness.manifest.json` OK, and the pinned consumer example
+check passed. All GitLab responses in tests came from an injected fake
+transport; no live GitLab compatibility or permission claim is made.

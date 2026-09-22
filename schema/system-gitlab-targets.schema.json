@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/coding-harness/system-gitlab-targets.schema.json",
+  "title": "Coding harness GitLab observation targets",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "merge_requests"],
+  "properties": {
+    "schema_version": { "const": "coding-harness.gitlab-targets/v1" },
+    "merge_requests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repository", "project_id", "project_path", "iid", "target_branch", "required_jobs"],
+        "properties": {
+          "repository": { "type": "string", "minLength": 1 },
+          "project_id": { "type": "integer", "minimum": 1 },
+          "project_path": { "type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]*(/[A-Za-z0-9_][A-Za-z0-9_.-]*)+$" },
+          "iid": { "type": "integer", "minimum": 1 },
+          "target_branch": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$" },
+          "required_jobs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    }
+  }
+}
