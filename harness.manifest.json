@@ -113,8 +113,8 @@
     },
     {
       "id": "release",
-      "command": "V=$(cat base/VERSION); OUT=$(mktemp -d); node bin/harness.mjs release --base base --out \"$OUT\" --version \"$V\" --force >/dev/null && diff -r \"$OUT/base@$V\" \"dist/base@$V\"; s=$?; rm -rf \"$OUT\"; exit $s",
-      "protects": "the committed base release matches what base/ produces at the pinned version",
+      "command": "V=$(cat base/VERSION); mkdir -p .harness/tmp && OUT=$(mktemp -d .harness/tmp/release.XXXXXX); node bin/harness.mjs release --base base --out \"$OUT\" --version \"$V\" --force >/dev/null && diff -r \"$OUT/base@$V\" \"dist/base@$V\"; s=$?; rm -rf \"$OUT\"; exit $s",
+      "protects": "the committed base release matches what base/ produces at the pinned version; the scratch directory lives under the ignored .harness/tmp so the gate also runs where the platform temp directory is not writable",
       "prove_fires": "append to base/AGENTS.base.md without re-releasing; the rebuilt artifact differs from dist/ and the gate fails",
       "prove_fires_command": "printf '\\n<!-- prove -->\\n' >> base/AGENTS.base.md",
       "revert_command": "git checkout -- base/AGENTS.base.md",
