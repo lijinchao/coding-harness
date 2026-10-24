@@ -68,8 +68,13 @@ test('check fails when a fetched git base is tampered', { skip: !gitAvailable },
   const { root, consumer } = makeGitBase('0.1.0')
   const manifest = manifestPath(consumer)
   run(['sync', '--manifest', manifest])
-  const hit = execFileSync('find', [join(consumer, '.harness'), '-name', 'AGENTS.base.md'], { encoding: 'utf8' }).trim().split('\n')[0]
-  writeFileSync(hit, '# tampered\n')
+  // Every copy, not the first one `find` happens to list: which copy a directory
+  // walk returns first depends on the filesystem, so a single hit made this test pass
+  // on one platform and fail with "Missing expected exception" on another. The
+  // assertion is about tampering being detected at all, and it stays that.
+  const hits = execFileSync('find', [join(consumer, '.harness'), '-name', 'AGENTS.base.md'], { encoding: 'utf8' }).trim().split('\n').filter(Boolean)
+  assert.ok(hits.length > 0, 'the fetched base must be on disk')
+  for (const hit of hits) writeFileSync(hit, '# tampered\n')
   assert.throws(() => run(['check', '--manifest', manifest]))
   rmSync(root, { recursive: true, force: true })
 })

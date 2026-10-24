@@ -66,7 +66,7 @@ commands:
                                          move the pins, rewrite version references, re-sync, and check
   release    --base <dir> --out <dir> [--version <v>] [--force]
                                          build a versioned, hashed base release
-  gates      --manifest <path> [--gate <id>] [--phase <name>] [--changed <path>|--since <ref>]
+  gates      --manifest <path> [--gate <id>] [--phase <name>] [--changed <path>|--since <ref>] [--skip-proofs]
                                      [--jobs <n>] [--timeout <s>] [--fail-fast] [--report <file>]
                                          run the declared gates, or the gates a change selects (one list for local and CI)
   select     --manifest <path> (--since <ref> | --changed <path>)
@@ -80,7 +80,7 @@ commands:
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce', 'skip-proofs', 'help'])
 const REPEATABLE_FLAGS = new Set(['changed', 'bind'])
 
 function parseOptions(argv) {
@@ -351,6 +351,21 @@ async function cmdGates(options) {
     if (result.signal !== null) notes.push('signal ' + result.signal)
     if (result.violations.length > 0) notes.push('forbidden output: ' + result.violations.join(', '))
     console.log(`${status}\t${result.id}${notes.length === 0 ? '' : ' (' + notes.join('; ') + ')'}`)
+  }
+  // A green gate run beside a stale proof lock is the false comfort this tool exists
+  // to prevent: the gates pass because they still work, while the recorded evidence
+  // describes a definition that no longer exists. A repository that declares
+  // `governance.proofs` has asked for that evidence, so a stale lock is a failure of
+  // this run rather than a note — and saying so here is what stops "local green, CI
+  // red", since only `prove` used to notice.
+  if (options['skip-proofs'] !== true) {
+    const ran = new Set(gates.map((gate) => gate.id))
+    const stale = proofProblems(manifest, toolCommit(), ran)
+    if (stale.length > 0) {
+      for (const problem of stale) console.error('proof: ' + problem)
+      console.error('gates: ' + String(stale.length) + ' recorded proof(s) do not describe the gates that just ran; run harness prove --record')
+      blocking += 1
+    }
   }
   if (typeof options.report === 'string') {
     const entry = { at: new Date().toISOString(), kind: 'gate-health', version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
@@ -730,7 +745,15 @@ try {
   }
   const handler = COMMANDS[command]
   if (handler === undefined) throw new Error(`unknown command: ${command}`)
-  await handler(parseOptions(rest))
+  const options = parseOptions(rest)
+  // `harness <command> --help` used to run the command: `--help` was not a boolean
+  // flag, so it swallowed the next argument or failed with "missing value", and a
+  // gate run could be started by someone asking what the command does.
+  if (options.help === true) {
+    console.log(USAGE)
+    process.exit(0)
+  }
+  await handler(options)
 } catch (error) {
   console.error(`harness: ${error.message}`)
   process.exit(1)

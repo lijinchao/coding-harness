@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { toolCommit } from '../src/tool.mjs'
 
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
@@ -210,4 +211,39 @@ test('gates --phase runs the unphased gates plus that phase only', () => {
   assert.ok(ran.includes('fast'))
   assert.ok(!ran.includes('full'))
   rmSync(dir, { recursive: true, force: true })
+})
+
+test('gates reports a stale proof instead of a false green', () => {
+  // The failure this exists for: a green gate run next to a proof lock that
+  // describes a definition the gate no longer has. Only `prove --isolated` used to
+  // notice, so the repository looked healthy locally and failed in CI.
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-gates-'))
+  try {
+    const gates = [gate('pass', 'true', 'blocking')]
+    writeManifest(dir, gates)
+    const manifest = JSON.parse(readFileSync(manifestPath(dir), 'utf8'))
+    manifest.governance = { proofs: { require: 'blocking', maxAgeDays: 30 } }
+    manifest.lock = {
+      version: manifest.version,
+      outputs: {},
+      proofs: { pass: { at: new Date().toISOString(), tool: toolCommit(), definition: 'definitely-not-the-hash' } },
+    }
+    writeFileSync(manifestPath(dir), JSON.stringify(manifest, null, 2) + '\n')
+    assert.throws(() => run(['gates', '--manifest', manifestPath(dir)]), /proof: .*the gate changed since it was proved/)
+    // An explicit opt-out exists for the one case that needs it: a worktree whose
+    // lock is being rebuilt.
+    run(['gates', '--manifest', manifestPath(dir), '--skip-proofs'])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('gates does not demand proofs from a repository that never asked for them', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'coding-harness-gates-'))
+  try {
+    writeManifest(dir, [gate('pass', 'true', 'blocking')])
+    run(['gates', '--manifest', manifestPath(dir)])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })

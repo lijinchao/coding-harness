@@ -113,8 +113,8 @@
     },
     {
       "id": "release",
-      "command": "V=$(cat base/VERSION); OUT=$(mktemp -d); node bin/harness.mjs release --base base --out \"$OUT\" --version \"$V\" --force >/dev/null && diff -r \"$OUT/base@$V\" \"dist/base@$V\"; s=$?; rm -rf \"$OUT\"; exit $s",
-      "protects": "the committed base release matches what base/ produces at the pinned version",
+      "command": "V=$(cat base/VERSION); mkdir -p .harness/tmp && OUT=$(mktemp -d .harness/tmp/release.XXXXXX); node bin/harness.mjs release --base base --out \"$OUT\" --version \"$V\" --force >/dev/null && diff -r \"$OUT/base@$V\" \"dist/base@$V\"; s=$?; rm -rf \"$OUT\"; exit $s",
+      "protects": "the committed base release matches what base/ produces at the pinned version; the scratch directory lives under the ignored .harness/tmp so the gate also runs where the platform temp directory is not writable",
       "prove_fires": "append to base/AGENTS.base.md without re-releasing; the rebuilt artifact differs from dist/ and the gate fails",
       "prove_fires_command": "printf '\\n<!-- prove -->\\n' >> base/AGENTS.base.md",
       "revert_command": "git checkout -- base/AGENTS.base.md",
@@ -176,7 +176,7 @@
     },
     {
       "id": "command-review",
-      "setup_command": "./harness command-review --repository . --revision \"$(git rev-parse HEAD)\" --command true --out \"${TMPDIR:-/tmp}/cr.json\"",
+      "setup_command": "./harness command-review --repository . --revision \"$(git rev-parse HEAD)\" --command true --force --out \"${TMPDIR:-/tmp}/cr.json\"",
       "command": "REV=$(git rev-parse HEAD); ./harness command-review-check --repository . --revision \"$REV\" --command true --receipt \"${TMPDIR:-/tmp}/cr.json\"",
       "protects": "a review receipt binds a command to its revision, and the check fails without one",
       "prove_fires": "delete the receipt outside the repository, then run the gate; the check has nothing to verify and the gate exits 1",
@@ -442,49 +442,49 @@
     },
     "proofs": {
       "harness-drift": {
-        "at": "2026-09-19T06:59:10.110Z",
+        "at": "2026-10-24T12:45:04.571Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
       },
       "doctor": {
-        "at": "2026-09-19T06:59:12.095Z",
+        "at": "2026-10-24T12:45:07.593Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "213d4e3325a35af950e2e7528dc2efc43933f198b00a994347e242f16ac48bad"
       },
       "validate": {
-        "at": "2026-09-19T06:59:14.164Z",
+        "at": "2026-10-24T12:45:10.602Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
       },
       "tests": {
-        "at": "2026-09-19T07:00:31.197Z",
+        "at": "2026-10-24T12:48:04.818Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
       },
       "release": {
-        "at": "2026-09-19T07:00:32.475Z",
+        "at": "2026-10-24T12:48:05.870Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
-        "definition": "0b003dc204854ed88316fa96f1ed06a8e4b06614bf8f43e6a7f644fa5e76b02e"
+        "definition": "6785a37bd333f993d80f3878f782b8d3d74597b7b3e4361a4f50cebdf7c817b1"
       },
       "example": {
-        "at": "2026-09-19T07:00:38.121Z",
+        "at": "2026-10-24T12:48:10.408Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
       },
       "metrics": {
-        "at": "2026-09-19T07:00:43.000Z",
+        "at": "2026-10-24T12:48:15.453Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
       },
       "release-ready": {
-        "at": "2026-09-19T07:00:40.829Z",
+        "at": "2026-10-24T12:48:13.152Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
       },
       "command-review": {
-        "at": "2026-09-19T07:00:48.751Z",
+        "at": "2026-10-24T12:48:22.559Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
-        "definition": "e8c30565bc5ef10672eece0d39e69635f41bfb2ca6198ae5a26dc80ca617f52e"
+        "definition": "210c8640f1c52cbb0a5e7f9da179571ac55220531c09b9b9ef51ebac26341a01"
       }
     }
   }
