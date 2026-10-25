@@ -145,6 +145,14 @@ export function mergePacks(root, manifest, options = {}) {
   const declared = manifest.packs.map((declaration) => declaration.id)
   const resolved = manifest.packs.map((declaration) => {
     const pack = resolvePack(root, declaration, kernelVersion)
+    const held = manifest.lock?.packs?.[declaration.id]
+    if (held?.version === declaration.version) {
+      const keys = Object.keys(pack.release.files).sort()
+      const heldKeys = Object.keys(held.files ?? {}).sort()
+      if (JSON.stringify(keys) !== JSON.stringify(heldKeys) || keys.some((file) => held.files[file] !== pack.release.files[file])) {
+        throw new Error('pack ' + declaration.id + ': release content differs from the lock; publish a new pack version')
+      }
+    }
     for (const dependency of pack.descriptor.packs ?? []) {
       if (!declared.includes(dependency)) throw new Error('pack ' + pack.id + ': requires pack ' + dependency + ', which is not declared')
     }

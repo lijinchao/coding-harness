@@ -260,8 +260,10 @@ function cmdUpgrade(options) {
   }
   // An upgrade re-composes, but a recorded proof is evidence about a gate and
   // must survive it; applySync preserves whatever lock.proofs it is given.
-  const proofs = manifest.lock?.proofs
-  manifest.lock = proofs === undefined ? undefined : { proofs }
+  const previousLock = manifest.lock ?? {}
+  manifest.lock = Object.fromEntries(['proofs', 'packs', 'overrides']
+    .filter((key) => previousLock[key] !== undefined)
+    .map((key) => [key, previousLock[key]]))
   const outputs = applySync(root, path, manifest)
   for (const item of outputs) console.log(`synced ${item.output}`)
   // A declared product mention that tracks the base pin must name the new one;

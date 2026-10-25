@@ -15,7 +15,7 @@ The existing kernel resolves it, verifies its hashes, and records it in
 `lock.packs`. `scripts/check-delivery.mjs` imports that released checker.
 The pack's always-selected plan gate fails on empty acceptance criteria and
 passes after restoring the plan. The first trial used kernel 0.1.41. It exposed
-a writeback defect, so the self/example pins move to a local 0.1.42 release;
+a writeback defect, so the self/example pins move to a local 0.1.43 release;
 neither its tag nor a pack tag is published to the remote.
 
 The first red test scaffold printed `unimplemented`. With the test runner
@@ -110,6 +110,10 @@ observable drift opportunity, not evidence that today's commands differ.
    also needed to persist its new root version. A regression covers record,
    reload, re-prove, upgrade, and check; this is why a green single run was not
    sufficient evidence for the delivery workflow.
+   The first fix still dropped pack locks during upgrade, so its next sync
+   dirtied the tree. The follow-up requires byte-identical sync after upgrade,
+   retains pack/override pins, and rejects a changed release even when its own
+   hash record was recomputed. Use kernel 0.1.43 for this adoption workflow.
 
 ## How to combine this with ordinary development
 

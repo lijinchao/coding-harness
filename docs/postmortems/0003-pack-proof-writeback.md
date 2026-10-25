@@ -21,7 +21,8 @@ changing the raw primitive version that sync persists.
 Reproduce the writeback failure in a fixture consumer before fixing the writer.
 Persist only raw declarations and the updated lock, and explicitly propagate
 the upgraded root version. Use a local 0.1.42 tool release for the self/example
-pins; do not claim the older pinned writer contains the fix.
+pins; a 0.1.43 follow-up also retains pack/override locks and verifies resolved
+pack hashes against the stored pin. Do not claim the older writer has the fix.
 
 ## Regression test
 

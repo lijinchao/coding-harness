@@ -46,10 +46,12 @@ the full suite and example check pass, and a report names the remaining gaps.
 No remote push, product feature, or claimed human approval is part of it.
 The first real pack proof exposed a kernel writeback bug: `prove --record`
 serialized merged contributions into the raw manifest. Fix recording and test
-the adjacent pack upgrade path, then create a local 0.1.42 release/tag and move
+the adjacent pack upgrade path, then create local 0.1.42/0.1.43 releases and move
 the self/example pins to it. Populate caches from the same local tag while it
 is unpublished; keep the recorded remote source unchanged. This adds a local
-kernel release because continuing to pin the broken writer defeats the trial.
+kernel releases because continuing to pin the broken writer defeats the trial.
+The 0.1.43 follow-up preserves pack locks through upgrade and checks them
+against resolved hashes: rehashing a changed release must not silently move a pin.
 
 ## Plan
 
