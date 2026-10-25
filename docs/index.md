@@ -11,6 +11,7 @@ own their facts. This map does not copy their contents or authorize actions.
 | Why a choice was made | [context decision](decisions/0046-context-map-contract.md) and relevant `docs/decisions/` record | Before revisiting that choice |
 | Commands | [reference](reference.md) | Before using an unfamiliar CLI operation |
 | Knowledge map declaration | [context contract](context.md) | Before changing context routes or budgets |
+| Context map measurements and limits | [pilot](context-map-pilot.md) | Before claiming token savings or improving routing |
 | Release / pin / attestation | [release](release.md) | Before distributing or upgrading artifacts |
 | Real consumer results and limits | [game-design pilot](game-design-adoption.md) | Before generalizing consumer practices |
 

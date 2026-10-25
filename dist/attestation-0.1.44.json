@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-25T07:16:42.572Z",
+  "version": "0.1.44",
+  "toolCommit": "0e1c61df050c74b29974d9aab404e11520330cf5",
+  "tag": "0e1c61df050c74b29974d9aab404e11520330cf5",
+  "base": {
+    "version": "0.1.44",
+    "release": "0589481f497937c9f325bf098ea0d4ae86f39f6c4314bd44e4362faa16b2e0a1"
+  },
+  "locks": {
+    "self": "c54ace30071aa7733d4209be07a4c6ae2b1adcc3a9cde125e23a0323420be329",
+    "example": "223c24cbf8be649f4de72d28448a985876efb3f8da709a88f8c1fa7b5acba29f"
+  },
+  "proofs": {
+    "harness-drift": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
+    },
+    "doctor": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "6ff094309c342c1070ef98af62f505887eecdd1bd1c12ec8958245b90646fac2"
+    },
+    "validate": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
+    },
+    "tests": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
+    },
+    "release": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "0b003dc204854ed88316fa96f1ed06a8e4b06614bf8f43e6a7f644fa5e76b02e"
+    },
+    "example": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
+    },
+    "metrics": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
+    },
+    "release-ready": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
+    },
+    "command-review": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "555fe9389f59ff92fa4576a4c0eb790e2087ba6dc2e06faf584be91d6e00c03a"
+    },
+    "delivery-flow/plan": {
+      "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+      "definition": "842b8b0a30c3ce341c445cc086249ba8129afb0b38293de7c0d4b01c02eb3326"
+    }
+  },
+  "example": "examples/consumer/harness.manifest.json"
+}
