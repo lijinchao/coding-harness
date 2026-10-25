@@ -86,7 +86,7 @@ A gate is admitted only with a `prove_fires` action you have actually run. A gat
 
 ## Status
 
-The pinned base/tool release is v0.1.45. The table above inventories this
+The pinned base/tool release is v0.1.47. The table above inventories this
 checkout; its test compares it with the executable CLI. Working-only commands: none.
 The self-governance test compares
 these names with the tool commit pinned in `harness.manifest.json`.

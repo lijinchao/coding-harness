@@ -10,8 +10,11 @@ own their facts. This map does not copy their contents or authorize actions.
 | Manifest fields and artifact contracts | [contracts](contracts.md), [schema](../schema/harness.manifest.schema.json) | Before adding or changing a declaration |
 | Why a choice was made | [context decision](decisions/0046-context-map-contract.md) and relevant `docs/decisions/` record | Before revisiting that choice |
 | Commands | [reference](reference.md) | Before using an unfamiliar CLI operation |
+| Review criteria | [REVIEW.md](../REVIEW.md) | Before code review; findings do not grant approval |
 | Knowledge map declaration | [context contract](context.md) | Before changing context routes or budgets |
 | Context map measurements and limits | [pilot](context-map-pilot.md) | Before claiming token savings or improving routing |
+| Native agent setup and task execution | [native guide](native-agents.md) | Before configuring agent discovery or interpreting native task results |
+| Native pilot outcomes and blocked cases | [native pilot](native-agent-pilot.md) | Before claiming cross-agent task success or token savings |
 | Release / pin / attestation | [release](release.md) | Before distributing or upgrading artifacts |
 | Real consumer results and limits | [game-design pilot](game-design-adoption.md) | Before generalizing consumer practices |
 

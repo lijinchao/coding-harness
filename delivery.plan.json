@@ -1,13 +1,14 @@
 {
   "schema_version": "coding-harness.delivery/v1",
-  "id": "integration-and-proof-boundaries",
-  "outcome": "The integrated tool preserves upstream capabilities and publishes verifiable context, delivery and proof behavior for owner review.",
-  "design": "docs/decisions/0047-integrate-and-review-before-pr.md",
+  "id": "proof-stage-normal-completion",
+  "outcome": "Reject incomplete proof stages even when timeout cleanup exits zero; release the fixed immutable tool before merging the authorized PR stack.",
+  "design": "docs/decisions/0050-proof-stage-completion.md",
   "constraints": [
-    "Zero runtime dependencies",
-    "Keep published versions immutable",
-    "No self-approval, automatic merge or game product changes",
-    "Separate local evidence from remote CI and human acceptance"
+    "No runtime dependencies added",
+    "Do not edit generated files or old releases",
+    "User authorized fixed release and ordered PR merges; no self-approval or old-release edits",
+    "Model calls remain opt-in and bounded; raw traces stay untracked",
+    "Native support, task execution, repository DoD and human acceptance are distinct"
   ],
   "scope": [
     "src",
@@ -21,58 +22,51 @@
     "docs",
     "README.md",
     "harness.manifest.json",
-    "examples/consumer"
+    "examples/consumer",
+    ".agents",
+    ".claude",
+    "AGENTS.delta.md"
   ],
   "acceptance": [
     {
       "id": "AC-01",
-      "description": "Upstream capabilities and CLI inventory survive integration",
+      "description": "Self and example pin the immutable fixed tool with no drift",
       "checks": [
-        "suite"
+        "pins"
       ]
     },
     {
       "id": "AC-02",
-      "description": "Interrupted or unrestored failures cannot create successful proofs",
+      "description": "Every proof stage rejects timeout and signal termination",
       "checks": [
-        "proofs"
+        "scoring"
       ]
     },
     {
       "id": "AC-03",
-      "description": "Containment rejects Windows parent/sibling/drive escapes",
+      "description": "A recovery timeout cannot produce a CLI proof record",
       "checks": [
-        "paths"
+        "cli-proof"
       ]
     },
     {
       "id": "AC-04",
-      "description": "Proof qualification reaches both metrics summaries",
+      "description": "Normal failure/revert/success proof behavior is preserved",
       "checks": [
-        "metrics"
+        "scoring"
       ]
     },
     {
       "id": "AC-05",
-      "description": "Immutable release and consumer pins validate",
+      "description": "Existing repository regressions remain green",
       "checks": [
-        "pins",
         "suite"
       ]
     }
   ],
   "checks": [
     {
-      "id": "suite",
-      "tier": "integration",
-      "command": "npm test",
-      "test_files": [
-        "test/self-product-status.test.mjs",
-        "test/delivery-flow.test.mjs"
-      ]
-    },
-    {
-      "id": "proofs",
+      "id": "scoring",
       "tier": "integration",
       "command": "node --test test/proof-failure-boundary.test.mjs",
       "test_files": [
@@ -80,20 +74,11 @@
       ]
     },
     {
-      "id": "paths",
-      "tier": "unit",
-      "command": "node --test --test-name-pattern=containment test/context-map.test.mjs",
+      "id": "cli-proof",
+      "tier": "e2e",
+      "command": "node --test --test-name-pattern='CLI refuses to record' test/proof-failure-boundary.test.mjs",
       "test_files": [
-        "test/context-map.test.mjs"
-      ]
-    },
-    {
-      "id": "metrics",
-      "tier": "integration",
-      "command": "node --test test/gates.test.mjs test/metrics.test.mjs",
-      "test_files": [
-        "test/gates.test.mjs",
-        "test/metrics.test.mjs"
+        "test/proof-failure-boundary.test.mjs"
       ]
     },
     {
@@ -104,12 +89,21 @@
         "harness.manifest.json",
         "examples/consumer/harness.manifest.json"
       ]
+    },
+    {
+      "id": "suite",
+      "tier": "integration",
+      "command": "npm test",
+      "test_files": [
+        "test/proof-failure-boundary.test.mjs",
+        "test/self-product-status.test.mjs"
+      ]
     }
   ],
   "tier_waivers": [
     {
-      "tier": "e2e",
-      "reason": "The mapped checks do not test an application or remote GitLab instance. Remote release bootstrap and PR CI are separately verified; no game E2E or owner acceptance is claimed."
+      "tier": "unit",
+      "reason": "The defect is subprocess lifecycle qualification across actual Git proof stages, covered by integration checks; pure isolated assertions would not reproduce it."
     }
   ]
 }

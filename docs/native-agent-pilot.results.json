@@ -1,0 +1,530 @@
+{
+  "schema_version": "coding-harness.native-pilot-summary/v1",
+  "generated_at": "2026-10-25T09:33:04.999Z",
+  "scorer_sha256": "2a3808f9fbc950e08d6854309b95f1b6c2dc0fdf5c08cdb533bcd3863636a040",
+  "records": [
+    {
+      "case_id": "claude-baseline",
+      "at": "2026-10-25T08:54:36.459Z",
+      "agent": "claude",
+      "runtime": "2.1.310 (Claude Code)",
+      "task": "review",
+      "variant": "baseline",
+      "revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "fixture_revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 8779,
+      "exit_code": 1,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "provider-error",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": "openrouter/auto[1m]",
+      "usage": {
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "trace": ".harness/native-evals/2026-10-25/claude-baseline/trace.jsonl",
+      "trace_sha256": "fe761b78f5d88482c01f2f6f872e5d67c560f954860bb623c88136be85e2694c"
+    },
+    {
+      "case_id": "claude-native",
+      "at": "2026-10-25T08:54:37.361Z",
+      "agent": "claude",
+      "runtime": "2.1.310 (Claude Code)",
+      "task": "review",
+      "variant": "native",
+      "revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "fixture_revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 9764,
+      "exit_code": 1,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "provider-error",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [
+        "test-driven-development",
+        "verification-tiers",
+        "writing-a-gate"
+      ],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": "openrouter/auto[1m]",
+      "usage": {
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "trace": ".harness/native-evals/2026-10-25/claude-native/trace.jsonl",
+      "trace_sha256": "efda59b2715b595075bd6fbcea62ca8c04a307d9e1327ee9486fc3c4da01f338"
+    },
+    {
+      "case_id": "codex-baseline",
+      "at": "2026-10-25T08:57:26.661Z",
+      "agent": "codex",
+      "runtime": "codex-cli 0.146.0",
+      "task": "review",
+      "variant": "baseline",
+      "revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "fixture_revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 180025,
+      "exit_code": 0,
+      "timed_out": true,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "timeout",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [
+        "/bin/zsh -lc 'node --test test/proof-failure-boundary.test.mjs test/scan-prove.test.mjs test/output-assertions.test.mjs test/proofs.test.mjs'"
+      ],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": null,
+      "usage": null,
+      "trace": ".harness/native-evals/2026-10-25/codex-baseline/trace.jsonl",
+      "trace_sha256": "367cca24e4babeaa9821a4ed7c223445fc4a2590cdf665e6b893a466966b0454"
+    },
+    {
+      "case_id": "codex-baseline-retry",
+      "at": "2026-10-25T09:02:56.940Z",
+      "agent": "codex",
+      "runtime": "codex-cli 0.146.0",
+      "task": "context",
+      "variant": "baseline",
+      "revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "fixture_revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 190164,
+      "exit_code": 1,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "execution-error",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": null,
+      "usage": null,
+      "trace": ".harness/native-evals/2026-10-25/codex-baseline-retry/trace.jsonl",
+      "trace_sha256": "d64690984b3ec3f8006ec44fbe0c68343d1b9d47d444ac33bfa171e20b47a70f"
+    },
+    {
+      "case_id": "codex-native",
+      "at": "2026-10-25T08:57:26.714Z",
+      "agent": "codex",
+      "runtime": "codex-cli 0.146.0",
+      "task": "review",
+      "variant": "native",
+      "revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "fixture_revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 180025,
+      "exit_code": 0,
+      "timed_out": true,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "timeout",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [
+        "/bin/zsh -lc \"sed -n '1,240p' REVIEW.md && sed -n '1,220p' docs/index.md && sed -n '1,240p' .agents/skills/verification-tiers/SKILL.md\""
+      ],
+      "observed_passed_checks": [],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": null,
+      "usage": null,
+      "trace": ".harness/native-evals/2026-10-25/codex-native/trace.jsonl",
+      "trace_sha256": "87503ce3bee1f19ee025b1e976d6abf1de666fb0b3b2455340135c2b58134810"
+    },
+    {
+      "case_id": "codex-native-retry",
+      "at": "2026-10-25T09:02:48.553Z",
+      "agent": "codex",
+      "runtime": "codex-cli 0.146.0",
+      "task": "context",
+      "variant": "native",
+      "revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "fixture_revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 181806,
+      "exit_code": 1,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "execution-error",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": null,
+      "usage": null,
+      "trace": ".harness/native-evals/2026-10-25/codex-native-retry/trace.jsonl",
+      "trace_sha256": "34513e1a884f5d0c7c58cbea37fa62b13c7d552474a810cd81a8c6c503e177be"
+    },
+    {
+      "case_id": "dsh-baseline",
+      "at": "2026-10-25T08:57:57.841Z",
+      "agent": "dsh",
+      "runtime": "0.2.1-rc.2@687f282e8625c6b8d11ff58211a90524be2e4317",
+      "task": "review",
+      "variant": "baseline",
+      "revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "fixture_revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 331,
+      "exit_code": 1,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "execution-error",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": null,
+      "usage": null,
+      "trace": ".harness/native-evals/2026-10-25/dsh-baseline/trace.jsonl",
+      "trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case_id": "dsh-baseline-retry",
+      "at": "2026-10-25T09:01:55.422Z",
+      "agent": "dsh",
+      "runtime": "0.2.1-rc.2@687f282e8625c6b8d11ff58211a90524be2e4317",
+      "task": "context",
+      "variant": "baseline",
+      "revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "fixture_revision": "f62eb771119e0ed24dc6083ff62437f9f09e0241",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 129052,
+      "exit_code": 0,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "repository-dod-qualified",
+      "execution_qualified": true,
+      "repository_dod_qualified": true,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [
+        "node --test --test-name-pattern=\"doctor rejects broken, ambiguous, unreachable and escaping context declarations\" test/context-map.test.mjs 2>&1; echo \"[exit=$?]\"",
+        "npm test 2>&1 | tail -25; echo \"[exit=${PIPESTATUS[0]}]\""
+      ],
+      "required_checks": {
+        "suite": true,
+        "example": true
+      },
+      "attempted_checks": {
+        "suite": true,
+        "example": true
+      },
+      "model": null,
+      "usage": {
+        "inputTokens": 32701,
+        "outputTokens": 11826,
+        "cacheReadTokens": 477568,
+        "cacheWriteTokens": 0,
+        "totalTokens": 522095
+      },
+      "trace": ".harness/native-evals/2026-10-25/dsh-baseline-retry/trace.jsonl",
+      "trace_sha256": "333ea7aa5f935d976e9a20b49e4469fcc15e25e52629847f503b83178ab0fd35"
+    },
+    {
+      "case_id": "dsh-native",
+      "at": "2026-10-25T08:57:56.929Z",
+      "agent": "dsh",
+      "runtime": "0.2.1-rc.2@687f282e8625c6b8d11ff58211a90524be2e4317",
+      "task": "review",
+      "variant": "native",
+      "revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "fixture_revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 360,
+      "exit_code": 1,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "execution-error",
+      "execution_qualified": false,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [],
+      "observed_passed_checks": [],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": null,
+      "usage": null,
+      "trace": ".harness/native-evals/2026-10-25/dsh-native/trace.jsonl",
+      "trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case_id": "dsh-native-retry",
+      "at": "2026-10-25T09:00:44.142Z",
+      "agent": "dsh",
+      "runtime": "0.2.1-rc.2@687f282e8625c6b8d11ff58211a90524be2e4317",
+      "task": "context",
+      "variant": "native",
+      "revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "fixture_revision": "73adc4351005a22df6201591c85e70bd0e7a74cb",
+      "scorer_hidden": false,
+      "kernel_version": "0.1.45",
+      "tool_commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+      "agent_elapsed_ms": 56210,
+      "exit_code": 0,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "missing-required-checks",
+      "execution_qualified": true,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": false,
+      "projected_evidence_incomplete": false,
+      "native_catalog": [],
+      "observed_skill_uses": [
+        {
+          "tool": "skill",
+          "input": {
+            "name": "verification-tiers"
+          }
+        }
+      ],
+      "observed_passed_checks": [
+        "node --test test/context-map.test.mjs"
+      ],
+      "required_checks": {
+        "suite": false,
+        "example": false
+      },
+      "attempted_checks": {
+        "suite": false,
+        "example": false
+      },
+      "model": null,
+      "usage": {
+        "inputTokens": 30893,
+        "outputTokens": 6756,
+        "cacheReadTokens": 221440,
+        "cacheWriteTokens": 0,
+        "totalTokens": 259089
+      },
+      "trace": ".harness/native-evals/2026-10-25/dsh-native-retry/trace.jsonl",
+      "trace_sha256": "a3b29c035820a22726eb359939cb364e6b815a424f20ece47e4427e975d97549"
+    },
+    {
+      "case_id": "dsh-remediated",
+      "at": "2026-10-25T09:16:30.392Z",
+      "agent": "dsh",
+      "runtime": "0.2.1-rc.2@687f282e8625c6b8d11ff58211a90524be2e4317",
+      "task": "context",
+      "variant": "native-remediated",
+      "revision": "19ae63d03c894f0f67d8ec3cc32157fb935ade34",
+      "fixture_revision": "26c22faf22d68cdcd969c8526f74d410aa4b2208",
+      "scorer_hidden": true,
+      "kernel_version": "0.1.46",
+      "tool_commit": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
+      "agent_elapsed_ms": 124801,
+      "exit_code": 0,
+      "timed_out": false,
+      "source_clean": true,
+      "independent_check_exit": 0,
+      "status": "independently-verified",
+      "execution_qualified": true,
+      "repository_dod_qualified": false,
+      "human_acceptance": "pending",
+      "independent_delivery_qualified": true,
+      "projected_evidence_incomplete": true,
+      "native_catalog": [],
+      "observed_skill_uses": [
+        {
+          "tool": "skill",
+          "input": {
+            "name": "verification-tiers"
+          }
+        }
+      ],
+      "observed_passed_checks": [
+        "node --test test/context-map.test.mjs"
+      ],
+      "required_checks": {
+        "suite": false,
+        "example": true
+      },
+      "attempted_checks": {
+        "suite": true,
+        "example": true
+      },
+      "model": null,
+      "usage": {
+        "inputTokens": 35005,
+        "outputTokens": 8408,
+        "cacheReadTokens": 429312,
+        "cacheWriteTokens": 0,
+        "totalTokens": 472725
+      },
+      "trace": ".harness/native-evals/2026-10-25/dsh-remediated/trace.jsonl",
+      "trace_sha256": "ba856a8e3ad4954afc50ac4d747d4b8b84b9b90890f7a087bd8243fd692f88db"
+    }
+  ],
+  "limits": [
+    "Small sample; conditions and revisions differ; no causal or cross-provider performance claim.",
+    "Task execution and mandatory repository checks are distinct; human acceptance is pending.",
+    "Usage keeps provider fields; missing usage is null; elapsed time is CLI time, not end-to-end time-to-green."
+  ]
+}

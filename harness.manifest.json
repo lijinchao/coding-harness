@@ -1,9 +1,9 @@
 {
-  "version": "0.1.45",
+  "version": "0.1.47",
   "tool": {
-    "version": "0.1.45",
+    "version": "0.1.47",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c"
+    "commit": "122c44d45e4ae39ae1959620959a624a2a609051"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -39,6 +39,42 @@
       "sources": [
         "base:REVIEW.base.md"
       ]
+    },
+    {
+      "output": ".agents/skills/test-driven-development/SKILL.md",
+      "sources": [
+        "base:skills/test-driven-development/SKILL.md"
+      ]
+    },
+    {
+      "output": ".agents/skills/writing-a-gate/SKILL.md",
+      "sources": [
+        "base:skills/writing-a-gate/SKILL.md"
+      ]
+    },
+    {
+      "output": ".agents/skills/verification-tiers/SKILL.md",
+      "sources": [
+        "base:skills/verification-tiers/SKILL.md"
+      ]
+    },
+    {
+      "output": ".claude/skills/test-driven-development/SKILL.md",
+      "sources": [
+        "base:skills/test-driven-development/SKILL.md"
+      ]
+    },
+    {
+      "output": ".claude/skills/writing-a-gate/SKILL.md",
+      "sources": [
+        "base:skills/writing-a-gate/SKILL.md"
+      ]
+    },
+    {
+      "output": ".claude/skills/verification-tiers/SKILL.md",
+      "sources": [
+        "base:skills/verification-tiers/SKILL.md"
+      ]
     }
   ],
   "skills": [
@@ -65,10 +101,10 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.45 plus this delta",
-      "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
+      "protects": "all composed instructions and native skill exports match their pinned sources",
+      "prove_fires": "corrupt a native skill export, then verify drift fails and sync restores it",
       "severity": "blocking",
-      "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
+      "prove_fires_command": "printf '\\n<!-- prove -->\\n' >> .agents/skills/verification-tiers/SKILL.md",
       "revert_command": "./harness sync --manifest harness.manifest.json",
       "expect": {
         "forbid": [
@@ -261,7 +297,9 @@
         "harness",
         "harness.manifest.json",
         ".github/**",
-        ".gitignore"
+        ".gitignore",
+        ".agents/**",
+        ".claude/**"
       ],
       "requires": [
         "harness-drift",
@@ -370,6 +408,14 @@
     "changes": "docs/changes",
     "docs": [
       {
+        "path": "docs/native-agent-pilot.md",
+        "maxBytes": 12000
+      },
+      {
+        "path": "docs/native-agents.md",
+        "maxBytes": 9000
+      },
+      {
         "path": "docs/review-0.1.45.md",
         "maxBytes": 7000
       },
@@ -474,9 +520,9 @@
     }
   },
   "lock": {
-    "version": "0.1.45",
+    "version": "0.1.47",
     "tool": {
-      "version": "0.1.45",
+      "version": "0.1.47",
       "files": {
         "bin/harness.mjs": "dac5e01504ba58df73ba43ffd80cd43c2a6264724159ad30398f43075c7bc62b",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
@@ -496,7 +542,7 @@
         "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
         "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
         "src/proof.mjs": "af56a190eeef321d30e2fce82e34b1b3f7f3fd978972cb4dbf1dd846f65924cf",
-        "src/prove.mjs": "f99e435f18cbe69c598aec98c823c567573ffc1220d50e19ab4b84b3df45ad82",
+        "src/prove.mjs": "8cc3d33f819fdfd7d08c3df3729f13c6af755fb4099fbd5ae0725b66cf083b8b",
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/select.mjs": "bd3fd4063c4422e284966e8c286d2472dce97925501ee054ec3ee544ef980c6e",
@@ -509,23 +555,29 @@
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
         "src/workflow.mjs": "3a11dc98d197897f900c85d85928354dadb16196e113e77e59c2520c8f51e64e",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "66368314ab0761c878b6e5462e024ab3c098bf25f5188dc2530e9aa5d347674b"
+        "package.json": "2e8b3732e4b57ae216f66d2509bc71d28457174a85821eea8769f677fc7db4fb"
       },
-      "commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c"
+      "commit": "122c44d45e4ae39ae1959620959a624a2a609051"
     },
     "outputs": {
-      "AGENTS.md": "ec0823820eefd69d45ae279ada36bc47566c396acfe792c0e44c8fa3f3fe21f6",
-      "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
+      "AGENTS.md": "4be2d6fdf4dcb7d5f19fa328198cf9a1f46b6863d5165fda52647060344b0f30",
+      "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
+      ".agents/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
+      ".agents/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
+      ".agents/skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527",
+      ".claude/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
+      ".claude/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
+      ".claude/skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527"
     },
     "base": {
-      "version": "0.1.45",
+      "version": "0.1.47",
       "files": {
         "AGENTS.base.md": "997ba570678141d8be247c93705448fa1a39020f43ee6fd20d549e66972a6327",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "e27ac3672d30adb34fd07260d4336f616a5535cd69b97691abdeaf9c3e4d63e4",
+        "VERSION": "339576cb65d219c73663037939204654d18f39683f3b38ed72ecd3edba722f57",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
-        "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
+        "skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527",
         "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
         "templates/change-record.md": "b65a4e185e03968fb931745dfbbf28e64b632e64e092e0fed4a9dce08a73a217",
         "templates/decision-record.md": "42649218463664519be18ed153b865ee90fc978022e94c50d17be5965b5deb45",
@@ -547,53 +599,53 @@
     },
     "proofs": {
       "harness-drift": {
-        "at": "2026-10-25T08:04:19.962Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
-        "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
+        "at": "2026-10-25T13:00:57.020Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
+        "definition": "132e6590cd01239c68d753a964c9b1418f7e864e8d1e2cb77ca31e1af0a63af9"
       },
       "doctor": {
-        "at": "2026-10-25T08:04:21.402Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:00:58.470Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "6ff094309c342c1070ef98af62f505887eecdd1bd1c12ec8958245b90646fac2"
       },
       "validate": {
-        "at": "2026-10-25T08:04:22.781Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:00:59.850Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
       },
       "tests": {
-        "at": "2026-10-25T08:05:39.054Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:02:29.702Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
       },
       "release": {
-        "at": "2026-10-25T08:05:39.521Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:02:30.374Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "6785a37bd333f993d80f3878f782b8d3d74597b7b3e4361a4f50cebdf7c817b1"
       },
       "example": {
-        "at": "2026-10-25T08:05:41.758Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:02:32.858Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
       },
       "metrics": {
-        "at": "2026-10-25T08:05:44.308Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:02:35.594Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
       },
       "release-ready": {
-        "at": "2026-10-25T08:05:43.169Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:02:34.358Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
       },
       "command-review": {
-        "at": "2026-10-25T08:05:46.530Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:02:37.930Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "555fe9389f59ff92fa4576a4c0eb790e2087ba6dc2e06faf584be91d6e00c03a"
       },
       "delivery-flow/plan": {
-        "at": "2026-10-25T08:07:45.600Z",
-        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "at": "2026-10-25T13:02:38.439Z",
+        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
         "definition": "842b8b0a30c3ce341c445cc086249ba8129afb0b38293de7c0d4b01c02eb3326"
       }
     }
