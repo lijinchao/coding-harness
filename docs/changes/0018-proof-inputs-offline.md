@@ -38,3 +38,6 @@ Pre-merge review found a numeric-filename ordering false stale despite both
 initial CIs passing. The new regression failed on a freshly created snapshot;
 sorting both key sets fixes it. Full offline suite then passed 292 / 0.
 Publish 0.1.49 rather than modifying 0.1.48, and refresh the final pins/proofs.
+Final 0.1.49 offline gates: 292 pass / 0 fail, 10/10 gate verdicts; all ten
+isolated fault proofs refreshed at c5fb3cd and the 0.1.49 attestation verifies.
+The published module also passes the numeric-filename reproducer directly.

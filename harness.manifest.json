@@ -780,8 +780,8 @@
     ],
     "proofs": {
       "harness-drift": {
-        "at": "2026-10-25T13:55:55.245Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:16:33.425Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "2839744b9b2c92cd12685061f9d54d54f4713a8fd5b7547fb7825aa34b13f463",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
@@ -789,15 +789,15 @@
           "src/fetch.mjs": "a32bf52873d23f3877d5a2e6e86d4f5f3c348d4aebfc1bb1003393132c3659e0",
           "src/pack.mjs": "6de1f9152017bdf89a44a44fa62fe88392aebdbb7567d9a3efa270e8dccc7c6c",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
           "src/shim.mjs": "ec87aa104ff9c9737173e71a5b7fd45c45762699317c488f3a7012c682386166",
           "src/state.mjs": "a63084baa55e4bffdad199d5161707ea66b8404ff742ecd3296feaff4f149aeb",
           "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561"
         }
       },
       "doctor": {
-        "at": "2026-10-25T13:55:56.659Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:16:35.014Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "a3a90283a8132c853690652086834618b265dbe73f00be82d90f99a581bac33b",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
@@ -809,12 +809,12 @@
           "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
           "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236"
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
         }
       },
       "validate": {
-        "at": "2026-10-25T13:55:57.966Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:16:36.469Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "85883936543f45260613633b1dfa0e80f3a262058c41e384318e9b1f3ae224f6",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
@@ -822,16 +822,16 @@
           "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
           "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236"
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
         }
       },
       "tests": {
-        "at": "2026-10-25T13:57:20.753Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:18:04.961Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "d02b64a46a8ecf83385511144101fa4a072714a5d12e35ff75a3d265b7be9b14",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
-          "package.json": "87a33bdb5115bad6f1d8749dec74f131d5c22ae2380cd185ff79e9be73d00629",
+          "package.json": "c4c64038c2dd23dfcbd99bf356f3e0f79df2822b724b3ec6474934078c6f337b",
           "scripts/capture-delivery-pilot.mjs": "48ce17f972621de1a2a9fe771ba87169b9447dd0c8893f543447c4b962f677e7",
           "scripts/check-command-review.mjs": "079a44dc5a670202b0235a863415a8e732b94a551bfbbbf959002534cc941665",
           "scripts/check-delivery.mjs": "e8c687c3d476ebf3b4884c9bdb6972ac44f8f00da7cbe8738f894021f521fd12",
@@ -852,7 +852,7 @@
           "src/pack.mjs": "6de1f9152017bdf89a44a44fa62fe88392aebdbb7567d9a3efa270e8dccc7c6c",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
           "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
           "src/prove.mjs": "8cc3d33f819fdfd7d08c3df3729f13c6af755fb4099fbd5ae0725b66cf083b8b",
           "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
           "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
@@ -894,7 +894,7 @@
           "test/postmortems.test.mjs": "517e8eff72aa219a3f0a9cb182fe2f22f3f9ad5b06dabb11de997ee6a04db4fb",
           "test/product.test.mjs": "ce20a4438c0a2f9af9a9e206b856d762796c0e48e04c6655662f389f98da1f46",
           "test/proof-failure-boundary.test.mjs": "91b17d3105771ea1ec8ab91f09fd48e4536a69e53f6f5fd45a0c44dd36614126",
-          "test/proof-inputs.test.mjs": "087aff9089d2a4a5cab2817a922620fec7b7b0149fde26510929b7196957752e",
+          "test/proof-inputs.test.mjs": "7b3c8ecd3dae885dcd3679dc88e15eda6b11014bf5883f6a9139c6e8dbe211d2",
           "test/proofs.test.mjs": "ccdc4b87ef954a9165848cdd029cba631123d35758ba15f9e79c23ba1d2ae5b3",
           "test/scan-prove.test.mjs": "22af8e1e0d41f7570396ccd90e8a16d94d9cacbbf9c4cd54096c028eab897b9e",
           "test/schema-agreement.test.mjs": "1b519c47fa9a9eb8a2298f99910d3de3745bf1a1c9a7090e3ac082dda6d18e9e",
@@ -911,19 +911,19 @@
         }
       },
       "release": {
-        "at": "2026-10-25T13:57:21.266Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:18:05.440Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "e0631859b8b88c0536c727e35cc97bcc447b858212c5a297bf6fc1fbba73b379",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
           "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75"
         }
       },
       "example": {
-        "at": "2026-10-25T13:57:23.594Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:18:07.612Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "ed81b9a29063bb3cc30ced45ccc0be8a5290bcc9e83d314e724107b725f4cc5d",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
@@ -931,24 +931,24 @@
           "src/fetch.mjs": "a32bf52873d23f3877d5a2e6e86d4f5f3c348d4aebfc1bb1003393132c3659e0",
           "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
           "src/state.mjs": "a63084baa55e4bffdad199d5161707ea66b8404ff742ecd3296feaff4f149aeb"
         }
       },
       "metrics": {
-        "at": "2026-10-25T13:57:26.351Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:18:10.167Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "2affe866030a8ed21c601360fa60b7d71ae645e0baa01b797e8f4a254d67db26",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
           "src/metrics.mjs": "f3d1bf431ea0e5b8fdf7eee6ca8a0d3605b45fadedd17df8074d1bfaca346b82",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236"
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
         }
       },
       "release-ready": {
-        "at": "2026-10-25T13:57:25.132Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:18:09.034Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "49cfa1ff59d896a45fa96c2a11adacce17a7bdced47c04a06e182cac5d9ea297",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
@@ -960,12 +960,12 @@
           "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
           "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236"
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
         }
       },
       "command-review": {
-        "at": "2026-10-25T13:57:28.732Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:18:12.389Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "538865f79630c00820edb71ca9baf23767d0b098d64c97f8131d69cd126a9fff",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
@@ -973,12 +973,12 @@
           "scripts/check-command-review.mjs": "079a44dc5a670202b0235a863415a8e732b94a551bfbbbf959002534cc941665",
           "src/command-review.mjs": "cf62b228512df4f6ec00e4021fb81dc0fba58f46bf5dcc26af502e20fb7c4f8c",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
-          "src/proof.mjs": "26b976d9cc6d1c24983c436bd44bb99ddf5b1c189aa92c2b5ca345f924c89236"
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
         }
       },
       "delivery-flow/plan": {
-        "at": "2026-10-25T13:57:29.268Z",
-        "tool": "684bbc3b796dd871a4c5ef08b42500b671d19734",
+        "at": "2026-10-25T14:18:12.876Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "44b96947830f543b09fba18231b086a90688d88c5c8a9867a16532206990d401",
         "inputs": {
           "dist/packs/delivery-flow/base@0.1.1/check.mjs": "062e5103eed0a0caff13f5389385885731edfb4b7bcb8dfd3e09cf3f6c4f7620",
