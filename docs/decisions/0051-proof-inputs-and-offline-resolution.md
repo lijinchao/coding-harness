@@ -53,3 +53,8 @@ failures because fixture setup inherited HARNESS_OFFLINE=1 while intentionally
 testing cold local file:// clones. Isolate only those fixture environments;
 retain all assertions and dedicated offline refusal tests. This does not
 relax the tool's offline policy or claim to sandbox arbitrary test commands.
+
+Pre-merge review departure: both first PR CIs passed, but numeric filenames
+revealed JavaScript integer-key enumeration differs from lexical order. Add
+a regression, compare sorted key sets on both sides, and publish 0.1.49 rather
+than modifying immutable 0.1.48. Refresh the same consumer pins/proofs again.
