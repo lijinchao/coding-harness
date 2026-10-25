@@ -26,3 +26,6 @@ First whole-suite offline diagnostic: 287 pass / 4 fail; cold local file://
 fixture setup inherited the caller's offline policy. Its explicit construction
 environment is now isolated, preserving refusal and integrity assertions.
 No new proofs were recorded from the failed isolated proof attempt.
+After fixture isolation, full offline gates pass with 291 tests / 0 failures;
+all ten input-bound isolated proofs fired and recovered. Strict doctor,
+example check, proof freshness (10/10 inputs) and attestation verify at 0.1.48.

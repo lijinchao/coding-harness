@@ -95,3 +95,5 @@ The pinned tool includes packs, legibility and eval declarations, and system
 checks, runs and CI observations. GitLab collaboration observation is released
 and tested with a fake transport; target-instance compatibility and CI artifact
 provenance remain unverified. YAML manifest support is deferred.
+Explicit [proof inputs and offline caches](docs/proof-inputs-offline.md) are
+supported; legacy proofs do not automatically bind checker implementations.
