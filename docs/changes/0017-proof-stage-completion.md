@@ -22,5 +22,9 @@ against the fixed source CLI; no cached-tool path remains in the test.
 After correction, the targeted run is 16 passed / 0 failed; the full suite
 before release is 277 passed / 0 failed. Release 0.1.47 is a new artifact,
 not an edit to any published release.
+The published tool was also run against the original review fixture: its
+result is now `status=error`, `gate timed out after revert`, rather than ok.
+All ten isolated failure/recovery proofs passed with tool 0.1.47, and strict
+doctor, proof freshness and the newly generated 0.1.47 attestation verified.
 The targeted integration run, full suite, released-tool pins, isolated proofs
 and attestation are verified before the authorized PR stack is merged.
