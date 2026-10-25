@@ -599,52 +599,52 @@
     },
     "proofs": {
       "harness-drift": {
-        "at": "2026-10-25T09:14:29.091Z",
+        "at": "2026-10-25T09:39:10.516Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "132e6590cd01239c68d753a964c9b1418f7e864e8d1e2cb77ca31e1af0a63af9"
       },
       "doctor": {
-        "at": "2026-10-25T09:14:30.511Z",
+        "at": "2026-10-25T09:39:11.908Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "6ff094309c342c1070ef98af62f505887eecdd1bd1c12ec8958245b90646fac2"
       },
       "validate": {
-        "at": "2026-10-25T09:14:31.841Z",
+        "at": "2026-10-25T09:39:13.208Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
       },
       "tests": {
-        "at": "2026-10-25T09:16:07.576Z",
+        "at": "2026-10-25T09:40:28.094Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
       },
       "release": {
-        "at": "2026-10-25T09:16:08.052Z",
+        "at": "2026-10-25T09:40:28.551Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "6785a37bd333f993d80f3878f782b8d3d74597b7b3e4361a4f50cebdf7c817b1"
       },
       "example": {
-        "at": "2026-10-25T09:16:10.297Z",
+        "at": "2026-10-25T09:40:30.803Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
       },
       "metrics": {
-        "at": "2026-10-25T09:16:12.877Z",
+        "at": "2026-10-25T09:40:33.363Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
       },
       "release-ready": {
-        "at": "2026-10-25T09:16:11.694Z",
+        "at": "2026-10-25T09:40:32.208Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
       },
       "command-review": {
-        "at": "2026-10-25T09:16:15.253Z",
+        "at": "2026-10-25T09:40:35.620Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "555fe9389f59ff92fa4576a4c0eb790e2087ba6dc2e06faf584be91d6e00c03a"
       },
       "delivery-flow/plan": {
-        "at": "2026-10-25T09:16:15.736Z",
+        "at": "2026-10-25T09:40:36.098Z",
         "tool": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7",
         "definition": "842b8b0a30c3ce341c445cc086249ba8129afb0b38293de7c0d4b01c02eb3326"
       }

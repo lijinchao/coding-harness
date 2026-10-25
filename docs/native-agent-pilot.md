@@ -14,6 +14,7 @@
 改为原生 verification-tiers 导出文件，已看到它失败并在 sync 后恢复。
 AGENTS.delta 为评审任务显式路由到 REVIEW。没有新建 CLAUDE.md 兼容副本，
 没有修改全局 Agent 配置、全局安装、game-design 或 DSH 的源码。
+任务副本使用已校验依赖缓存的私有拷贝；这不是新机器的远端冷启动测试。
 
 上一轮 Claude 入口判断过时：官方文档说明 2.1.277 起支持 AGENTS.md；当前仍
 受内置插件与加载模式影响。本机安装 2.1.71，本次临时运行固定的 2.1.310。
@@ -73,6 +74,14 @@ usage 与缺失状态；可离线重算，不调用模型。独立日志另外�
 首批观测以 kind=delivery-outcome 追加到同一 docs/metrics.jsonl，按 case 去重；
 不会混入默认 gate-health 窗口。首次不完整观测不因后来复验而被悄悄改绿。
 这些是混合环境下的流程观测，不能当跨模型正确率或自动晋升依据。
+
+维护仓库最终复证还曾因新 manifest 条目的 JSON 排版被 sync 规范化而拒绝
+恢复成功。该次未记录新证明；先 sync 并提交规范化结果，再重新隔离复证。
+
+最终维护分支验证：完整 `npm test` 为 264 passed / 0 failed；十个 gate
+全部通过，十个隔离故障注入证明全部触发并恢复。self check 为八个组合输出、
+example check 为两个，均匹配 0.1.46；doctor --strict、prove --check 与
+attestation 校验通过。这些是本地证据，不代表远端 CI 或三端产品 E2E 已通过。
 
 DSH 基线 provider totalTokens 为 522095，首个原生组为 259089；二者所做工作
 不同，初版 treatment 还可读取 evaluator、基线没有它。后续 fixture 隐去
