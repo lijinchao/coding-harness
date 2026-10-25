@@ -43,7 +43,13 @@ Commit this plan before implementation. The change is complete when negative
 tests fail for missing behavior, the released pack passes conformance with
 failure injection and revert, the self pilot reports pending human acceptance,
 the full suite and example check pass, and a report names the remaining gaps.
-No tag, remote push, product feature, or claimed human approval is part of it.
+No remote push, product feature, or claimed human approval is part of it.
+The first real pack proof exposed a kernel writeback bug: `prove --record`
+serialized merged contributions into the raw manifest. Fix recording and test
+the adjacent pack upgrade path, then create a local 0.1.42 release/tag and move
+the self/example pins to it. Populate caches from the same local tag while it
+is unpublished; keep the recorded remote source unchanged. This adds a local
+kernel release because continuing to pin the broken writer defeats the trial.
 
 ## Plan
 
