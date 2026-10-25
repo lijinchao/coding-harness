@@ -39,6 +39,42 @@
       "sources": [
         "base:REVIEW.base.md"
       ]
+    },
+    {
+      "output": ".agents/skills/test-driven-development/SKILL.md",
+      "sources": [
+        "base:skills/test-driven-development/SKILL.md"
+      ]
+    },
+    {
+      "output": ".agents/skills/writing-a-gate/SKILL.md",
+      "sources": [
+        "base:skills/writing-a-gate/SKILL.md"
+      ]
+    },
+    {
+      "output": ".agents/skills/verification-tiers/SKILL.md",
+      "sources": [
+        "base:skills/verification-tiers/SKILL.md"
+      ]
+    },
+    {
+      "output": ".claude/skills/test-driven-development/SKILL.md",
+      "sources": [
+        "base:skills/test-driven-development/SKILL.md"
+      ]
+    },
+    {
+      "output": ".claude/skills/writing-a-gate/SKILL.md",
+      "sources": [
+        "base:skills/writing-a-gate/SKILL.md"
+      ]
+    },
+    {
+      "output": ".claude/skills/verification-tiers/SKILL.md",
+      "sources": [
+        "base:skills/verification-tiers/SKILL.md"
+      ]
     }
   ],
   "skills": [
@@ -65,10 +101,10 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.45 plus this delta",
-      "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
+      "protects": "all composed instructions and native skill exports match their pinned sources",
+      "prove_fires": "corrupt a native skill export, then verify drift fails and sync restores it",
       "severity": "blocking",
-      "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
+      "prove_fires_command": "printf '\\n<!-- prove -->\\n' >> .agents/skills/verification-tiers/SKILL.md",
       "revert_command": "./harness sync --manifest harness.manifest.json",
       "expect": {
         "forbid": [
@@ -261,7 +297,9 @@
         "harness",
         "harness.manifest.json",
         ".github/**",
-        ".gitignore"
+        ".gitignore",
+        ".agents/**",
+        ".claude/**"
       ],
       "requires": [
         "harness-drift",
@@ -514,8 +552,14 @@
       "commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c"
     },
     "outputs": {
-      "AGENTS.md": "ec0823820eefd69d45ae279ada36bc47566c396acfe792c0e44c8fa3f3fe21f6",
-      "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
+      "AGENTS.md": "4be2d6fdf4dcb7d5f19fa328198cf9a1f46b6863d5165fda52647060344b0f30",
+      "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
+      ".agents/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
+      ".agents/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
+      ".agents/skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
+      ".claude/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
+      ".claude/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
+      ".claude/skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41"
     },
     "base": {
       "version": "0.1.45",
