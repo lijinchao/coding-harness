@@ -52,6 +52,9 @@ No tag, remote push, product feature, or claimed human approval is part of it.
    first local hashed release and exercise it through the existing pack loader.
 3. Add a self-hosted pilot and conformance journey, including deliberate gate
    failure and recovery, without changing the pinned kernel release.
+   The isolated suite exposed a process-global temporary-directory assertion:
+   another caller's directory was mistaken for a leak. Add deterministic
+   interference to its regression test and assert cleanup of the owned export.
 4. Run existing offline game-design verification and inspect its CI/entrypoints.
 5. Document real findings and adoption mapping, verification output, and the
    unimplemented boundaries (execution capture, authenticated approval, metrics
