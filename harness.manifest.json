@@ -304,6 +304,16 @@
     }
   ],
   "governance": {
+    "context": {
+      "entrypoint": "AGENTS.md",
+      "sources": [
+        {"id": "map", "path": "docs/index.md", "scope": ["**"], "when": "before locating a source", "authority": "knowledge-map"},
+        {"id": "direction", "path": "docs/direction.md", "scope": ["src/**", "packs/**"], "when": "before changing product boundaries", "authority": "product-direction"},
+        {"id": "status", "path": "docs/roadmap.md", "scope": ["**"], "when": "before planning an iteration", "authority": "current-capabilities"},
+        {"id": "schema", "path": "schema/harness.manifest.schema.json", "scope": ["src/**", "schema/**"], "when": "before changing a manifest field", "authority": "manifest-schema"},
+        {"id": "release", "path": "docs/release.md", "scope": ["base/**", "dist/**", "bin/**", "src/**"], "when": "before distributing artifacts", "authority": "release-protocol"}
+      ]
+    },
     "decisions": "docs/decisions",
     "owners": [
       "@lijinchao"
@@ -313,6 +323,9 @@
     ],
     "changes": "docs/changes",
     "docs": [
+      {"path": "AGENTS.md", "maxBytes": 8192},
+      {"path": "docs/index.md", "maxBytes": 4096},
+      {"path": "docs/context.md", "maxBytes": 4096},
       {
         "path": "docs/game-design-adoption.md",
         "maxWords": 1100

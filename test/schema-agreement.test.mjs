@@ -14,6 +14,9 @@ const KEY_GROUPS = [
   ['PRODUCT_KEYS', items.product.properties],
   ['PRODUCT_VERSION_KEYS', items.product.properties.version.properties],
   ['GOVERNANCE_KEYS', items.governance.properties],
+  ['DOC_KEYS', items.governance.properties.docs.items.properties],
+  ['CONTEXT_KEYS', items.governance.properties.context.properties],
+  ['CONTEXT_SOURCE_KEYS', items.governance.properties.context.properties.sources.items.properties],
   ['COMPOSITION_KEYS', items.compositions.items.properties],
   ['SKILL_KEYS', items.skills.items.properties],
   ['GATE_KEYS', items.gates.items.properties],
@@ -31,6 +34,7 @@ for (const [name, properties] of KEY_GROUPS) {
 }
 
 test('the schema and the validator agree on the required fields', () => {
+  assert.deepEqual([...contract.CONTEXT_SOURCE_FIELDS].sort(), [...items.governance.properties.context.properties.sources.items.required].sort())
   assert.deepEqual([...contract.SKILL_FIELDS].sort(), [...items.skills.items.required].sort())
   assert.deepEqual([...contract.GATE_FIELDS].sort(), [...items.gates.items.required].sort())
   assert.deepEqual([...contract.SURFACE_FIELDS].sort(), [...items.surfaces.items.required].sort())

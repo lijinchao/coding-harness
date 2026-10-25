@@ -298,8 +298,8 @@ function changedFiles(root, options) {
   const changed = options.changed ?? []
   if (changed.length > 0) return changed
   if (typeof options.since === 'string') {
-    const out = execFileSync('git', ['-C', root, 'diff', '--name-only', options.since + '...HEAD'], { encoding: 'utf8' })
-    return out.split('\n').filter(Boolean)
+    const out = execFileSync('git', ['-C', root, 'diff', '--name-only', '-z', options.since + '...HEAD'], { encoding: 'utf8' })
+    return out.split('\0').filter(Boolean)
   }
   throw new Error('missing --since <ref> or --changed <path>')
 }

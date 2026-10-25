@@ -4,6 +4,7 @@ import { adoptionProblems } from './adopt.mjs'
 import { decisionProblems, documentProblems, instructionProblems, postmortemProblems, surfaceCoverageProblems } from './documents.mjs'
 import { productProblems } from './product.mjs'
 import { proofIdProblems } from './proof.mjs'
+import { contextProblems } from './context.mjs'
 
 const DECISION_SECTIONS = ['Problem', 'Decision', 'Alternatives', 'Consequences']
 const CHANGE_SECTIONS = ['Verification']
@@ -32,6 +33,7 @@ export function doctorReport(root, manifest, requirements) {
   if (manifest.surfaces !== undefined) problems.push(...surfaceCoverageProblems(root, manifest.surfaces))
 
   const governance = manifest.governance
+  problems.push(...contextProblems(root, governance))
 
   // An owner nobody routes to is not an owner, whether or not governance is declared.
   const skillOwners = (manifest.skills ?? []).map((skill) => skill?.owner).filter((owner) => typeof owner === 'string')

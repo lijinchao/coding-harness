@@ -141,6 +141,9 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 
 ### Metrics budget
 
+The optional context map and UTF-8 byte budget are checked by doctor; their
+fields, navigation rules and limitations are defined in [context.md](context.md).
+
 | Field | Meaning |
 |---|---|
 | `governance.metrics` | The committed log of gate runs a window budget judges, and its limits |
