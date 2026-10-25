@@ -407,7 +407,10 @@
     ],
     "changes": "docs/changes",
     "docs": [
-      {"path": "docs/native-agent-pilot.md", "maxBytes": 12000},
+      {
+        "path": "docs/native-agent-pilot.md",
+        "maxBytes": 12000
+      },
       {
         "path": "docs/native-agents.md",
         "maxBytes": 9000
