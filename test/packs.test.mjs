@@ -8,7 +8,9 @@ import { join, resolve } from 'node:path'
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
 function run(args) {
-  return execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8' })
+  // Cold file:// fixture setup is explicitly online-capable; no remote URL is
+  // used here. Dedicated offline tests retain and verify the refusal policy.
+  return execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8', env: { ...process.env, HARNESS_OFFLINE: '0' } })
 }
 
 function fails(args) {

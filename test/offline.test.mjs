@@ -75,8 +75,13 @@ test('base and pack resolution reuse main-worktree caches and still verify bytes
   const main = join(root, 'main'); init(main)
   writeFileSync(join(main, '.gitignore'), '.harness/\n'); commit(main)
   const url = 'git:' + source
-  const cached = ensureGitCheckout(url, '0.0.1', join(main, '.harness'))
-  ensureGitCheckout(url, '0.0.1', join(main, '.harness'), 'pack/sample/v0.0.1')
+  const inherited = process.env.HARNESS_OFFLINE
+  let cached
+  process.env.HARNESS_OFFLINE = '0'
+  try {
+    cached = ensureGitCheckout(url, '0.0.1', join(main, '.harness'))
+    ensureGitCheckout(url, '0.0.1', join(main, '.harness'), 'pack/sample/v0.0.1')
+  } finally { if (inherited === undefined) delete process.env.HARNESS_OFFLINE; else process.env.HARNESS_OFFLINE = inherited }
   const worktree = join(root, 'worktree'); git(main, 'worktree', 'add', '--detach', worktree)
   const previous = process.env.HARNESS_OFFLINE; process.env.HARNESS_OFFLINE = '1'
   try {

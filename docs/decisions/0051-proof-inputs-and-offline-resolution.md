@@ -47,3 +47,9 @@ legacy proofs under strict input policy, verify cache integrity offline and
 manual-worktree cache reuse, and prove missing dependencies do not contact Git.
 Full suite, pinned example, isolated fault proofs and cold consumer checks remain
 required. Reviewer ownership and actual injected failures are not replaced by hashes.
+
+Observed integration departure: the first offline whole-suite run had four
+failures because fixture setup inherited HARNESS_OFFLINE=1 while intentionally
+testing cold local file:// clones. Isolate only those fixture environments;
+retain all assertions and dedicated offline refusal tests. This does not
+relax the tool's offline policy or claim to sandbox arbitrary test commands.

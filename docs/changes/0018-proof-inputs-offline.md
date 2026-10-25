@@ -21,3 +21,8 @@ applySync, not hand-edited. Explicit input policy is enabled on the self harness
 its delivery-pack gate uses the existing explicit override mechanism rather
 than changing an old pack release. Self/example upgrade, isolated proofs and
 producer attestation complete the release transaction.
+
+First whole-suite offline diagnostic: 287 pass / 4 fail; cold local file://
+fixture setup inherited the caller's offline policy. Its explicit construction
+environment is now isolated, preserving refusal and integrity assertions.
+No new proofs were recorded from the failed isolated proof attempt.

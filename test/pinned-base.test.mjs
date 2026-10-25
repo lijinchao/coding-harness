@@ -9,7 +9,9 @@ import { toolVersion } from '../src/tool.mjs'
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
 function run(args) {
-  return execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8' })
+  // These fixtures intentionally exercise file:// cold clones, not the caller's
+  // dependency policy. Offline refusal is covered separately in offline.test.
+  return execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8', env: { ...process.env, HARNESS_OFFLINE: '0' } })
 }
 
 function manifestPath(dir) {
