@@ -33,3 +33,8 @@ An ordinary manual Git worktree with no private prepopulated cache passed
 offline self check, input freshness (10/10) and attestation by borrowing the
 verified main cache. Consumer evidence independently exercises fourteen full
 offline gates and reproduces checker hollowing as nonzero failures.
+
+Pre-merge review found a numeric-filename ordering false stale despite both
+initial CIs passing. The new regression failed on a freshly created snapshot;
+sorting both key sets fixes it. Full offline suite then passed 292 / 0.
+Publish 0.1.49 rather than modifying 0.1.48, and refresh the final pins/proofs.

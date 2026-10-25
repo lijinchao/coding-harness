@@ -108,7 +108,7 @@ export function proofProblems(manifest, tool, only, root) {
       try {
         const current = snapshotProofInputs(root, gate)
         const held = proofs[gate.id]?.inputs
-        const same = held !== null && typeof held === 'object' && JSON.stringify(Object.keys(held).sort()) === JSON.stringify(Object.keys(current)) && Object.entries(current).every(([path, digest]) => held[path] === digest)
+        const same = held !== null && typeof held === 'object' && JSON.stringify(Object.keys(held).sort()) === JSON.stringify(Object.keys(current).sort()) && Object.entries(current).every(([path, digest]) => held[path] === digest)
         if (!same) problems.push('gate ' + gate.id + ': proof inputs changed or are unbound; run harness prove --record')
       } catch (error) { problems.push('gate ' + gate.id + ': ' + error.message) }
     }

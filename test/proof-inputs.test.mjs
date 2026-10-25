@@ -87,6 +87,16 @@ test('prototype-named tracked inputs are recorded as ordinary paths', t => {
   assert.equal(inputs.__proto__, sha('checker'))
 })
 
+test('integer-like input filenames do not make a fresh snapshot stale', t => {
+  const { root, git, gate, m } = fixture(t)
+  for (const path of ['2', '10']) writeFileSync(join(root, path), 'rule')
+  git('add', '2', '10')
+  gate.proof_inputs = ['2', '10']
+  m.lock.proofs.g.definition = proof.definitionHash(gate)
+  m.lock.proofs.g.inputs = proof.snapshotProofInputs(root, gate)
+  assert.deepEqual(proof.proofProblems(m, tool, undefined, root), [])
+})
+
 test('CLI records checker bytes and gates rejects a hollowed checker', t => {
   const { root, git, m } = fixture(t)
   const path = join(root, 'harness.manifest.json')
