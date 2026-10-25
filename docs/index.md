@@ -13,6 +13,7 @@ own their facts. This map does not copy their contents or authorize actions.
 | Review criteria | [REVIEW.md](../REVIEW.md) | Before code review; findings do not grant approval |
 | Knowledge map declaration | [context contract](context.md) | Before changing context routes or budgets |
 | Context map measurements and limits | [pilot](context-map-pilot.md) | Before claiming token savings or improving routing |
+| Native agent setup and task execution | [native guide](native-agents.md) | Before configuring agent discovery or interpreting native task results |
 | Release / pin / attestation | [release](release.md) | Before distributing or upgrading artifacts |
 | Real consumer results and limits | [game-design pilot](game-design-adoption.md) | Before generalizing consumer practices |
 

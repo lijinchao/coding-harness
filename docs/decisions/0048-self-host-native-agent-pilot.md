@@ -47,3 +47,11 @@ guidance follows skill-creator's concise, progressively disclosed conventions;
 no new universal rules are added from hypothetical failures. Current Claude
 loading mode/provider/plugin availability is recorded separately from version.
 External model use is bounded and opt-in; human product approval remains separate.
+
+Observed departure: the first DSH native run used the skill but omitted this
+repository's mandatory full suite/example. Clarify the pinned tier skill,
+release a new immutable base/tool version 0.1.46, and rerun the native task.
+Score task execution separately from repository DoD compliance. The first native
+run could inspect its evaluator while baseline could not; hide scorer code in
+future private fixtures, record the derived fixture revision, and do not infer
+causal gains from this sample. Preserve all failed infrastructure attempts.

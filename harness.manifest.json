@@ -407,6 +407,7 @@
     ],
     "changes": "docs/changes",
     "docs": [
+      {"path": "docs/native-agents.md", "maxBytes": 9000},
       {
         "path": "docs/review-0.1.45.md",
         "maxBytes": 7000
@@ -591,9 +592,9 @@
     },
     "proofs": {
       "harness-drift": {
-        "at": "2026-10-25T08:04:19.962Z",
+        "at": "2026-10-25T08:54:28.725Z",
         "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
-        "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
+        "definition": "132e6590cd01239c68d753a964c9b1418f7e864e8d1e2cb77ca31e1af0a63af9"
       },
       "doctor": {
         "at": "2026-10-25T08:04:21.402Z",
