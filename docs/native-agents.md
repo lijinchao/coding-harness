@@ -63,3 +63,15 @@ DSH 的解析配置与 DSH_HOME 仅在子进程指定，不改源码或用户全
 仅模型声称通过不能计成功。超时即使进程返回 0 也不计完成；仓库 DoD 另检查
 完整 npm test 与 example check。原生技能的定向检查不能替代这些必需项。
 不要在 prove 借用缓存期间并行写同一缓存或日志。
+
+已有轨迹可离线汇总（不调用模型）：
+
+```sh
+node scripts/native-agent-eval.mjs --summarize .harness/native-evals/2026-10-25 \
+  --out docs/native-agent-pilot.results.json
+```
+
+投影被截断时，可用 --verify-delivery <某次报告目录> 在相同干净 fixture 上
+独立执行完整测试与 example；随后重新汇总，独立复验与原生投影状态分开保留。
+--metrics docs/metrics.jsonl 将首批观测按 case 去重追加为 delivery-outcome；
+默认 gate-health 窗口不会混入它们，后续复验不会覆盖首次观测。

@@ -1,13 +1,14 @@
 {
   "schema_version": "coding-harness.delivery/v1",
-  "id": "integration-and-proof-boundaries",
-  "outcome": "The integrated tool preserves upstream capabilities and publishes verifiable context, delivery and proof behavior for owner review.",
-  "design": "docs/decisions/0047-integrate-and-review-before-pr.md",
+  "id": "native-agent-self-pilot",
+  "outcome": "Expose pinned native skills and qualify actual repository task evidence without mistaking discovery, partial runs, or infrastructure failures for accepted delivery.",
+  "design": "docs/decisions/0048-self-host-native-agent-pilot.md",
   "constraints": [
-    "Zero runtime dependencies",
-    "Keep published versions immutable",
-    "No self-approval, automatic merge or game product changes",
-    "Separate local evidence from remote CI and human acceptance"
+    "No runtime dependencies added",
+    "Do not edit generated files or old releases",
+    "No global agent configuration changes, game changes or remote publishing",
+    "Model calls remain opt-in and bounded; raw traces stay untracked",
+    "Native support, task execution, repository DoD and human acceptance are distinct"
   ],
   "scope": [
     "src",
@@ -21,79 +22,63 @@
     "docs",
     "README.md",
     "harness.manifest.json",
-    "examples/consumer"
+    "examples/consumer",
+    ".agents",
+    ".claude",
+    "AGENTS.delta.md"
   ],
   "acceptance": [
     {
       "id": "AC-01",
-      "description": "Upstream capabilities and CLI inventory survive integration",
+      "description": "Native skills are composed from one pinned source and drift is detected",
       "checks": [
-        "suite"
+        "pins"
       ]
     },
     {
       "id": "AC-02",
-      "description": "Interrupted or unrestored failures cannot create successful proofs",
+      "description": "Incomplete, truncated or self-asserted evidence cannot satisfy the scorer",
       "checks": [
-        "proofs"
+        "scoring"
       ]
     },
     {
       "id": "AC-03",
-      "description": "Containment rejects Windows parent/sibling/drive escapes",
+      "description": "Task and repository delivery qualification are distinct",
       "checks": [
-        "paths"
+        "unit-grading"
       ]
     },
     {
       "id": "AC-04",
-      "description": "Proof qualification reaches both metrics summaries",
+      "description": "Agent attempts retain versions, traces, blocked cases and independent checks",
       "checks": [
-        "metrics"
+        "scoring"
       ]
     },
     {
       "id": "AC-05",
-      "description": "Immutable release and consumer pins validate",
+      "description": "Existing repository regressions remain green",
       "checks": [
-        "pins",
         "suite"
       ]
     }
   ],
   "checks": [
     {
-      "id": "suite",
+      "id": "scoring",
       "tier": "integration",
-      "command": "npm test",
+      "command": "node --test test/native-eval.test.mjs",
       "test_files": [
-        "test/self-product-status.test.mjs",
-        "test/delivery-flow.test.mjs"
+        "test/native-eval.test.mjs"
       ]
     },
     {
-      "id": "proofs",
-      "tier": "integration",
-      "command": "node --test test/proof-failure-boundary.test.mjs",
-      "test_files": [
-        "test/proof-failure-boundary.test.mjs"
-      ]
-    },
-    {
-      "id": "paths",
+      "id": "unit-grading",
       "tier": "unit",
-      "command": "node --test --test-name-pattern=containment test/context-map.test.mjs",
+      "command": "node --test --test-name-pattern='focused check success' test/native-eval.test.mjs",
       "test_files": [
-        "test/context-map.test.mjs"
-      ]
-    },
-    {
-      "id": "metrics",
-      "tier": "integration",
-      "command": "node --test test/gates.test.mjs test/metrics.test.mjs",
-      "test_files": [
-        "test/gates.test.mjs",
-        "test/metrics.test.mjs"
+        "test/native-eval.test.mjs"
       ]
     },
     {
@@ -104,12 +89,21 @@
         "harness.manifest.json",
         "examples/consumer/harness.manifest.json"
       ]
+    },
+    {
+      "id": "suite",
+      "tier": "integration",
+      "command": "npm test",
+      "test_files": [
+        "test/native-eval.test.mjs",
+        "test/self-product-status.test.mjs"
+      ]
     }
   ],
   "tier_waivers": [
     {
       "tier": "e2e",
-      "reason": "The mapped checks do not test an application or remote GitLab instance. Remote release bootstrap and PR CI are separately verified; no game E2E or owner acceptance is claimed."
+      "reason": "Live provider trials are separately recorded observations, not CI tests or a fully qualified cross-agent product E2E. Provider/network blocks and projected evidence gaps remain explicit."
     }
   ]
 }
