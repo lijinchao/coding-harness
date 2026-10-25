@@ -98,6 +98,7 @@ and report schemas; they do not affect `system-ci` health.
 | `revert_command` | The command that undoes the failure (required for a blocking gate) |
 | `expect` | `forbid` output patterns and the `allow` lines that are benign |
 | `severity` | `blocking` or `advisory` |
+| `proof_inputs` | Tracked checker files binding freshness; [contract](proof-inputs-offline.md) |
 | `phase` | Optional label; an unphased gate runs in every phase |
 | `needs` | Gate ids that must pass before this gate runs |
 | `after` | Gate ids that must finish first; their failure does not skip this gate |

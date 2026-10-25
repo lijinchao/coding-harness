@@ -16,6 +16,7 @@ own their facts. This map does not copy their contents or authorize actions.
 | Native agent setup and task execution | [native guide](native-agents.md) | Before configuring agent discovery or interpreting native task results |
 | Native pilot outcomes and blocked cases | [native pilot](native-agent-pilot.md) | Before claiming cross-agent task success or token savings |
 | Release / pin / attestation | [release](release.md) | Before distributing or upgrading artifacts |
+| Checker proof inputs / offline caches | [input and offline contract](proof-inputs-offline.md) | Before binding checker files or running without dependency downloads |
 | Real consumer results and limits | [game-design pilot](game-design-adoption.md) | Before generalizing consumer practices |
 
 Implementation facts live in `src/`, `bin/`, and `test/`; read them before

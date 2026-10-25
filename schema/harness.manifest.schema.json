@@ -127,6 +127,7 @@
           "additionalProperties": false,
           "properties": {
             "require": { "enum": ["blocking", "all", "none"] },
+            "requireInputs": { "type": "boolean" },
             "maxAgeDays": { "type": "integer", "minimum": 1 }
           }
         }
@@ -182,6 +183,7 @@
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "command": { "type": "string", "minLength": 1 },
+          "proof_inputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
           "protects": { "type": "string", "minLength": 1 },
           "prove_fires": { "type": "string", "minLength": 1 },
           "prove_fires_command": { "type": "string", "minLength": 1 },
@@ -277,7 +279,15 @@
           }
         },
         "outputs": { "type": "object", "additionalProperties": { "type": "string" } },
-        "proofs": { "type": "object", "additionalProperties": { "type": "string" } }
+        "proofs": { "type": "object", "additionalProperties": { "oneOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": false, "required": ["at", "tool", "definition"], "properties": {
+            "at": { "type": "string", "minLength": 1 },
+            "tool": { "type": "string", "minLength": 1 },
+            "definition": { "type": "string", "minLength": 1 },
+            "inputs": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+          } }
+        ] } }
       }
     }
   }

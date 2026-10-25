@@ -1,4 +1,7 @@
 import { createHash } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
+import { lstatSync, readFileSync, realpathSync } from 'node:fs'
+import { isAbsolute, relative, resolve, sep, posix } from 'node:path'
 
 /**
  * The gate fields that decide whether the gate fires.
@@ -6,7 +9,30 @@ import { createHash } from 'node:crypto'
  * Prose such as `protects` is deliberately excluded: rewording what a gate
  * defends does not invalidate the run that watched it fail.
  */
-const DEFINITION_KEYS = ['id', 'command', 'setup_command', 'prove_fires_command', 'revert_command', 'expect', 'severity', 'phase', 'needs', 'after', 'always']
+const DEFINITION_KEYS = ['id', 'command', 'setup_command', 'prove_fires_command', 'revert_command', 'expect', 'severity', 'phase', 'needs', 'after', 'always', 'proof_inputs']
+
+/** Explicit checker files only: no guessed shell dependencies or product-wide hash. */
+export function snapshotProofInputs(root, gate) {
+  if (gate.proof_inputs === undefined) return undefined
+  if (!root) throw new Error('proof inputs require the repository root')
+  const base = realpathSync(root)
+  const tracked = new Set(execFileSync('git', ['-C', root, 'ls-files', '-z'], { encoding: 'utf8', stdio: 'pipe' }).split('\0').filter(Boolean))
+  const entries = [], seen = new Set()
+  for (const path of [...gate.proof_inputs].sort()) {
+    if (typeof path !== 'string' || !path || isAbsolute(path) || /^[A-Za-z]:/.test(path) || /[\\*?\[\]]/.test(path) || path.split('/').includes('..') || posix.normalize(path) !== path) throw new Error('invalid proof input path: ' + path)
+    if (seen.has(path)) throw new Error('duplicate proof input: ' + path)
+    seen.add(path)
+    if (!tracked.has(path)) throw new Error('proof input is not tracked: ' + path)
+    const file = resolve(root, path)
+    try {
+      const info = lstatSync(file)
+      const rel = relative(base, realpathSync(file))
+      if (!info.isFile() || rel === '..' || rel.startsWith('..' + sep) || isAbsolute(rel)) throw new Error('not a regular repository file')
+      entries.push([path, createHash('sha256').update(readFileSync(file)).digest('hex')])
+    } catch (error) { throw new Error('cannot read proof input ' + path + ': ' + error.message) }
+  }
+  return Object.fromEntries(entries)
+}
 
 /**
  * The behavioural definition of a gate.
@@ -64,7 +90,7 @@ export function proofIdProblems(manifest) {
  * @param {Set<string>} [only] - Gate ids to demand when only some are being proved.
  * @returns {string[]}
  */
-export function proofProblems(manifest, tool, only) {
+export function proofProblems(manifest, tool, only, root) {
   const proofs = manifest.lock?.proofs ?? {}
   const problems = proofIdProblems(manifest)
   const policy = manifest.governance?.proofs
@@ -77,6 +103,15 @@ export function proofProblems(manifest, tool, only) {
   for (const gate of manifest.gates) {
     if (only !== undefined && !only.has(gate.id)) continue
     if (scope !== 'all' && gate.severity !== 'blocking') continue
+    if (policy.requireInputs === true && !gate.proof_inputs?.length) problems.push('gate ' + gate.id + ': proof_inputs required by policy')
+    if (gate.proof_inputs !== undefined) {
+      try {
+        const current = snapshotProofInputs(root, gate)
+        const held = proofs[gate.id]?.inputs
+        const same = held !== null && typeof held === 'object' && JSON.stringify(Object.keys(held).sort()) === JSON.stringify(Object.keys(current)) && Object.entries(current).every(([path, digest]) => held[path] === digest)
+        if (!same) problems.push('gate ' + gate.id + ': proof inputs changed or are unbound; run harness prove --record')
+      } catch (error) { problems.push('gate ' + gate.id + ': ' + error.message) }
+    }
     const record = proofs[gate.id]
     if (record === undefined) {
       problems.push('gate ' + gate.id + ': no recorded proof; run harness prove --record')

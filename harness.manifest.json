@@ -110,7 +110,18 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/compose.mjs",
+        "src/fetch.mjs",
+        "src/pack.mjs",
+        "src/process.mjs",
+        "src/proof.mjs",
+        "src/shim.mjs",
+        "src/state.mjs",
+        "src/tool.mjs"
+      ]
     },
     {
       "id": "doctor",
@@ -124,7 +135,19 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/adopt.mjs",
+        "src/artifacts.mjs",
+        "src/context.mjs",
+        "src/doctor.mjs",
+        "src/documents.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/product.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "validate",
@@ -138,7 +161,15 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "schema/harness.manifest.schema.json",
+        "src/artifacts.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "tests",
@@ -152,7 +183,87 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "package.json",
+        "scripts/capture-delivery-pilot.mjs",
+        "scripts/check-command-review.mjs",
+        "scripts/check-delivery.mjs",
+        "scripts/native-agent-eval.mjs",
+        "src/adopt.mjs",
+        "src/artifacts.mjs",
+        "src/attest.mjs",
+        "src/command-review.mjs",
+        "src/compose.mjs",
+        "src/context.mjs",
+        "src/doctor.mjs",
+        "src/documents.mjs",
+        "src/external-hints.mjs",
+        "src/fetch.mjs",
+        "src/gates.mjs",
+        "src/manifest.mjs",
+        "src/metrics.mjs",
+        "src/pack.mjs",
+        "src/process.mjs",
+        "src/product.mjs",
+        "src/proof.mjs",
+        "src/prove.mjs",
+        "src/release.mjs",
+        "src/scan.mjs",
+        "src/select.mjs",
+        "src/shim.mjs",
+        "src/state.mjs",
+        "src/survey.mjs",
+        "src/system-ci-template.mjs",
+        "src/system-gitlab.mjs",
+        "src/system.mjs",
+        "src/tool.mjs",
+        "src/workflow.mjs",
+        "src/worktree.mjs",
+        "test/adopt.test.mjs",
+        "test/artifacts.test.mjs",
+        "test/attest.test.mjs",
+        "test/batch-c.test.mjs",
+        "test/command-review-gate.test.mjs",
+        "test/command-review.test.mjs",
+        "test/context-map.test.mjs",
+        "test/delivery-evidence.test.mjs",
+        "test/delivery-flow.test.mjs",
+        "test/doctor.test.mjs",
+        "test/documents.test.mjs",
+        "test/evals.test.mjs",
+        "test/failclosed.test.mjs",
+        "test/gates.test.mjs",
+        "test/harness.test.mjs",
+        "test/journeys.test.mjs",
+        "test/legibility.test.mjs",
+        "test/metrics.test.mjs",
+        "test/native-eval.test.mjs",
+        "test/offline.test.mjs",
+        "test/output-assertions.test.mjs",
+        "test/pack-conformance.test.mjs",
+        "test/pack-proof-record.test.mjs",
+        "test/packs.test.mjs",
+        "test/pinned-base.test.mjs",
+        "test/postmortems.test.mjs",
+        "test/product.test.mjs",
+        "test/proof-failure-boundary.test.mjs",
+        "test/proof-inputs.test.mjs",
+        "test/proofs.test.mjs",
+        "test/scan-prove.test.mjs",
+        "test/schema-agreement.test.mjs",
+        "test/select.test.mjs",
+        "test/self-product-status.test.mjs",
+        "test/shim.test.mjs",
+        "test/strictness.test.mjs",
+        "test/survey.test.mjs",
+        "test/system-ci-template.test.mjs",
+        "test/system-gitlab.test.mjs",
+        "test/system.test.mjs",
+        "test/tool-pin.test.mjs",
+        "test/workflow.test.mjs"
+      ]
     },
     {
       "id": "release",
@@ -170,7 +281,13 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/process.mjs",
+        "src/proof.mjs",
+        "src/release.mjs"
+      ]
     },
     {
       "id": "example",
@@ -187,7 +304,16 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/compose.mjs",
+        "src/fetch.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/proof.mjs",
+        "src/state.mjs"
+      ]
     },
     {
       "id": "release-ready",
@@ -201,7 +327,19 @@
         "forbid": [
           "harness:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/adopt.mjs",
+        "src/artifacts.mjs",
+        "src/context.mjs",
+        "src/doctor.mjs",
+        "src/documents.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/product.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "metrics",
@@ -215,7 +353,13 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/metrics.mjs",
+        "src/process.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "command-review",
@@ -229,7 +373,36 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "docs/fixtures/command-review.json",
+        "scripts/check-command-review.mjs",
+        "src/command-review.mjs",
+        "src/process.mjs",
+        "src/proof.mjs"
+      ]
+    },
+    {
+      "id": "delivery-flow/plan",
+      "command": "node scripts/check-delivery.mjs --manifest delivery.plan.json --stage planned",
+      "protects": "Every acceptance criterion maps to an existing test, and each test tier is covered or explicitly waived.",
+      "prove_fires": "Empty the acceptance criteria; the plan check must fail, then pass after revert.",
+      "prove_fires_command": "node -e \"const fs=require('fs');const p='delivery.plan.json';const m=JSON.parse(fs.readFileSync(p));m.acceptance=[];fs.writeFileSync(p,JSON.stringify(m,null,2)+'\\n')\"",
+      "revert_command": "git restore -- delivery.plan.json",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "\"status\": \"blocked\""
+        ]
+      },
+      "always": true,
+      "override": true,
+      "proof_inputs": [
+        "scripts/check-delivery.mjs",
+        "dist/packs/delivery-flow/base@0.1.1/check.mjs",
+        "dist/packs/delivery-flow/base@0.1.1/delivery.schema.json"
+      ]
     }
   ],
   "surfaces": [
@@ -494,6 +667,10 @@
       {
         "path": "docs/delivery-flow-pilot.md",
         "maxWords": 1300
+      },
+      {
+        "path": "docs/proof-inputs-offline.md",
+        "maxBytes": 8500
       }
     ],
     "instructions": [
@@ -506,7 +683,8 @@
     "manualVerification": "docs/MANUAL_VERIFICATION.md",
     "proofs": {
       "require": "blocking",
-      "maxAgeDays": 30
+      "maxAgeDays": 30,
+      "requireInputs": true
     },
     "metrics": {
       "log": "docs/metrics.jsonl",

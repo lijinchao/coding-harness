@@ -20,7 +20,7 @@ import { GITLAB_WORKFLOW, WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
-import { definitionHash, proofProblems } from '../src/proof.mjs'
+import { definitionHash, proofProblems, snapshotProofInputs } from '../src/proof.mjs'
 import { budgetProblems, metricsWindow, readRuns, runIsGreen } from '../src/metrics.mjs'
 import { DEFAULT_CARRY, carriedChanges, carriedState, createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
@@ -35,7 +35,10 @@ import { renderSystemCiTemplate, writeSystemCiTemplate } from '../src/system-ci-
 import { observeSystemGitlab } from '../src/system-gitlab.mjs'
 import { checkCommandReview, runCommandReview } from '../src/command-review.mjs'
 
-const USAGE = `usage: harness <command> [options]
+const USAGE = `usage: harness <command> [options] [--offline]
+
+--offline reuses verified caches and refuses dependency fetches (also HARNESS_OFFLINE=1).
+It does not sandbox network access by repository commands.
 
 commands:
   survey     --dir <path>                inspect an unadopted repository without writing or running its commands
@@ -80,7 +83,7 @@ commands:
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce', 'skip-proofs', 'help'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce', 'skip-proofs', 'help', 'offline'])
 const REPEATABLE_FLAGS = new Set(['changed', 'bind'])
 
 function parseOptions(argv) {
@@ -366,7 +369,7 @@ async function cmdGates(options) {
   let stale = []
   if (options['skip-proofs'] !== true) {
     const ran = new Set(gates.map((gate) => gate.id))
-    stale = proofProblems(manifest, toolCommit(), ran)
+    stale = proofProblems(manifest, toolCommit(), ran, root)
     if (stale.length > 0) {
       for (const problem of stale) console.error('proof: ' + problem)
       console.error('gates: ' + String(stale.length) + ' recorded proof(s) do not describe the gates that just ran; run harness prove --record')
@@ -608,7 +611,7 @@ async function cmdProve(options) {
   const timeoutMs = options.timeout === undefined ? 0 : Number(options.timeout) * 1000
   if (timeoutMs === 0 && process.stdout.isTTY) console.error('prove: --timeout is unset; each proof command can wait forever')
   if (options.record !== true) {
-    const stale = proofProblems(manifest, toolCommit(), only === undefined ? undefined : new Set([only]))
+    const stale = proofProblems(manifest, toolCommit(), only === undefined ? undefined : new Set([only]), root)
     if (stale.length > 0) {
       for (const problem of stale) console.error('prove: ' + problem)
       throw new Error('the recorded proofs are not current; run harness prove --record')
@@ -617,6 +620,8 @@ async function cmdProve(options) {
     // anything, so a gate can hold a release to it.
     if (options.check === true) {
       console.log('proofs: current for ' + (only === undefined ? manifest.gates.length + ' gate(s)' : only))
+      const selected = manifest.gates.filter(gate => only === undefined || gate.id === only)
+      console.log('proof inputs: declared for ' + selected.filter(gate => gate.proof_inputs?.length).length + '/' + selected.length + ' gate(s); undeclared gates bind declarations only')
       return
     }
   }
@@ -644,8 +649,13 @@ async function cmdProve(options) {
   try {
     for (const gate of manifest.gates) {
       if (only !== undefined && gate.id !== only) continue
+      if (manifest.governance?.proofs?.requireInputs === true && manifest.governance.proofs.require !== 'none' && (manifest.governance.proofs.require === 'all' || gate.severity === 'blocking') && !gate.proof_inputs?.length) throw new Error('gate ' + gate.id + ': proof_inputs required by policy')
+      const inputs = snapshotProofInputs(runRoot, gate)
       const result = await proveGate(runRoot, gate, timeoutMs, { trackedOnly: isolated })
-      if (result.status === 'ok') recorded[gate.id] = { at: new Date().toISOString(), tool: toolCommit() ?? 'unknown', definition: definitionHash(gate) }
+      if (result.status === 'ok') {
+        if (JSON.stringify(inputs) !== JSON.stringify(snapshotProofInputs(runRoot, gate))) throw new Error('gate ' + gate.id + ': proof inputs changed during proof')
+        recorded[gate.id] = { at: new Date().toISOString(), tool: toolCommit() ?? 'unknown', definition: definitionHash(gate), ...(inputs === undefined ? {} : { inputs }) }
+      }
       if (result.status !== 'ok' && result.status !== 'skip') bad += 1
       console.log(`${result.status}\t${gate.id}\t${result.detail}`)
     }
@@ -754,6 +764,7 @@ try {
   const handler = COMMANDS[command]
   if (handler === undefined) throw new Error(`unknown command: ${command}`)
   const options = parseOptions(rest)
+  if (options.offline === true) process.env.HARNESS_OFFLINE = '1'
   // `harness <command> --help` used to run the command: `--help` was not a boolean
   // flag, so it swallowed the next argument or failed with "missing value", and a
   // gate run could be started by someone asking what the command does.
