@@ -1,12 +1,12 @@
 {
   "schema_version": "coding-harness.delivery/v1",
-  "id": "native-agent-self-pilot",
-  "outcome": "Expose pinned native skills and qualify actual repository task evidence without mistaking discovery, partial runs, or infrastructure failures for accepted delivery.",
-  "design": "docs/decisions/0048-self-host-native-agent-pilot.md",
+  "id": "proof-stage-normal-completion",
+  "outcome": "Reject incomplete proof stages even when timeout cleanup exits zero; release the fixed immutable tool before merging the authorized PR stack.",
+  "design": "docs/decisions/0050-proof-stage-completion.md",
   "constraints": [
     "No runtime dependencies added",
     "Do not edit generated files or old releases",
-    "No global agent configuration changes, game changes or remote publishing",
+    "User authorized fixed release and ordered PR merges; no self-approval or old-release edits",
     "Model calls remain opt-in and bounded; raw traces stay untracked",
     "Native support, task execution, repository DoD and human acceptance are distinct"
   ],
@@ -30,28 +30,28 @@
   "acceptance": [
     {
       "id": "AC-01",
-      "description": "Native skills are composed from one pinned source and drift is detected",
+      "description": "Self and example pin the immutable fixed tool with no drift",
       "checks": [
         "pins"
       ]
     },
     {
       "id": "AC-02",
-      "description": "Incomplete, truncated or self-asserted evidence cannot satisfy the scorer",
+      "description": "Every proof stage rejects timeout and signal termination",
       "checks": [
         "scoring"
       ]
     },
     {
       "id": "AC-03",
-      "description": "Task and repository delivery qualification are distinct",
+      "description": "A recovery timeout cannot produce a CLI proof record",
       "checks": [
-        "unit-grading"
+        "cli-proof"
       ]
     },
     {
       "id": "AC-04",
-      "description": "Agent attempts retain versions, traces, blocked cases and independent checks",
+      "description": "Normal failure/revert/success proof behavior is preserved",
       "checks": [
         "scoring"
       ]
@@ -68,17 +68,17 @@
     {
       "id": "scoring",
       "tier": "integration",
-      "command": "node --test test/native-eval.test.mjs",
+      "command": "node --test test/proof-failure-boundary.test.mjs",
       "test_files": [
-        "test/native-eval.test.mjs"
+        "test/proof-failure-boundary.test.mjs"
       ]
     },
     {
-      "id": "unit-grading",
-      "tier": "unit",
-      "command": "node --test --test-name-pattern='focused check success' test/native-eval.test.mjs",
+      "id": "cli-proof",
+      "tier": "e2e",
+      "command": "node --test --test-name-pattern='CLI refuses to record' test/proof-failure-boundary.test.mjs",
       "test_files": [
-        "test/native-eval.test.mjs"
+        "test/proof-failure-boundary.test.mjs"
       ]
     },
     {
@@ -95,15 +95,15 @@
       "tier": "integration",
       "command": "npm test",
       "test_files": [
-        "test/native-eval.test.mjs",
+        "test/proof-failure-boundary.test.mjs",
         "test/self-product-status.test.mjs"
       ]
     }
   ],
   "tier_waivers": [
     {
-      "tier": "e2e",
-      "reason": "Live provider trials are separately recorded observations, not CI tests or a fully qualified cross-agent product E2E. Provider/network blocks and projected evidence gaps remain explicit."
+      "tier": "unit",
+      "reason": "The defect is subprocess lifecycle qualification across actual Git proof stages, covered by integration checks; pure isolated assertions would not reproduce it."
     }
   ]
 }
