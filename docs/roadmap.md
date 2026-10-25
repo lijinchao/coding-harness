@@ -6,6 +6,9 @@ This page carries the forward plan: the next three actions, the milestones ahead
 
 ## Next actions
 
+The [delivery-flow pilot](delivery-flow-pilot.md) connects acceptance criteria to
+existing tests and records the adoption gaps found in game-design.
+
 Three things, in order.
 
 1. **Survey and adopt one real repository.** Run `node bin/harness.mjs survey --dir <repo>`, review its context and command candidates, then run `init`, author that repository's `AGENTS.delta.md`, and add `harness check` to CI. Hand-edit the composed `AGENTS.md` once and watch the job fail; that failure is the gate's proof.

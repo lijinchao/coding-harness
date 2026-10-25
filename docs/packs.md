@@ -29,6 +29,8 @@ The merge order is kernel defaults, then packs in declaration order, then the re
 
 ## The shipped packs
 
+[Delivery-flow pilot](delivery-flow-pilot.md) adds a self-hosted acceptance map.
+
 `packs/node-library/` contributes three gates (no committed `node_modules`, a license file, no `console.log` in `src/`); `packs/architecture/`, two that hold anywhere (generated code stays out of `src/`, one package system at the root); `packs/hygiene/`, two more (no conflict markers, no tracked file over 1 MiB). Every gate is shell-only: a pack's failure injection runs in someone else's repository and must not assume a toolchain it may not have.
 
 `test/pack-conformance.test.mjs` is the conformance a pack owes its consumers: one fixture consumer declares all three, and every contributed gate is watched to fail and pass again.
