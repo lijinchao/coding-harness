@@ -314,6 +314,10 @@
     "changes": "docs/changes",
     "docs": [
       {
+        "path": "docs/game-design-adoption.md",
+        "maxWords": 1100
+      },
+      {
         "path": "README.md",
         "maxWords": 820
       },
