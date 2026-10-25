@@ -1,9 +1,9 @@
 {
-  "version": "0.1.41",
+  "version": "0.1.42",
   "tool": {
-    "version": "0.1.41",
+    "version": "0.1.42",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338"
+    "commit": "fada161ff42dd35d38325f84f9ed3e0ac6ede669"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -65,7 +65,7 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.41 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.42 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
@@ -394,11 +394,11 @@
     }
   },
   "lock": {
-    "version": "0.1.41",
+    "version": "0.1.42",
     "tool": {
-      "version": "0.1.41",
+      "version": "0.1.42",
       "files": {
-        "bin/harness.mjs": "7180abc28b2eaea1d32862d78b4e7d007e6f1385402f62284b3ad0b297a8ddcd",
+        "bin/harness.mjs": "58672234672b3d7ea807d36e1594be8bbeaa0e1de0cb48e536554de528b02a15",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/attest.mjs": "83e4637cc9dcc1e28d1ee63a155359aa3a94072e37d2ae8c6c0f3da6d3a8481a",
@@ -426,20 +426,20 @@
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
         "src/workflow.mjs": "5a6cbbfe9bfab8bd29c40b195802a8a314c4eab331e2674fddf7d20ae7781714",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "0132ad0312ee3d7b0eed34c625dd34cdc1fde32b6d730435afd0de243961922c"
+        "package.json": "826d62b8534b0ac6625fd5dc63a65d50e3503ce26aadfce75ce16829ee3bb3db"
       },
-      "commit": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338"
+      "commit": "fada161ff42dd35d38325f84f9ed3e0ac6ede669"
     },
     "outputs": {
       "AGENTS.md": "71b138542ed3331629b7f57efe434f27a20ab2f4e80f258d96b0f6759d9c584f",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.41",
+      "version": "0.1.42",
       "files": {
         "AGENTS.base.md": "873b6971a932faa0426e5c92751bd391a397dfd39666cd8517b3661ecc69fe50",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "d8fea9b913f6a92471d7d6b1cd978fa4d97dc4d462ce8f2f7d92682484dcd871",
+        "VERSION": "a7f94bf3ea19f1e365fe391914734285127f1cd84e2bdfc74c244d81774910b6",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
@@ -450,63 +450,56 @@
         "templates/postmortem.md": "80af444609639a827e383450b682b93f59dc0b08279b519a1342e708dc65d1ee"
       }
     },
-    "packs": {
-      "delivery-flow": {
-        "version": "0.1.0",
-        "files": {
-          "README.md": "9dd8bf81f3b027b2181c84597b8c10a4a9d64c8d14ddb100f9826f4ea91e3b27",
-          "VERSION": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
-          "check.mjs": "dfe9a87c0b5e4ba34633d197755bcb2126a97759421a2d2db846102121c5d05a",
-          "delivery.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
-          "pack.json": "f33c987d6544d66dc8b426d7575417def43bd05986cd1beba3598301a5e745b8"
-        }
-      }
-    },
     "proofs": {
       "harness-drift": {
-        "at": "2026-09-19T06:59:10.110Z",
+        "at": "2026-10-25T05:30:04.697Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
       },
       "doctor": {
-        "at": "2026-09-19T06:59:12.095Z",
+        "at": "2026-10-25T05:30:06.038Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "213d4e3325a35af950e2e7528dc2efc43933f198b00a994347e242f16ac48bad"
       },
       "validate": {
-        "at": "2026-09-19T06:59:14.164Z",
+        "at": "2026-10-25T05:30:07.356Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
       },
       "tests": {
-        "at": "2026-09-19T07:00:31.197Z",
+        "at": "2026-10-25T05:30:56.104Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
       },
       "release": {
-        "at": "2026-09-19T07:00:32.475Z",
+        "at": "2026-10-25T05:30:56.567Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "0b003dc204854ed88316fa96f1ed06a8e4b06614bf8f43e6a7f644fa5e76b02e"
       },
       "example": {
-        "at": "2026-09-19T07:00:38.121Z",
+        "at": "2026-10-25T05:30:58.877Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
       },
       "metrics": {
-        "at": "2026-09-19T07:00:43.000Z",
+        "at": "2026-10-25T05:31:01.376Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
       },
       "release-ready": {
-        "at": "2026-09-19T07:00:40.829Z",
+        "at": "2026-10-25T05:31:00.238Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
         "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
       },
       "command-review": {
-        "at": "2026-09-19T07:00:48.751Z",
+        "at": "2026-10-25T05:31:03.573Z",
         "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
-        "definition": "e8c30565bc5ef10672eece0d39e69635f41bfb2ca6198ae5a26dc80ca617f52e"
+        "definition": "555fe9389f59ff92fa4576a4c0eb790e2087ba6dc2e06faf584be91d6e00c03a"
+      },
+      "delivery-flow/plan": {
+        "at": "2026-10-25T05:31:04.058Z",
+        "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
+        "definition": "842b8b0a30c3ce341c445cc086249ba8129afb0b38293de7c0d4b01c02eb3326"
       }
     }
   }
