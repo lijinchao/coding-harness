@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
+import { createHash } from 'node:crypto'
 
 test('recording pack proofs and upgrading preserve the raw repository declarations', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'pack-proof-record-'))
@@ -37,5 +38,19 @@ test('recording pack proofs and upgrading preserve the raw repository declaratio
   assert.equal(upgraded.version, '0.1.42', 'upgrade must persist the raw root version as well as the merged lock')
   assert.deepEqual(upgraded.gates, [])
   assert.ok(upgraded.lock.proofs['sample/guard'])
+  assert.ok(upgraded.lock.packs?.sample?.files['pack.json'], 'upgrade must retain the pack pin')
+  const beforeSync = readFileSync(path, 'utf8')
+  run('sync', '--manifest', path)
+  assert.equal(readFileSync(path, 'utf8'), beforeSync, 'an upgraded manifest must already be canonical')
   run('check', '--manifest', path)
+  const descriptorPath = join(root, 'packs', 'base@0.1.0', 'pack.json')
+  const descriptor = JSON.parse(readFileSync(descriptorPath, 'utf8'))
+  descriptor.gates[0].command = 'true'
+  const bytes = JSON.stringify(descriptor)
+  writeFileSync(descriptorPath, bytes)
+  const releasePath = join(root, 'packs', 'base@0.1.0', 'release.json')
+  const release = JSON.parse(readFileSync(releasePath, 'utf8'))
+  release.files['pack.json'] = createHash('sha256').update(bytes).digest('hex')
+  writeFileSync(releasePath, JSON.stringify(release))
+  assert.throws(() => run('validate', '--manifest', path), /differs from the lock/)
 })
