@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, resolve, win32 } from 'node:path'
+import * as contextModule from '../src/context.mjs'
 import { documentProblems, surfaceCoverageProblems } from '../src/documents.mjs'
 import { doctorProblems } from '../src/doctor.mjs'
 import { validateManifest } from '../src/manifest.mjs'
@@ -113,4 +114,11 @@ test('a broken anchor in a declared routing edge is not considered reachable', t
   const { root, manifest } = fixture(t)
   writeFileSync(join(root, '地图.md'), '# map\n[status](状态.md#missing)\n')
   assert.match(doctorProblems(root, manifest).join(), /anchor not found/)
+})
+
+test('containment rejects Windows parent and sibling escapes with Windows separators', () => {
+  assert.equal(contextModule.inside('C:\\repo', 'C:\\repo\\docs\\map.md', win32), true)
+  assert.equal(contextModule.inside('C:\\repo', 'C:\\other\\map.md', win32), false)
+  assert.equal(contextModule.inside('C:\\repo', 'C:\\repo-copy\\map.md', win32), false)
+  assert.equal(contextModule.inside('C:\\repo', 'D:\\repo\\map.md', win32), false)
 })

@@ -37,3 +37,13 @@ The PR includes previously local delivery/context work and explicit integration
 fixes. Runtime dependencies remain zero. Publication is authorized by the user;
 review/verification are evidence, not owner approval. Preserve release artifacts
 and distinguish passing local checks from actual remote CI results.
+
+The confirmed timeout-as-proof defect must reject interrupted injection runs
+after restoring their state. Apply portable containment to the standalone
+delivery Pack too, under a new Pack version. Gate reports must retain proof
+failures so the same metrics window cannot report a stale-proof run green.
+The receipt reentrancy regression exercises runGates directly; CLI proof
+freshness remains separately enforced and tested. Compress merged documentation
+instead of raising its existing budget.
+Proof failure and recovery must use the same forbidden-output assertions as
+gate execution, not only command exit codes.

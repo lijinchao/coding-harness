@@ -1,12 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import pathApi, { dirname, isAbsolute, resolve } from 'node:path'
 import { matchGlob } from './select.mjs'
 import { linkProblems } from './documents.mjs'
 
-function inside(root, path) {
-  const rel = relative(root, path)
-  return rel !== '..' && !rel.startsWith('../') && !isAbsolute(rel)
+export function inside(root, path, paths = pathApi) {
+  const rel = paths.relative(root, path)
+  return rel !== '..' && !rel.startsWith('..' + paths.sep) && !paths.isAbsolute(rel)
 }
 
 // A bounded declaration graph, never a loader of concatenated agent prompts.

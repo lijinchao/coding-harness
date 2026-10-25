@@ -21,7 +21,7 @@ import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
 import { definitionHash, proofProblems } from '../src/proof.mjs'
-import { budgetProblems, metricsWindow, readRuns } from '../src/metrics.mjs'
+import { budgetProblems, metricsWindow, readRuns, runIsGreen } from '../src/metrics.mjs'
 import { DEFAULT_CARRY, carriedChanges, carriedState, createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
@@ -363,9 +363,10 @@ async function cmdGates(options) {
   // `governance.proofs` has asked for that evidence, so a stale lock is a failure of
   // this run rather than a note — and saying so here is what stops "local green, CI
   // red", since only `prove` used to notice.
+  let stale = []
   if (options['skip-proofs'] !== true) {
     const ran = new Set(gates.map((gate) => gate.id))
-    const stale = proofProblems(manifest, toolCommit(), ran)
+    stale = proofProblems(manifest, toolCommit(), ran)
     if (stale.length > 0) {
       for (const problem of stale) console.error('proof: ' + problem)
       console.error('gates: ' + String(stale.length) + ' recorded proof(s) do not describe the gates that just ran; run harness prove --record')
@@ -373,7 +374,7 @@ async function cmdGates(options) {
     }
   }
   if (typeof options.report === 'string') {
-    const entry = { at: new Date().toISOString(), kind: 'gate-health', version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
+    const entry = { at: new Date().toISOString(), kind: 'gate-health', version: manifest.version, tool: toolVersion(), proofs_checked: options['skip-proofs'] !== true, proof_problems: stale, results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
     appendFileSync(resolve(options.report), `${JSON.stringify(entry)}\n`)
   }
   if (blocking > 0) process.exit(1)
@@ -439,7 +440,7 @@ function cmdMetrics(options) {
   }
   const log = resolve(requireOption(options, 'log'))
   const runs = readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line))
-  const green = runs.filter((run) => run.results.every((result) => result.ok)).length
+  const green = runs.filter(run => runIsGreen(run)).length
   console.log(`runs: ${runs.length}`)
   console.log(`green: ${green}`)
   console.log(`first-pass rate: ${runs.length === 0 ? 'n/a' : (green / runs.length).toFixed(2)}`)

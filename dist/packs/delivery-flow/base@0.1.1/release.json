@@ -1,0 +1,11 @@
+{
+  "name": "base",
+  "version": "0.1.1",
+  "files": {
+    "README.md": "3e686e808d0e37a9eff700d20efedb8b60ee5a15c4a54a31f073337e1ba34529",
+    "VERSION": "80447316529fc62014fbaa047fb67c51ac30e32830cda370405349d8d66d196c",
+    "check.mjs": "062e5103eed0a0caff13f5389385885731edfb4b7bcb8dfd3e09cf3f6c4f7620",
+    "delivery.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
+    "pack.json": "f33c987d6544d66dc8b426d7575417def43bd05986cd1beba3598301a5e745b8"
+  }
+}

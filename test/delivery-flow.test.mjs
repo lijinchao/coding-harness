@@ -4,8 +4,15 @@ import { spawnSync, execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
+import { win32 } from 'node:path'
+import * as checkerModule from '../packs/delivery-flow/check.mjs'
 
 const CHECKER = resolve(import.meta.dirname, '../packs/delivery-flow/check.mjs')
+
+test('the standalone pack rejects Windows realpath escapes', () => {
+  assert.equal(checkerModule.inside('C:\\repo', 'C:\\other\\plan.json', win32), false)
+  assert.equal(checkerModule.inside('C:\\repo', 'C:\\repo\\plan.json', win32), true)
+})
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'delivery-flow-test-'))

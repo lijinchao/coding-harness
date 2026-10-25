@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { runCommand } from './process.mjs'
+import { outputViolations } from './gates.mjs'
 
 /**
  * Working-tree changes git can see, or null when this is not a git checkout.
@@ -72,7 +73,11 @@ export async function proveGate(root, gate, timeoutMs = 0, options = {}) {
     return { status: 'error', detail: 'introducing the failure exited ' + introduced.code + (introduced.timedOut ? ' (timeout)' : '') + (problem === null ? ' (reverted)' : '; ' + problem) }
   }
   const fired = await runCommand(root, gate.command, timeoutMs)
-  if (fired.code === 0) {
+  if (fired.timedOut || fired.signal !== null) {
+    const problem = await revert()
+    return { status: 'error', detail: (fired.timedOut ? 'gate timed out' : 'gate terminated by signal ' + fired.signal) + ' under injection; no proof recorded' + (problem === null ? ' (reverted)' : '; ' + problem) }
+  }
+  if (fired.code === 0 && outputViolations(fired.output, gate.expect).length === 0) {
     const problem = await revert()
     return problem === null
       ? { status: 'dead', detail: 'gate did not fire on the introduced failure' }
@@ -81,6 +86,6 @@ export async function proveGate(root, gate, timeoutMs = 0, options = {}) {
   const problem = await revert()
   if (problem !== null) return { status: 'error', detail: problem }
   const clean = await runCommand(root, gate.command, timeoutMs)
-  if (clean.code !== 0) return { status: 'error', detail: 'gate still fails after revert' }
+  if (clean.code !== 0 || outputViolations(clean.output, gate.expect).length > 0) return { status: 'error', detail: 'gate still fails after revert' }
   return { status: 'ok', detail: 'fired on the failure and passed after revert' }
 }

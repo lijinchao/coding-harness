@@ -1,18 +1,15 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { runGates } from '../src/gates.mjs'
 
-test('the self command-review gate runs twice without leftover receipt collisions', (t) => {
-  const dir = mkdtempSync(join(tmpdir(), 'command-review-gate-test-'))
-  t.after(() => rmSync(dir, { recursive: true, force: true }))
+test('the self command-review gate runs twice without leftover receipt collisions', async () => {
   const root = resolve(import.meta.dirname, '..')
+  const manifest = JSON.parse(readFileSync(resolve(root, 'harness.manifest.json'), 'utf8'))
+  const gate = manifest.gates.find(gate => gate.id === 'command-review')
   for (let i = 0; i < 2; i++) {
-    const result = spawnSync(process.execPath, [join(root, 'bin/harness.mjs'), 'gates', '--manifest', join(root, 'harness.manifest.json'), '--gate', 'command-review'], {
-      cwd: root, env: { ...process.env, TMPDIR: dir }, encoding: 'utf8',
-    })
-    assert.equal(result.status, 0, 'run ' + (i + 1) + ': ' + result.stdout + result.stderr)
+    const [result] = await runGates(root, [gate])
+    assert.equal(result.ok, true, 'run ' + (i + 1) + ': ' + result.output)
   }
 })

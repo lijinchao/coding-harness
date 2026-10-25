@@ -1,4 +1,4 @@
-# delivery-flow 0.1.0
+# delivery-flow 0.1.1
 
 An opt-in acceptance map for behavior changes. It references existing designs,
 tests, commands, and review evidence. Node.js and a pinned `harness` executable
@@ -7,7 +7,7 @@ are required. No application runtime or model is supplied.
 ## Adoption
 
 Release with `harness release --base packs/delivery-flow --out <registry>
---version 0.1.0`. Declare a `delivery-flow` pack from that registry and version,
+--version 0.1.1`. Declare a `delivery-flow` pack from that registry and version,
 then sync the consumer. The pack contributes one always-selected plan gate.
 The consumer owns `scripts/check-delivery.mjs`, importing `main` from the
 resolved, locked release's `check.mjs`, and `delivery.plan.json` at its root.

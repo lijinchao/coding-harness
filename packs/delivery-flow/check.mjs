@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import pathApi, { dirname, isAbsolute, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SCHEMA = JSON.parse(readFileSync(new URL('./delivery.schema.json', import.meta.url), 'utf8'))
@@ -32,11 +32,15 @@ function validate(value, schema, where, problems) {
   }
 }
 
+export function inside(root, path, paths = pathApi) {
+  const rel = paths.relative(root, path)
+  return rel !== '..' && !rel.startsWith('..' + paths.sep) && !paths.isAbsolute(rel)
+}
+
 function localPath(root, path) {
   if (isAbsolute(path) || path.split(/[\\/]/).includes('..') || /[*?[\]]/.test(path)) throw new Error('path must stay inside repository: ' + path)
   const full = resolve(root, path)
-  const rel = relative(realpathSync(root), realpathSync(full))
-  if (rel === '..' || rel.startsWith('../') || isAbsolute(rel)) throw new Error('symlink escapes repository: ' + path)
+  if (!inside(realpathSync(root), realpathSync(full))) throw new Error('symlink escapes repository: ' + path)
   return full
 }
 
