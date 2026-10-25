@@ -1,6 +1,6 @@
 # 0044 — Delivery starts with an acceptance map
 
-Status: accepted
+Status: implemented
 
 ## Problem
 

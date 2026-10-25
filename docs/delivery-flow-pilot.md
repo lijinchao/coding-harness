@@ -2,9 +2,8 @@
 
 ## The self pilot
 
-The CLI is a software product: repository owners initialize, compose, validate,
-run gates, and inspect evidence. coding-harness can therefore trial delivery
-without inventing another product. `delivery.plan.json` maps three acceptance
+coding-harness has executable CLI operator journeys, making it a suitable
+delivery trial. `delivery.plan.json` maps three acceptance
 criteria to frozen integration tests. Unit and shipped-artifact E2E are
 explicitly waived for this slice; the report must not claim either was run.
 `test/delivery-evidence.test.mjs` separately tests real baseline/candidate
@@ -18,9 +17,9 @@ passes after restoring the plan. The first trial used kernel 0.1.41. It exposed
 a writeback defect, so the self/example pins move to a local 0.1.43 release;
 neither its tag nor a pack tag is published to the remote.
 
-The first red test scaffold printed `unimplemented`. With the test runner
-working, criteria validation still failed (`0 !== 1`) and the positive report
-was not `planned`. The six tests in `test/delivery-flow.test.mjs` were committed
+The red scaffold printed `unimplemented`; criteria validation failed
+(`0 !== 1`) with a working test runner. The six tests in
+`test/delivery-flow.test.mjs` were committed
 before the implementation. Replay their baseline and candidate with:
 
 ```sh
@@ -118,6 +117,9 @@ observable drift opportunity, not evidence that today's commands differ.
 ## How to combine this with ordinary development
 
 Choose one behavior slice, its existing design, and an owner-approved scope.
+Include dependency locks, build configuration, and source assets in that scope
+when they affect the behavior. Recorded test receipts do not identify an
+unrecorded model, server, operating system, or dependency environment.
 Link criteria to focused tests and explain any omitted tier. Commit those
 tests, observe an expected failure, implement, and preserve the test content
 through the passing candidate. Record ordinary lint/build/test results
@@ -130,3 +132,19 @@ run the intervening checks and address failures within the approved scope.
 Convert repeated findings into proved checks, initially observe noisy checks
 in Shadow, and retire redundant rules. Judge progress by fewer repeated
 defects and less review work, not by gate count.
+
+## Recorded verification
+
+The feature's frozen-test baseline is `a6173c7`; the passing scoped candidate
+is `b347a0e`. Both exact commits were replayed into command-review receipts:
+baseline exit 1, candidate exit 0, unchanged test SHA-256
+`087f65be3fe0dbc3e0db720d834d23af14f99f69f2f57543b4e60f82d4fadeb8`.
+The report is `verified` for AC-01 through AC-03, with human acceptance pending.
+The later kernel fixes are independently covered by the full suite and proofs.
+
+`npm test`: 203 pass, 0 fail. The local 0.1.43 tool at `382bb18` proved all
+10 gates in an isolated worktree, recorded the proofs, and reloaded the raw
+manifest successfully. `prove --check` reports 10 current gates; strict doctor
+and the example check pass. Upgrade followed by sync is byte-identical.
+Caches were populated from the local release tag, not a remote publication;
+hosted CI and remote-fetch qualification remain unperformed.
