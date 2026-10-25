@@ -29,3 +29,7 @@ No new proofs were recorded from the failed isolated proof attempt.
 After fixture isolation, full offline gates pass with 291 tests / 0 failures;
 all ten input-bound isolated proofs fired and recovered. Strict doctor,
 example check, proof freshness (10/10 inputs) and attestation verify at 0.1.48.
+An ordinary manual Git worktree with no private prepopulated cache passed
+offline self check, input freshness (10/10) and attestation by borrowing the
+verified main cache. Consumer evidence independently exercises fourteen full
+offline gates and reproduces checker hollowing as nonzero failures.
