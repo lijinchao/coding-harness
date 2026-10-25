@@ -369,7 +369,10 @@
     ],
     "changes": "docs/changes",
     "docs": [
-      {"path": "docs/review-0.1.45.md", "maxBytes": 7000},
+      {
+        "path": "docs/review-0.1.45.md",
+        "maxBytes": 7000
+      },
       {
         "path": "docs/context-map-pilot.md",
         "maxBytes": 6500
@@ -589,7 +592,7 @@
         "definition": "555fe9389f59ff92fa4576a4c0eb790e2087ba6dc2e06faf584be91d6e00c03a"
       },
       "delivery-flow/plan": {
-        "at": "2026-10-25T08:05:47.010Z",
+        "at": "2026-10-25T08:07:45.600Z",
         "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "842b8b0a30c3ce341c445cc086249ba8129afb0b38293de7c0d4b01c02eb3326"
       }
