@@ -143,6 +143,10 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 
 ### Metrics budget
 
+Doctor checks optional [context maps and byte budgets](context.md).
+Gate reports retain `proofs_checked` and `proof_problems`: failed or bypassed
+proof checks cannot qualify as green. Legacy logs retain their interpretation.
+
 | Field | Meaning |
 |---|---|
 | `governance.metrics` | The committed log of gate runs a window budget judges, and its limits |
@@ -156,7 +160,7 @@ A manifest may declare `surfaces`. `harness select --manifest <path> (--since <r
 | `governance.docs` | Documents whose links, word budget, and forbidden text are checked |
 | `governance.instructions` | Globs for every instruction file an agent can read |
 
-`harness doctor` checks that each declared document exists, that its relative links resolve (a fragment must name a heading), and that it stays within `maxWords`, and rejects a line matching a `forbid` pattern unless it also matches `allow`. It walks the repository for `AGENTS.md` and `AGENTS.delta.md` and fails when a file is unmatched by `governance.instructions` or a declared glob matches nothing. A budget forces relocation instead of accumulation, and an unmanaged instruction file is a rule nobody governs; both keys are recommended.
+`harness doctor` checks document existence, relative links and anchors, `maxWords`, and `forbid` lines respecting `allow`. It discovers `AGENTS.md` and `AGENTS.delta.md`; every discovered instruction must match `governance.instructions`, and every declared glob must match an instruction. Both keys are recommended. Budgets constrain growth; declarations prevent unmanaged instructions.
 
 ### Decision record
 

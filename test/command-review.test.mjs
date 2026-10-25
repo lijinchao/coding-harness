@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import {
   COMMAND_REVIEW_FILESYSTEM_KEYS,
   COMMAND_REVIEW_ISOLATION_KEYS,
@@ -24,7 +24,7 @@ function repositoryFixture() {
   const root = mkdtempSync(join(tmpdir(), 'coding-harness-command-review-fixture-'))
   const repository = join(root, 'repository')
   execFileSync('mkdir', ['-p', repository])
-  writeFileSync(join(repository, 'check.mjs'), "console.log('committed candidate')\n")
+  writeFileSync(join(repository, 'check.mjs'), "console.log('committed candidate'); console.log(process.cwd())\n")
   execFileSync('git', ['init', '-q'], { cwd: repository })
   execFileSync('git', ['add', '-A'], { cwd: repository })
   execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'fixture'], { cwd: repository })
@@ -32,14 +32,21 @@ function repositoryFixture() {
   return { root, repository, revision }
 }
 
-test('command review runs the exact revision in an archive and does not authorize admission', async () => {
+test('command review runs the exact revision in an archive and does not authorize admission', async (t) => {
   const value = repositoryFixture()
   writeFileSync(join(value.repository, 'check.mjs'), "throw new Error('dirty source must not run')\n")
   writeFileSync(join(value.repository, 'untracked.txt'), 'not exported\n')
   const out = join(value.root, 'review.json')
-  const beforeTemps = new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('coding-harness-command-review-')))
-  const receipt = await runCommandReview(value.repository, value.revision, 'node check.mjs', out, { timeoutMs: 5000 })
-  const afterTemps = new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('coding-harness-command-review-')))
+  let executionDirectory
+  let unrelatedDirectory
+  t.after(() => { if (unrelatedDirectory) rmSync(unrelatedDirectory, { recursive: true, force: true }); rmSync(value.root, { recursive: true, force: true }) })
+  const receipt = await runCommandReview(value.repository, value.revision, 'node check.mjs', out, {
+    timeoutMs: 5000,
+    onOutput: (result) => {
+      executionDirectory = result.stdout.trim().split('\n').at(-1)
+      unrelatedDirectory = mkdtempSync(join(tmpdir(), 'coding-harness-command-review-unrelated-'))
+    },
+  })
 
   assert.equal(receipt.status, 'passed')
   assert.equal(receipt.result.ok, true)
@@ -51,7 +58,10 @@ test('command review runs the exact revision in an archive and does not authoriz
   assert.deepEqual(receipt.filesystem.modified, [])
   assert.deepEqual(receipt.filesystem.removed, [])
   assert.equal(receipt.filesystem.before_sha256, receipt.filesystem.after_sha256)
-  assert.deepEqual(afterTemps, beforeTemps)
+  assert.notEqual(executionDirectory, value.repository)
+  assert.equal(existsSync(executionDirectory), false, 'the actual exported tree must have been removed')
+  assert.equal(existsSync(dirname(executionDirectory)), false, 'the owned temporary parent must have been removed')
+  assert.equal(existsSync(unrelatedDirectory), true, 'cleanup must preserve another caller\'s directory')
   assert.deepEqual(validateCommandReview(receipt), [])
   const checked = checkCommandReview(value.repository, value.revision, 'node check.mjs', out)
   assert.equal(checked.valid, true)

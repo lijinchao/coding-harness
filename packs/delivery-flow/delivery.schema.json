@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "outcome", "design", "constraints", "scope", "acceptance", "checks", "tier_waivers"],
+  "properties": {
+    "schema_version": {"type": "string", "enum": ["coding-harness.delivery/v1"]},
+    "id": {"type": "string", "minLength": 1},
+    "outcome": {"type": "string", "minLength": 1},
+    "design": {"type": "string", "minLength": 1},
+    "constraints": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "scope": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "acceptance": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "description", "checks"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "checks": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "checks": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "tier", "command", "test_files"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-zA-Z0-9_-]+$"},
+          "tier": {"type": "string", "enum": ["unit", "integration", "e2e"]},
+          "command": {"type": "string", "minLength": 1},
+          "test_files": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "expected_failure": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "tier_waivers": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["tier", "reason"],
+        "properties": {
+          "tier": {"type": "string", "enum": ["unit", "integration", "e2e"]},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

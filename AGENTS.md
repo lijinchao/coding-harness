@@ -4,6 +4,7 @@ The rules below are shared by every repository that pins this base. The reposito
 
 ## Conventions
 
+- Keep the entrypoint a short map to authoritative sources; read task-specific details when needed.
 - One change, one plan: commit a plan before implementation, and update it in the same commit when the implementation departs from it.
 - A rule that must always hold belongs in a gate, not in a guide.
 - When the same mistake happens twice, the correction goes into this base or the repository delta, not only into the code.
@@ -23,6 +24,12 @@ Everything above this file comes from the shared base. This file holds only what
 > This file is the source for the composed `AGENTS.md`; `REVIEW.md` comes from the base alone. Run `./harness sync` after editing it.
 
 ## Commands
+
+Knowledge map: [docs/index.md](docs/index.md). Follow its reading conditions;
+do not load every linked document for every task.
+For code-review tasks, read [REVIEW.md](REVIEW.md). Native skills under
+`.agents/skills/` and `.claude/skills/` are generated from the pinned base;
+change their declared source and sync, never hand-edit the exports.
 
 - Test: `npm test` — runs `node --test`; all green.
 - Release the base: `node bin/harness.mjs release --base base --out dist` (version from `base/VERSION`).

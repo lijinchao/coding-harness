@@ -30,7 +30,7 @@ export function matchGlob(path, pattern) {
           index += 1
           regex += '(?:[^/]+/)*'
         } else {
-          regex += '.*'
+          regex += '[\\s\\S]*'
         }
       } else {
         regex += '[^/]*'

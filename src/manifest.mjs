@@ -26,7 +26,10 @@ export const LOCK_KEYS = ['version', 'tool', 'base', 'outputs', 'proofs', 'packs
 export const PACK_DECLARATION_KEYS = ['id', 'source', 'version', 'registry', 'cache']
 export const LOCK_TOOL_KEYS = ['version', 'commit', 'files']
 export const LOCK_BASE_KEYS = ['version', 'files']
-export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs', 'metrics', 'legibility']
+export const GOVERNANCE_KEYS = ['decisions', 'owners', 'ci', 'changes', 'manualVerification', 'docs', 'instructions', 'postmortems', 'proofCarry', 'proofs', 'metrics', 'legibility', 'context']
+export const CONTEXT_KEYS = ['entrypoint', 'sources']
+export const CONTEXT_SOURCE_FIELDS = ['id', 'path', 'scope', 'when']
+export const CONTEXT_SOURCE_KEYS = [...CONTEXT_SOURCE_FIELDS, 'authority']
 export const LEGIBILITY_ADAPTERS = ['start', 'ready', 'observe.ui', 'observe.logs', 'observe.metrics', 'observe.traces', 'reset', 'teardown']
 export const LEGIBILITY_KEYS = ['command', 'evidence']
 export const METRICS_KEYS = ['log', 'window', 'minFirstPassRate', 'maxFlaky', 'maxTimeouts', 'exclude', 'kind']
@@ -35,7 +38,7 @@ export const PROOFS_KEYS = ['require', 'maxAgeDays']
 export const PROOF_REQUIRE = ['blocking', 'all', 'none']
 export const PRODUCT_KEYS = ['version', 'mentions']
 export const PRODUCT_VERSION_KEYS = ['path', 'pattern']
-export const DOC_KEYS = ['path', 'maxWords', 'forbid', 'allow']
+export const DOC_KEYS = ['path', 'maxWords', 'maxBytes', 'forbid', 'allow']
 export const SURFACE_KEYS = ['id', 'paths', 'requires']
 export const SURFACE_FIELDS = ['id', 'paths', 'requires']
 
@@ -139,6 +142,25 @@ function validateGovernance(errors, governance) {
   requireObject(errors, governance, 'governance')
   rejectUnknown(errors, governance, GOVERNANCE_KEYS, 'governance')
   if (!isObject(governance)) return
+  if (governance.context !== undefined) {
+    const context = governance.context
+    requireObject(errors, context, 'governance.context')
+    rejectUnknown(errors, context, CONTEXT_KEYS, 'governance.context')
+    if (isObject(context)) {
+      requireString(errors, context.entrypoint, 'governance.context.entrypoint')
+      if (!Array.isArray(context.sources) || context.sources.length === 0) errors.push('governance.context.sources: required non-empty array')
+      else context.sources.forEach((source, index) => {
+        const where = 'governance.context.sources[' + index + ']'
+        requireObject(errors, source, where)
+        rejectUnknown(errors, source, CONTEXT_SOURCE_KEYS, where)
+        if (!isObject(source)) return
+        for (const field of ['id', 'path', 'when']) requireString(errors, source[field], where + '.' + field)
+        if (source.authority !== undefined) requireString(errors, source.authority, where + '.authority')
+        if (!Array.isArray(source.scope) || source.scope.length === 0) errors.push(where + '.scope: required non-empty array')
+        else source.scope.forEach((value, i) => requireString(errors, value, where + '.scope[' + i + ']'))
+      })
+    }
+  }
   if (governance.version !== undefined) errors.push('governance.version: removed; declare product.version.path and product.mentions instead')
   if (governance.decisions !== undefined) requireString(errors, governance.decisions, 'governance.decisions')
   if (governance.owners !== undefined) {
@@ -220,6 +242,7 @@ function validateGovernance(errors, governance) {
         rejectUnknown(errors, entry, DOC_KEYS, where)
         requireString(errors, entry?.path, where + '.path')
         if (entry?.maxWords !== undefined && !Number.isInteger(entry.maxWords)) errors.push(where + '.maxWords: must be an integer')
+        if (entry?.maxBytes !== undefined && (!Number.isInteger(entry.maxBytes) || entry.maxBytes < 1)) errors.push(where + '.maxBytes: must be a positive integer')
         if (entry?.forbid !== undefined) {
           if (!Array.isArray(entry.forbid) || entry.forbid.length === 0) errors.push(where + '.forbid: required non-empty array')
           else entry.forbid.forEach((pattern, patternIndex) => requireString(errors, pattern, where + '.forbid[' + patternIndex + ']'))

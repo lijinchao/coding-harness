@@ -84,7 +84,7 @@ The lock records the declared pin: `lock.tool.commit` is the manifest's `tool.co
 
 An upgrade is explicit. `harness upgrade --to <version> [--tool-commit <sha>]` moves the base pin and the tool pin, rewrites every `base@` reference in gate text and every occurrence of the previous base version in the documents declared under `product.mentions`, re-syncs the lock, and then runs the governance checks; it exits non-zero when a declared mention still disagrees with the product version source. The repository's own checks must pass before the bump merges. Editing a released base version in place is a broken pin, not an upgrade.
 
-`harness release` refuses to overwrite an existing `base@<version>`; bump `base/VERSION` or pass `--force`. `harness sync` and `harness upgrade` resolve, verify, and compose before writing anything, and commit each file by rename, so a failed upgrade leaves the previous state intact.
+`harness release` refuses to overwrite `base@<version>`; bump `base/VERSION` or pass `--force`. Sync/upgrade resolve and compose before writes: resolution failures preserve outputs, not whole-command rollback. Upgrade's final doctor runs after pin/lock/output writes; failures leave changes. Inspect changes; rerun checks.
 
 The bootstrap resolves the manifest and the tool cache next to the script, so invoking it by absolute path from any directory pins the same tool. `harness sync` writes the bootstrap from the running tool and `check` fails when it is missing or differs, so a bootstrap fix reaches a repository already initialized.
 

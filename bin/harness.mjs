@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
-import { mergePacks, packDiff } from '../src/pack.mjs'
+import { mergePacks, packDiff, PACK_RAW } from '../src/pack.mjs'
 import { buildAttestation, verifyAttestation } from '../src/attest.mjs'
 import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
@@ -21,7 +21,7 @@ import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
 import { definitionHash, proofProblems } from '../src/proof.mjs'
-import { budgetProblems, metricsWindow, readRuns } from '../src/metrics.mjs'
+import { budgetProblems, metricsWindow, readRuns, runIsGreen } from '../src/metrics.mjs'
 import { DEFAULT_CARRY, carriedChanges, carriedState, createProofWorktree, removeProofWorktree } from '../src/worktree.mjs'
 import { runGates } from '../src/gates.mjs'
 import { applySync, inspect, resolveBase, writeAtomic } from '../src/state.mjs'
@@ -260,6 +260,9 @@ function cmdUpgrade(options) {
   const stale = /base@\d+\.\d+\.\d+/g
   const rewrite = (value) => (typeof value === 'string' ? value.replace(stale, newPin) : value)
   manifest.version = to
+  // Pack resolution shallow-copies the root, so primitive pin changes must
+  // also reach the repository object that applySync persists.
+  if (manifest[PACK_RAW] !== undefined) manifest[PACK_RAW].version = to
   if (manifest.tool !== undefined) manifest.tool.version = to
   if (manifest.tool !== undefined && options['tool-commit'] !== undefined) manifest.tool.commit = options['tool-commit']
   for (const gate of manifest.gates) {
@@ -268,8 +271,10 @@ function cmdUpgrade(options) {
   }
   // An upgrade re-composes, but a recorded proof is evidence about a gate and
   // must survive it; applySync preserves whatever lock.proofs it is given.
-  const proofs = manifest.lock?.proofs
-  manifest.lock = proofs === undefined ? undefined : { proofs }
+  const previousLock = manifest.lock ?? {}
+  manifest.lock = Object.fromEntries(['proofs', 'packs', 'overrides']
+    .filter((key) => previousLock[key] !== undefined)
+    .map((key) => [key, previousLock[key]]))
   const outputs = applySync(root, path, manifest)
   for (const item of outputs) console.log(`synced ${item.output}`)
   // A declared product mention that tracks the base pin must name the new one;
@@ -304,8 +309,8 @@ function changedFiles(root, options) {
   const changed = options.changed ?? []
   if (changed.length > 0) return changed
   if (typeof options.since === 'string') {
-    const out = execFileSync('git', ['-C', root, 'diff', '--name-only', options.since + '...HEAD'], { encoding: 'utf8' })
-    return out.split('\n').filter(Boolean)
+    const out = execFileSync('git', ['-C', root, 'diff', '--name-only', '-z', options.since + '...HEAD'], { encoding: 'utf8' })
+    return out.split('\0').filter(Boolean)
   }
   throw new Error('missing --since <ref> or --changed <path>')
 }
@@ -358,9 +363,10 @@ async function cmdGates(options) {
   // `governance.proofs` has asked for that evidence, so a stale lock is a failure of
   // this run rather than a note — and saying so here is what stops "local green, CI
   // red", since only `prove` used to notice.
+  let stale = []
   if (options['skip-proofs'] !== true) {
     const ran = new Set(gates.map((gate) => gate.id))
-    const stale = proofProblems(manifest, toolCommit(), ran)
+    stale = proofProblems(manifest, toolCommit(), ran)
     if (stale.length > 0) {
       for (const problem of stale) console.error('proof: ' + problem)
       console.error('gates: ' + String(stale.length) + ' recorded proof(s) do not describe the gates that just ran; run harness prove --record')
@@ -368,7 +374,7 @@ async function cmdGates(options) {
     }
   }
   if (typeof options.report === 'string') {
-    const entry = { at: new Date().toISOString(), kind: 'gate-health', version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
+    const entry = { at: new Date().toISOString(), kind: 'gate-health', version: manifest.version, tool: toolVersion(), proofs_checked: options['skip-proofs'] !== true, proof_problems: stale, results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
     appendFileSync(resolve(options.report), `${JSON.stringify(entry)}\n`)
   }
   if (blocking > 0) process.exit(1)
@@ -434,7 +440,7 @@ function cmdMetrics(options) {
   }
   const log = resolve(requireOption(options, 'log'))
   const runs = readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line))
-  const green = runs.filter((run) => run.results.every((result) => result.ok)).length
+  const green = runs.filter(run => runIsGreen(run)).length
   console.log(`runs: ${runs.length}`)
   console.log(`green: ${green}`)
   console.log(`first-pass rate: ${runs.length === 0 ? 'n/a' : (green / runs.length).toFixed(2)}`)
@@ -664,7 +670,9 @@ async function cmdProve(options) {
   if (options.record === true) {
     manifest.lock = manifest.lock ?? { version: manifest.version, outputs: {} }
     manifest.lock.proofs = { ...(manifest.lock.proofs ?? {}), ...recorded }
-    writeAtomic(path, `${JSON.stringify(manifest, null, 2)}\n`)
+    const persisted = manifest[PACK_RAW] ?? manifest
+    persisted.lock = manifest.lock
+    writeAtomic(path, `${JSON.stringify(persisted, null, 2)}\n`)
     console.log(`proofs recorded: ${Object.keys(recorded).length}`)
   }
 }

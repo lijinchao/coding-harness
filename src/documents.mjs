@@ -80,6 +80,10 @@ export function documentProblems(root, docs) {
     if (!existsSync(path)) { problems.push('governance.docs[' + index + '] (' + rel + '): file not found'); continue }
     if (!statSync(path).isFile()) { problems.push('governance.docs[' + index + '] (' + rel + '): not a file'); continue }
     const text = readFileSync(path, 'utf8')
+    if (entry.maxBytes !== undefined) {
+      const bytes = Buffer.byteLength(text, 'utf8')
+      if (bytes > entry.maxBytes) problems.push(rel + ': ' + bytes + ' bytes exceeds the budget of ' + entry.maxBytes)
+    }
     if (entry.maxWords !== undefined) {
       const words = text.split(/\s+/).filter(Boolean).length
       if (words > entry.maxWords) problems.push(rel + ': ' + words + ' words exceeds the budget of ' + entry.maxWords)
@@ -123,7 +127,7 @@ export function uncoveredPaths(surfaces, paths) {
 export function surfaceCoverageProblems(root, surfaces) {
   let tracked
   try {
-    tracked = execFileSync('git', ['-C', root, 'ls-files'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).split('\n').filter(Boolean)
+    tracked = execFileSync('git', ['-C', root, 'ls-files', '-z'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).split('\0').filter(Boolean)
   } catch {
     return []
   }

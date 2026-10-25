@@ -6,6 +6,12 @@ Everything above this file comes from the shared base. This file holds only what
 
 ## Commands
 
+Knowledge map: [docs/index.md](docs/index.md). Follow its reading conditions;
+do not load every linked document for every task.
+For code-review tasks, read [REVIEW.md](REVIEW.md). Native skills under
+`.agents/skills/` and `.claude/skills/` are generated from the pinned base;
+change their declared source and sync, never hand-edit the exports.
+
 - Test: `npm test` — runs `node --test`; all green.
 - Release the base: `node bin/harness.mjs release --base base --out dist` (version from `base/VERSION`).
 - Validate a manifest: `./harness validate --manifest <path>`

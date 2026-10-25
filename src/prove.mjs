@@ -1,5 +1,15 @@
 import { execFileSync } from 'node:child_process'
 import { runCommand } from './process.mjs'
+import { outputViolations } from './gates.mjs'
+
+// Exit zero is not sufficient: a timeout handler can exit successfully while
+// leaving the work incomplete. Every successful proof stage must finish normally.
+function completionProblem(result) {
+  if (result.timedOut) return 'timed out'
+  if (result.signal !== null) return 'terminated by signal ' + result.signal
+  if (result.code !== 0) return 'exited ' + result.code
+  return null
+}
 
 /**
  * Working-tree changes git can see, or null when this is not a git checkout.
@@ -48,12 +58,14 @@ export async function proveGate(root, gate, timeoutMs = 0, options = {}) {
   // Once the failure has been introduced, every path attempts the revert.
   const revert = async () => {
     const result = await runCommand(root, gate.revert_command, timeoutMs)
-    if (result.code !== 0) return 'the revert exited ' + result.code + (result.timedOut ? ' (timeout)' : '')
+    const problem = completionProblem(result)
+    if (problem !== null) return 'the revert ' + problem
     // A gate may need a product the repository cannot commit; the revert
     // restores the state, and the setup that produced the product runs again.
     if (gate.setup_command !== undefined) {
       const setup = await runCommand(root, gate.setup_command, timeoutMs)
-      if (setup.code !== 0) return 'the setup exited ' + setup.code + (setup.timedOut ? ' (timeout)' : '')
+      const problem = completionProblem(setup)
+      if (problem !== null) return 'the setup ' + problem
     }
     const dirty = dirtyPaths(root, { untracked })
     if (dirty === null) return 'the revert could not be verified'
@@ -62,17 +74,23 @@ export async function proveGate(root, gate, timeoutMs = 0, options = {}) {
   }
   if (gate.setup_command !== undefined) {
     const setup = await runCommand(root, gate.setup_command, timeoutMs)
-    if (setup.code !== 0) {
-      return { status: 'error', detail: 'the setup exited ' + setup.code + (setup.timedOut ? ' (timeout)' : '') }
+    const problem = completionProblem(setup)
+    if (problem !== null) {
+      return { status: 'error', detail: 'the setup ' + problem }
     }
   }
   const introduced = await runCommand(root, gate.prove_fires_command, timeoutMs)
-  if (introduced.code !== 0) {
+  const introductionProblem = completionProblem(introduced)
+  if (introductionProblem !== null) {
     const problem = await revert()
-    return { status: 'error', detail: 'introducing the failure exited ' + introduced.code + (introduced.timedOut ? ' (timeout)' : '') + (problem === null ? ' (reverted)' : '; ' + problem) }
+    return { status: 'error', detail: 'introducing the failure ' + introductionProblem + (problem === null ? ' (reverted)' : '; ' + problem) }
   }
   const fired = await runCommand(root, gate.command, timeoutMs)
-  if (fired.code === 0) {
+  if (fired.timedOut || fired.signal !== null) {
+    const problem = await revert()
+    return { status: 'error', detail: (fired.timedOut ? 'gate timed out' : 'gate terminated by signal ' + fired.signal) + ' under injection; no proof recorded' + (problem === null ? ' (reverted)' : '; ' + problem) }
+  }
+  if (fired.code === 0 && outputViolations(fired.output, gate.expect).length === 0) {
     const problem = await revert()
     return problem === null
       ? { status: 'dead', detail: 'gate did not fire on the introduced failure' }
@@ -81,6 +99,8 @@ export async function proveGate(root, gate, timeoutMs = 0, options = {}) {
   const problem = await revert()
   if (problem !== null) return { status: 'error', detail: problem }
   const clean = await runCommand(root, gate.command, timeoutMs)
-  if (clean.code !== 0) return { status: 'error', detail: 'gate still fails after revert' }
+  const recoveryProblem = completionProblem(clean)
+  if (recoveryProblem !== null) return { status: 'error', detail: 'gate ' + recoveryProblem + ' after revert' }
+  if (outputViolations(clean.output, gate.expect).length > 0) return { status: 'error', detail: 'gate still fails after revert' }
   return { status: 'ok', detail: 'fired on the failure and passed after revert' }
 }

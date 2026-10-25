@@ -1,3 +1,11 @@
+// Shared by the window budget and raw-log CLI summary; legacy reports have
+// neither qualification field and retain their original gate-only meaning.
+export function runIsGreen(run, exclude = []) {
+  const results = (Array.isArray(run?.results) ? run.results : []).filter(result => !exclude.includes(result.id))
+  return run?.proofs_checked !== false && (run?.proof_problems ?? []).length === 0
+    && results.length > 0 && results.every(result => result.ok === true)
+}
+
 /**
  * Turn the recorded gate reports into the numbers a budget can judge.
  *
@@ -23,7 +31,7 @@ export function metricsWindow(entries, window = 20, exclude = [], kind = 'gate-h
   let green = 0
   for (const run of runs) {
     const results = (Array.isArray(run?.results) ? run.results : []).filter((result) => !ignored.has(result.id))
-    if (results.length > 0 && results.every((result) => result.ok === true)) green += 1
+    if (runIsGreen(run, exclude)) green += 1
     for (const result of results) {
       const entry = stats.get(result.id) ?? { runs: 0, failures: 0, timeouts: 0 }
       entry.runs += 1

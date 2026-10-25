@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { toolCommit } from '../src/tool.mjs'
+import { metricsWindow } from '../src/metrics.mjs'
 
 const CLI = resolve(import.meta.dirname, '../bin/harness.mjs')
 
@@ -229,10 +230,15 @@ test('gates reports a stale proof instead of a false green', () => {
       proofs: { pass: { at: new Date().toISOString(), tool: toolCommit(), definition: 'definitely-not-the-hash' } },
     }
     writeFileSync(manifestPath(dir), JSON.stringify(manifest, null, 2) + '\n')
-    assert.throws(() => run(['gates', '--manifest', manifestPath(dir)]), /proof: .*the gate changed since it was proved/)
+    const report = join(dir, 'report.jsonl')
+    assert.throws(() => run(['gates', '--manifest', manifestPath(dir), '--report', report]), /proof: .*the gate changed since it was proved/)
+    const rows = readFileSync(report, 'utf8').trim().split('\n').map(JSON.parse)
+    assert.equal(metricsWindow(rows).green, 0, 'stale proof failures must reach the same metrics window')
+    assert.match(run(['metrics', '--log', report]), /green: 0/)
     // An explicit opt-out exists for the one case that needs it: a worktree whose
     // lock is being rebuilt.
-    run(['gates', '--manifest', manifestPath(dir), '--skip-proofs'])
+    run(['gates', '--manifest', manifestPath(dir), '--skip-proofs', '--report', report])
+    assert.equal(metricsWindow(readFileSync(report, 'utf8').trim().split('\n').map(JSON.parse)).green, 0, 'an explicit bypass is not qualified health evidence')
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

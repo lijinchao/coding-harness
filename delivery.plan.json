@@ -1,0 +1,109 @@
+{
+  "schema_version": "coding-harness.delivery/v1",
+  "id": "proof-stage-normal-completion",
+  "outcome": "Reject incomplete proof stages even when timeout cleanup exits zero; release the fixed immutable tool before merging the authorized PR stack.",
+  "design": "docs/decisions/0050-proof-stage-completion.md",
+  "constraints": [
+    "No runtime dependencies added",
+    "Do not edit generated files or old releases",
+    "User authorized fixed release and ordered PR merges; no self-approval or old-release edits",
+    "Model calls remain opt-in and bounded; raw traces stay untracked",
+    "Native support, task execution, repository DoD and human acceptance are distinct"
+  ],
+  "scope": [
+    "src",
+    "bin",
+    "schema",
+    "test",
+    "scripts",
+    "packs",
+    "dist",
+    "base",
+    "docs",
+    "README.md",
+    "harness.manifest.json",
+    "examples/consumer",
+    ".agents",
+    ".claude",
+    "AGENTS.delta.md"
+  ],
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "description": "Self and example pin the immutable fixed tool with no drift",
+      "checks": [
+        "pins"
+      ]
+    },
+    {
+      "id": "AC-02",
+      "description": "Every proof stage rejects timeout and signal termination",
+      "checks": [
+        "scoring"
+      ]
+    },
+    {
+      "id": "AC-03",
+      "description": "A recovery timeout cannot produce a CLI proof record",
+      "checks": [
+        "cli-proof"
+      ]
+    },
+    {
+      "id": "AC-04",
+      "description": "Normal failure/revert/success proof behavior is preserved",
+      "checks": [
+        "scoring"
+      ]
+    },
+    {
+      "id": "AC-05",
+      "description": "Existing repository regressions remain green",
+      "checks": [
+        "suite"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "scoring",
+      "tier": "integration",
+      "command": "node --test test/proof-failure-boundary.test.mjs",
+      "test_files": [
+        "test/proof-failure-boundary.test.mjs"
+      ]
+    },
+    {
+      "id": "cli-proof",
+      "tier": "e2e",
+      "command": "node --test --test-name-pattern='CLI refuses to record' test/proof-failure-boundary.test.mjs",
+      "test_files": [
+        "test/proof-failure-boundary.test.mjs"
+      ]
+    },
+    {
+      "id": "pins",
+      "tier": "integration",
+      "command": "./harness check --manifest harness.manifest.json && ./harness check --manifest examples/consumer/harness.manifest.json",
+      "test_files": [
+        "harness.manifest.json",
+        "examples/consumer/harness.manifest.json"
+      ]
+    },
+    {
+      "id": "suite",
+      "tier": "integration",
+      "command": "npm test",
+      "test_files": [
+        "test/proof-failure-boundary.test.mjs",
+        "test/self-product-status.test.mjs"
+      ]
+    }
+  ],
+  "tier_waivers": [
+    {
+      "tier": "unit",
+      "reason": "The defect is subprocess lifecycle qualification across actual Git proof stages, covered by integration checks; pure isolated assertions would not reproduce it."
+    }
+  ]
+}

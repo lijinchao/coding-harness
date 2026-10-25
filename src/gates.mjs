@@ -1,6 +1,6 @@
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
 
-function outputViolations(output, expect) {
+export function outputViolations(output, expect) {
   if (expect === undefined || expect.forbid === undefined) return []
   const allow = expect.allow ?? []
   const lines = output.split('\n')

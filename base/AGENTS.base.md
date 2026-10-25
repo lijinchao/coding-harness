@@ -4,6 +4,7 @@ The rules below are shared by every repository that pins this base. The reposito
 
 ## Conventions
 
+- Keep the entrypoint a short map to authoritative sources; read task-specific details when needed.
 - One change, one plan: commit a plan before implementation, and update it in the same commit when the implementation departs from it.
 - A rule that must always hold belongs in a gate, not in a guide.
 - When the same mistake happens twice, the correction goes into this base or the repository delta, not only into the code.
