@@ -1,9 +1,9 @@
 {
-  "version": "0.1.46",
+  "version": "0.1.47",
   "tool": {
-    "version": "0.1.46",
+    "version": "0.1.47",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7"
+    "commit": "122c44d45e4ae39ae1959620959a624a2a609051"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -520,9 +520,9 @@
     }
   },
   "lock": {
-    "version": "0.1.46",
+    "version": "0.1.47",
     "tool": {
-      "version": "0.1.46",
+      "version": "0.1.47",
       "files": {
         "bin/harness.mjs": "dac5e01504ba58df73ba43ffd80cd43c2a6264724159ad30398f43075c7bc62b",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
@@ -542,7 +542,7 @@
         "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
         "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
         "src/proof.mjs": "af56a190eeef321d30e2fce82e34b1b3f7f3fd978972cb4dbf1dd846f65924cf",
-        "src/prove.mjs": "f99e435f18cbe69c598aec98c823c567573ffc1220d50e19ab4b84b3df45ad82",
+        "src/prove.mjs": "8cc3d33f819fdfd7d08c3df3729f13c6af755fb4099fbd5ae0725b66cf083b8b",
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/select.mjs": "bd3fd4063c4422e284966e8c286d2472dce97925501ee054ec3ee544ef980c6e",
@@ -555,9 +555,9 @@
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
         "src/workflow.mjs": "3a11dc98d197897f900c85d85928354dadb16196e113e77e59c2520c8f51e64e",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "91f852ee6857cb399c4e978d9042d3029fd4f64e458f07ef424d05477db6ba19"
+        "package.json": "2e8b3732e4b57ae216f66d2509bc71d28457174a85821eea8769f677fc7db4fb"
       },
-      "commit": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7"
+      "commit": "122c44d45e4ae39ae1959620959a624a2a609051"
     },
     "outputs": {
       "AGENTS.md": "4be2d6fdf4dcb7d5f19fa328198cf9a1f46b6863d5165fda52647060344b0f30",
@@ -570,11 +570,11 @@
       ".claude/skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527"
     },
     "base": {
-      "version": "0.1.46",
+      "version": "0.1.47",
       "files": {
         "AGENTS.base.md": "997ba570678141d8be247c93705448fa1a39020f43ee6fd20d549e66972a6327",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "c1e40add794a52b012ead4401c354662b2eaea818eab9cbc5806ed88ff10abb9",
+        "VERSION": "339576cb65d219c73663037939204654d18f39683f3b38ed72ecd3edba722f57",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527",
