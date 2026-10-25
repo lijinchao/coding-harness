@@ -84,13 +84,18 @@ context/maxBytes 字段；context 的 scope 只认可 Git inventory 中的文件
 因此在干净分支上，先对**旧声明**执行 pinned upgrade，再增加新声明：
 
 ```sh
-./harness upgrade --manifest harness.manifest.json --to 0.1.46 \
-  --tool-commit 1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7
+./harness upgrade --manifest harness.manifest.json --to <目标发行版本> \
+  --tool-commit <该发行的完整提交SHA>
 # 随后编辑源 delta、地图、context 与原生 compositions，不编辑生成物。
 ./harness sync --manifest harness.manifest.json
 # git add 这次新增的地图/测试等文件，使 scope 能被校验；然后：
 ./harness doctor --manifest harness.manifest.json --strict
 ```
+
+跨版本迁移须使用目标发行的固定工具执行 upgrade；旧 bootstrap 仍启动旧工具，
+会拒绝目标版本 pin。可先只更新 manifest.tool 的 version/commit 到已发布目标，
+再经项目 `./harness upgrade` 重建 base/lock；不要拿未发布工作树工具写锁。
+0.1.46 是上述历史试点的版本，不是修复证明超时漏洞后的推荐版本；最新固定版本见 README。
 
 提交实现后先 `./harness prove --manifest harness.manifest.json --isolated --record
 --timeout 300`，再跑完整 gates：旧 tool 的证明不因升级自动变新，命令全部通过

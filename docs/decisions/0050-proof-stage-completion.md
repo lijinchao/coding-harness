@@ -20,8 +20,10 @@ a failed recovery cannot create a proof record. Keep ordinary proof behavior.
 
 Publish immutable base/tool 0.1.47, upgrade self/example with the released
 tool, refresh all isolated proofs and attestation, and review the exact PR
-head. User authorization now permits release and merging PRs #3 and #4 in
-dependency order when the fixed stack and main CI pass. Do not self-approve,
+head. User authorization now permits release and merging PRs #3 and #4.
+Merge fixed #4 into #3's branch first, recheck #3 CI, then merge the complete
+stack to main; do not land known-broken #3 on main even temporarily.
+Do not self-approve,
 force-push, modify old releases, or change agentic-ops in this iteration.
 
 ## Alternatives
