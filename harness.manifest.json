@@ -1,9 +1,9 @@
 {
-  "version": "0.1.44",
+  "version": "0.1.45",
   "tool": {
-    "version": "0.1.44",
+    "version": "0.1.45",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "0e1c61df050c74b29974d9aab404e11520330cf5"
+    "commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -65,7 +65,7 @@
     {
       "id": "harness-drift",
       "command": "./harness check --manifest harness.manifest.json",
-      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.44 plus this delta",
+      "protects": "the composed AGENTS.md and REVIEW.md match base@0.1.45 plus this delta",
       "prove_fires": "hand-edit AGENTS.md, then run ./harness check; expect exit 1",
       "severity": "blocking",
       "prove_fires_command": "printf '<!-- prove -->\\n' >> AGENTS.md",
@@ -369,7 +369,10 @@
     ],
     "changes": "docs/changes",
     "docs": [
-      {"path": "docs/context-map-pilot.md", "maxBytes": 6500},
+      {
+        "path": "docs/context-map-pilot.md",
+        "maxBytes": 6500
+      },
       {
         "path": "AGENTS.md",
         "maxBytes": 8192
@@ -467,53 +470,55 @@
     }
   },
   "lock": {
-    "version": "0.1.44",
+    "version": "0.1.45",
     "tool": {
-      "version": "0.1.44",
+      "version": "0.1.45",
       "files": {
-        "bin/harness.mjs": "e7c23856f79c2c024dee3e34db56cfe5eed141c693aa9659ccfb8a3801edb4ac",
+        "bin/harness.mjs": "dac5e01504ba58df73ba43ffd80cd43c2a6264724159ad30398f43075c7bc62b",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/attest.mjs": "83e4637cc9dcc1e28d1ee63a155359aa3a94072e37d2ae8c6c0f3da6d3a8481a",
-        "src/command-review.mjs": "2c65b25882ecb345b7c3ba521b53335089681ea73f249a628e9993ea29c132fb",
+        "src/command-review.mjs": "cf62b228512df4f6ec00e4021fb81dc0fba58f46bf5dcc26af502e20fb7c4f8c",
         "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
-        "src/context.mjs": "60db029799af9d4f8ae66e867bd439970f12f369c633912ed1cc30c2f9f4d755",
+        "src/context.mjs": "1ac405d5dbeafc33eae3c371dfb423b49bf254bb73a71b4bbd75b1b3bb70ce72",
         "src/doctor.mjs": "ddc578a1e5fdfba7f416fe75ecb80f9fd7f98c15a2fd358a4ad2c6257430663c",
         "src/documents.mjs": "7829a7fc2c6c26d576a688d2f411418fcf49a79f952cb1528603954824ba4916",
+        "src/external-hints.mjs": "ce091d8c401b3bb06df711f1ac5ee2b3f7b85ea51b30cbf53d7d9e428bf2a310",
         "src/fetch.mjs": "cd43a0439c0cdd31637237d5b15cbab799273262dd833f7cd7b7210a1db7d51b",
-        "src/gates.mjs": "6baf3cab431dabeb285cb6ee306b1e92dbce5c6642f40f53b8add002772a2bf7",
+        "src/gates.mjs": "5215180a9dbc85d328f9ee2701a77a05c0b0aafc05a63ca8bda7b2453adf2e34",
         "src/manifest.mjs": "7b93127c3cbb8559be4ac9575141f9e51df73b90c75386215aaec749ff563280",
-        "src/metrics.mjs": "28230934a869bd040545dc8a82e849bad1d565e022f02dc191c89c6fdccd61fa",
+        "src/metrics.mjs": "f3d1bf431ea0e5b8fdf7eee6ca8a0d3605b45fadedd17df8074d1bfaca346b82",
         "src/pack.mjs": "6de1f9152017bdf89a44a44fa62fe88392aebdbb7567d9a3efa270e8dccc7c6c",
         "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
         "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
         "src/proof.mjs": "af56a190eeef321d30e2fce82e34b1b3f7f3fd978972cb4dbf1dd846f65924cf",
-        "src/prove.mjs": "e20fcca707044715b74010ae8e20a6ea4fb96412ae7ed28b105dd6fb1843535f",
+        "src/prove.mjs": "f99e435f18cbe69c598aec98c823c567573ffc1220d50e19ab4b84b3df45ad82",
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/select.mjs": "bd3fd4063c4422e284966e8c286d2472dce97925501ee054ec3ee544ef980c6e",
         "src/shim.mjs": "565579029f2cbd87ec02cf186331c5a3a5a53e07d4ba590da3a0778235aa3fc5",
         "src/state.mjs": "8d915d3d5c591ed806da105c9348cb14912cdb3119e306e148a974c11d28fdfa",
-        "src/survey.mjs": "8b83a6b927c90044b5d034dee0f6439d317eb1f681a118bc8f80869984deaa02",
+        "src/survey.mjs": "0f45e0628e2e95c01719a73c2b1cc1f1a16f4018db0ce62be92d56d07ad4dd29",
         "src/system-ci-template.mjs": "714343ebef940e9facbd17dbba3febe417bfa84d022a242cd8e736c0371b73cb",
-        "src/system.mjs": "054e0c3795013b5750a68e87ab3e098c037689bff981446ed7ea2f9f476b5453",
+        "src/system-gitlab.mjs": "26800e9caef6631e4fbad61e5a9c5113ff9bdc5a8e0bd6d67b5e6a96bc9acb1b",
+        "src/system.mjs": "9dfe613b810bf8daddf5b67c2e00638446a9a3f6fc0e96f859bc95a0fa139102",
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
-        "src/workflow.mjs": "5a6cbbfe9bfab8bd29c40b195802a8a314c4eab331e2674fddf7d20ae7781714",
+        "src/workflow.mjs": "3a11dc98d197897f900c85d85928354dadb16196e113e77e59c2520c8f51e64e",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "d4d3ab4ee21ec046669cdc4459926f412a3c6bcf53d0c4843b8be7a3070367a0"
+        "package.json": "66368314ab0761c878b6e5462e024ab3c098bf25f5188dc2530e9aa5d347674b"
       },
-      "commit": "0e1c61df050c74b29974d9aab404e11520330cf5"
+      "commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c"
     },
     "outputs": {
       "AGENTS.md": "ec0823820eefd69d45ae279ada36bc47566c396acfe792c0e44c8fa3f3fe21f6",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b"
     },
     "base": {
-      "version": "0.1.44",
+      "version": "0.1.45",
       "files": {
         "AGENTS.base.md": "997ba570678141d8be247c93705448fa1a39020f43ee6fd20d549e66972a6327",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "8f84ade2d56d086e8307558b6e50be1c3bf36534e464e9d9f58942e6a37e2d4c",
+        "VERSION": "e27ac3672d30adb34fd07260d4336f616a5535cd69b97691abdeaf9c3e4d63e4",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
@@ -526,11 +531,11 @@
     },
     "packs": {
       "delivery-flow": {
-        "version": "0.1.0",
+        "version": "0.1.1",
         "files": {
-          "README.md": "9dd8bf81f3b027b2181c84597b8c10a4a9d64c8d14ddb100f9826f4ea91e3b27",
-          "VERSION": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
-          "check.mjs": "dfe9a87c0b5e4ba34633d197755bcb2126a97759421a2d2db846102121c5d05a",
+          "README.md": "3e686e808d0e37a9eff700d20efedb8b60ee5a15c4a54a31f073337e1ba34529",
+          "VERSION": "80447316529fc62014fbaa047fb67c51ac30e32830cda370405349d8d66d196c",
+          "check.mjs": "062e5103eed0a0caff13f5389385885731edfb4b7bcb8dfd3e09cf3f6c4f7620",
           "delivery.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
           "pack.json": "f33c987d6544d66dc8b426d7575417def43bd05986cd1beba3598301a5e745b8"
         }

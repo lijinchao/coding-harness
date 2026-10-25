@@ -87,11 +87,11 @@ A gate is admitted only with a `prove_fires` action you have actually run. A gat
 ## Status
 
 The pinned base/tool release is v0.1.45. The table above inventories this
-checkout; its test compares it with the executable CLI. Working-only commands:
-`system-snapshot`, `system-gitlab-observe`. The self-governance test compares
+checkout; its test compares it with the executable CLI. Working-only commands: none.
+The self-governance test compares
 these names with the tool commit pinned in `harness.manifest.json`.
 
 The pinned tool includes packs, legibility and eval declarations, and system
-checks, runs and CI observations. GitLab collaboration observation is local
+checks, runs and CI observations. GitLab collaboration observation is released
 and tested with a fake transport; target-instance compatibility and CI artifact
 provenance remain unverified. YAML manifest support is deferred.
