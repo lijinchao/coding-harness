@@ -96,6 +96,12 @@ observable drift opportunity, not evidence that today's commands differ.
    `cr.json`, so a second run failed on an existing receipt. The regression
    test now runs it twice. Its adapter owns a unique temporary directory and
    removes it; failure injection changes a tracked expected-command fixture.
+7. **Test isolation exposed a test defect.** An isolated full-suite proof
+   intermittently failed after revert, while a standalone isolated rerun passed.
+   The cleanup test compared the entire process-global temporary namespace.
+   Deterministically introducing another caller's directory reproduced that
+   false failure. It now checks deletion of its actual export and parent and
+   preservation of the unrelated caller, rather than weakening cleanup checks.
 
 ## How to combine this with ordinary development
 

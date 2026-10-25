@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import {
   COMMAND_REVIEW_FILESYSTEM_KEYS,
   COMMAND_REVIEW_ISOLATION_KEYS,
@@ -37,7 +37,6 @@ test('command review runs the exact revision in an archive and does not authoriz
   writeFileSync(join(value.repository, 'check.mjs'), "throw new Error('dirty source must not run')\n")
   writeFileSync(join(value.repository, 'untracked.txt'), 'not exported\n')
   const out = join(value.root, 'review.json')
-  const beforeTemps = new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('coding-harness-command-review-')))
   let executionDirectory
   let unrelatedDirectory
   t.after(() => { if (unrelatedDirectory) rmSync(unrelatedDirectory, { recursive: true, force: true }); rmSync(value.root, { recursive: true, force: true }) })
@@ -48,7 +47,6 @@ test('command review runs the exact revision in an archive and does not authoriz
       unrelatedDirectory = mkdtempSync(join(tmpdir(), 'coding-harness-command-review-unrelated-'))
     },
   })
-  const afterTemps = new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('coding-harness-command-review-')))
 
   assert.equal(receipt.status, 'passed')
   assert.equal(receipt.result.ok, true)
@@ -60,9 +58,10 @@ test('command review runs the exact revision in an archive and does not authoriz
   assert.deepEqual(receipt.filesystem.modified, [])
   assert.deepEqual(receipt.filesystem.removed, [])
   assert.equal(receipt.filesystem.before_sha256, receipt.filesystem.after_sha256)
-  assert.deepEqual(afterTemps, beforeTemps)
   assert.notEqual(executionDirectory, value.repository)
   assert.equal(existsSync(executionDirectory), false, 'the actual exported tree must have been removed')
+  assert.equal(existsSync(dirname(executionDirectory)), false, 'the owned temporary parent must have been removed')
+  assert.equal(existsSync(unrelatedDirectory), true, 'cleanup must preserve another caller\'s directory')
   assert.deepEqual(validateCommandReview(receipt), [])
   const checked = checkCommandReview(value.repository, value.revision, 'node check.mjs', out)
   assert.equal(checked.valid, true)
