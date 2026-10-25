@@ -11,15 +11,18 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 | `repositories` | Repository id, role, checkout path, and full Git revision |
 | `contracts` | Producer, consumers, and repository-owned evidence path |
 | `verifications` | Reviewed command, repository, tier, and external-service boundary |
+| `change` | Shared ID, owned records, optional per-member Git baselines and diff coverage |
 
 `system-check` rejects unknown or duplicate identifiers, dangling repository
 references, escaping evidence paths, wildcard or multiline commands, and an
 external command outside `external-qualified`. It reports missing repositories,
 revision drift, dirty trees, missing evidence, and unresolved executables
 without running a command. Every repository needs a reviewed verification.
-`declared-ready` proves only snapshot alignment and evidence presence; command success remains unproved.
+`declared-ready` proves alignment and evidence presence, not command success.
 The complete format is in [system-manifest.md](system-manifest.md).
-An unresolved member uses `revision: null` and prevents readiness.
+`revision: null` prevents readiness.
+`system-snapshot` binds revisions outside member repositories without
+approving them or running commands. See [system-manifest.md](system-manifest.md).
 
 ### Command review receipt
 
@@ -58,21 +61,20 @@ declared repository. External qualification additionally requires
 `qualification.max_receipt_age_seconds` is the CI freshness budget. Promotion
 criteria declare a bounded history window, minimum observations, minimum
 healthy rate, and minimum current healthy streak.
-`system-ci` reads the system snapshot and `<tier>.receipt.json` files without
-running commands. An optional history directory supplies earlier reports for
-advisory stability statistics; malformed, future, or foreign-system entries are
-ignored and counted. Shadow mode always exits zero while reporting whether it
-would block; `--enforce` makes the current unhealthy result non-zero. History
-eligibility cannot enable enforcement or override current evidence.
+`system-ci` reads the snapshot and receipts without running commands. History
+supplies advisory statistics; malformed, future, or foreign entries are ignored.
+Shadow exits zero and reports `would_block`; `--enforce` fails on current
+unhealthy evidence. History cannot enable enforcement or override that evidence.
 Archived observations conform to `schema/system-ci-report.schema.json`; every
 receipt summary has a normalized shape even when evidence is absent or
-malformed. History accepts only complete reports for the same system.
+malformed. History requires the same Change ID and manifest digest. Legacy
+reports are ignored, so a new pinned change starts a new advisory window.
 
 The GitHub and GitLab scaffolds share `.harness/system-ci/receipts`,
 `.harness/system-ci/history`, and
-`.harness/system-ci/current/system-ci.json`. They archive current evidence but
-only document the provider-specific checkout and prior-artifact restoration
-steps; those deployment facts are never inferred.
+`.harness/system-ci/current/system-ci.json`. Checkout and history restoration
+remain provider-owned, not inferred. GitLab observations use separate target
+and report schemas; they do not affect `system-ci` health.
 
 ### Skill
 

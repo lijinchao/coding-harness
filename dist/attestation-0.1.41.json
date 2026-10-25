@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-19T07:00:56.287Z",
+  "at": "2026-10-24T12:53:33.199Z",
   "version": "0.1.41",
   "toolCommit": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
   "tag": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
@@ -8,7 +8,7 @@
     "release": "39112bbbec49f40f243084e0a98aeaa3a334101f01504784e36a9abdb306bcee"
   },
   "locks": {
-    "self": "9506a464c562a9b15ae3f00858af6c5f6a9a2c9eaa98483b40c79c4b999cc200"
+    "self": "c66a973bd1b5fae39ab48abcbb159f29627682c92ebb9d50c7d7980b3d884442"
   },
   "proofs": {
     "harness-drift": {
@@ -29,7 +29,7 @@
     },
     "release": {
       "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
-      "definition": "0b003dc204854ed88316fa96f1ed06a8e4b06614bf8f43e6a7f644fa5e76b02e"
+      "definition": "6785a37bd333f993d80f3878f782b8d3d74597b7b3e4361a4f50cebdf7c817b1"
     },
     "example": {
       "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
@@ -45,7 +45,7 @@
     },
     "command-review": {
       "tool": "282ecbf42e29dcfdc8356f5bf54cad1618ed8338",
-      "definition": "e8c30565bc5ef10672eece0d39e69635f41bfb2ca6198ae5a26dc80ca617f52e"
+      "definition": "210c8640f1c52cbb0a5e7f9da179571ac55220531c09b9b9ef51ebac26341a01"
     }
   }
 }

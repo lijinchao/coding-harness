@@ -16,7 +16,7 @@ import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
 import { toolCommit, toolRoot, toolVersion } from '../src/tool.mjs'
 import { SHIM } from '../src/shim.mjs'
-import { WORKFLOW } from '../src/workflow.mjs'
+import { GITLAB_WORKFLOW, WORKFLOW } from '../src/workflow.mjs'
 import { artifactProblems } from '../src/artifacts.mjs'
 import { scan } from '../src/scan.mjs'
 import { dirtyPaths, proveGate } from '../src/prove.mjs'
@@ -30,8 +30,9 @@ import { loadRequirements } from '../src/adopt.mjs'
 import { selectedGateIds } from '../src/select.mjs'
 import { uncoveredPaths } from '../src/documents.mjs'
 import { surveyRepository } from '../src/survey.mjs'
-import { checkSystemManifest, checkSystemReceipt, runSystemTier, systemCiReport } from '../src/system.mjs'
+import { checkSystemManifest, checkSystemReceipt, materializeSystemSnapshot, runSystemTier, systemCiReport } from '../src/system.mjs'
 import { renderSystemCiTemplate, writeSystemCiTemplate } from '../src/system-ci-template.mjs'
+import { observeSystemGitlab } from '../src/system-gitlab.mjs'
 import { checkCommandReview, runCommandReview } from '../src/command-review.mjs'
 
 const USAGE = `usage: harness <command> [options]
@@ -39,6 +40,8 @@ const USAGE = `usage: harness <command> [options]
 commands:
   survey     --dir <path>                inspect an unadopted repository without writing or running its commands
   system-check --manifest <path>         check a multi-repository system snapshot without running its commands
+  system-snapshot --manifest <declaration> --bind <id>=<full-sha> [--bind ...] --out <path>
+                                         bind reviewed revisions into a snapshot outside all declared repositories
   system-run --manifest <path> --tier <tier> --out <receipt> [--timeout <s>] [--allow-external] [--force]
                                          run one reviewed tier and write a version-bound receipt
   system-receipt-check --manifest <path> --receipt <path>
@@ -47,6 +50,8 @@ commands:
                                          check required receipts; Shadow mode is non-blocking by default
   system-ci-template --provider github|gitlab [--out <path>] [--force]
                                          print or explicitly write a reviewable Shadow scaffold
+  system-gitlab-observe --manifest <path> --targets <path> --host <hostname> --token-env <name> --out <report> [--timeout <s>]
+                                         read GitLab collaboration evidence against a pinned system snapshot
   command-review --repository <path> --revision <commit> --command <command> --out <receipt> [--timeout <s>] [--allow-external] [--force]
                                          run one candidate in an exact-revision archive; never grants approval
   command-review-check --repository <path> --revision <commit> --command <command> --receipt <path>
@@ -55,13 +60,13 @@ commands:
   sync       --manifest <path>           compose outputs from the pinned base and rewrite the lock
   check      --manifest <path>           fail when an output or the fetched base drifted
   doctor     --manifest <path>           fail when declared governance facts drift
-  init       --dir <path> [--base-source <dir>] [--version <v>]
+  init       --dir <path> --base-source <registry-or-git-url> --provider github|gitlab [--version <v>]
                                          scaffold a delta, manifest, and bootstrap
   upgrade    --manifest <path> --to <v> [--tool-commit <sha>]
                                          move the pins, rewrite version references, re-sync, and check
   release    --base <dir> --out <dir> [--version <v>] [--force]
                                          build a versioned, hashed base release
-  gates      --manifest <path> [--gate <id>] [--phase <name>] [--changed <path>|--since <ref>]
+  gates      --manifest <path> [--gate <id>] [--phase <name>] [--changed <path>|--since <ref>] [--skip-proofs]
                                      [--jobs <n>] [--timeout <s>] [--fail-fast] [--report <file>]
                                          run the declared gates, or the gates a change selects (one list for local and CI)
   select     --manifest <path> (--since <ref> | --changed <path>)
@@ -75,8 +80,8 @@ commands:
   prove      --manifest <path> [--gate <id>] [--timeout <s>] [--isolated] [--record]
                                          run the three-step proof (needs a clean tree; --isolated uses a worktree)`
 
-const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce'])
-const REPEATABLE_FLAGS = new Set(['changed'])
+const BOOLEAN_FLAGS = new Set(['force', 'record', 'fail-fast', 'isolated', 'check', 'strict', 'verify', 'allow-external', 'enforce', 'skip-proofs', 'help'])
+const REPEATABLE_FLAGS = new Set(['changed', 'bind'])
 
 function parseOptions(argv) {
   const options = {}
@@ -168,8 +173,16 @@ function cmdCheck(options) {
 function cmdInit(options) {
   const dir = resolve(requireOption(options, 'dir'))
   const version = options.version ?? toolVersion()
-  const source = options['base-source'] ?? 'git:https://github.com/lijinchao/coding-harness.git'
+  const source = requireOption(options, 'base-source')
+  const provider = requireOption(options, 'provider')
+  if (!['github', 'gitlab'].includes(provider)) throw new Error('--provider must be github or gitlab')
   const toolSource = options['tool-source'] ?? (source.startsWith('git:') ? source : toolRoot())
+  const manifestPath = resolve(dir, 'harness.manifest.json')
+  if (existsSync(manifestPath)) {
+    const existing = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    if (existing.base?.source !== source) throw new Error('existing manifest uses a different base source; use upgrade or edit it explicitly')
+    if (!(existing.governance?.ci ?? []).includes(provider === 'github' ? '.github/workflows/harness.yml' : '.gitlab-ci.yml')) throw new Error('existing manifest does not declare the selected CI provider')
+  }
   mkdirSync(dir, { recursive: true })
 
   const delta = resolve(dir, 'AGENTS.delta.md')
@@ -180,7 +193,6 @@ function cmdInit(options) {
   const shim = resolve(dir, 'harness')
   if (!existsSync(shim)) writeFileSync(shim, SHIM, { mode: 0o755 })
 
-  const manifestPath = resolve(dir, 'harness.manifest.json')
   if (!existsSync(manifestPath)) {
     const tool = { version: toolVersion(), source: toolSource }
     const commit = toolCommit()
@@ -189,7 +201,7 @@ function cmdInit(options) {
       version,
       tool,
       base: { source, registry: 'dist', cache: '.harness' },
-      governance: { owners: ['@owner'], ci: ['.github/workflows/harness.yml'] },
+      governance: { owners: ['@owner'], ci: [provider === 'github' ? '.github/workflows/harness.yml' : '.gitlab-ci.yml'] },
       compositions: [
         { output: 'AGENTS.md', sources: ['base:AGENTS.base.md', 'AGENTS.delta.md'] },
         { output: 'REVIEW.md', sources: ['base:REVIEW.base.md'] },
@@ -202,7 +214,7 @@ function cmdInit(options) {
       gates: [
         { id: 'harness-drift', command: './harness check --manifest harness.manifest.json', protects: `composed files match base@${version} plus this delta`, prove_fires: 'hand-edit AGENTS.md, then run ./harness check; expect exit 1', prove_fires_command: "printf '<!-- prove -->' >> AGENTS.md", revert_command: './harness sync --manifest harness.manifest.json', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
         { id: 'validate', command: './harness validate --manifest harness.manifest.json', protects: 'declared skills and gates carry their required sections', prove_fires: 'corrupt the manifest, then run ./harness validate; expect exit 1', prove_fires_command: "printf '{' >> harness.manifest.json", revert_command: 'git checkout -- harness.manifest.json', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
-        { id: 'doctor', command: './harness doctor --manifest harness.manifest.json', protects: 'declared governance facts stay consistent', prove_fires: 'empty CODEOWNERS, then run ./harness doctor; expect exit 1', prove_fires_command: "printf '' > .github/CODEOWNERS", revert_command: 'git checkout -- .github/CODEOWNERS', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
+        { id: 'doctor', command: './harness doctor --manifest harness.manifest.json', protects: 'declared governance facts stay consistent', prove_fires: 'empty CODEOWNERS, then run ./harness doctor; expect exit 1', prove_fires_command: "printf '' > CODEOWNERS", revert_command: 'git checkout -- CODEOWNERS', expect: { forbid: ['ERROR:'] }, severity: 'blocking' },
       ],
     }
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
@@ -216,15 +228,14 @@ function cmdInit(options) {
     writeFileSync(gitignore, '.harness/\n')
   }
 
-  const workflowPath = resolve(dir, '.github/workflows/harness.yml')
+  const workflowPath = resolve(dir, provider === 'github' ? '.github/workflows/harness.yml' : '.gitlab-ci.yml')
   if (!existsSync(workflowPath)) {
     mkdirSync(dirname(workflowPath), { recursive: true })
-    writeFileSync(workflowPath, WORKFLOW)
+    writeFileSync(workflowPath, provider === 'github' ? WORKFLOW : GITLAB_WORKFLOW)
   }
 
-  const codeowners = resolve(dir, '.github/CODEOWNERS')
+  const codeowners = resolve(dir, 'CODEOWNERS')
   if (!existsSync(codeowners)) {
-    mkdirSync(dirname(codeowners), { recursive: true })
     writeFileSync(codeowners, '# Base owner: base changes are reviewed here.\n* @owner\n')
   }
 
@@ -345,6 +356,21 @@ async function cmdGates(options) {
     if (result.signal !== null) notes.push('signal ' + result.signal)
     if (result.violations.length > 0) notes.push('forbidden output: ' + result.violations.join(', '))
     console.log(`${status}\t${result.id}${notes.length === 0 ? '' : ' (' + notes.join('; ') + ')'}`)
+  }
+  // A green gate run beside a stale proof lock is the false comfort this tool exists
+  // to prevent: the gates pass because they still work, while the recorded evidence
+  // describes a definition that no longer exists. A repository that declares
+  // `governance.proofs` has asked for that evidence, so a stale lock is a failure of
+  // this run rather than a note — and saying so here is what stops "local green, CI
+  // red", since only `prove` used to notice.
+  if (options['skip-proofs'] !== true) {
+    const ran = new Set(gates.map((gate) => gate.id))
+    const stale = proofProblems(manifest, toolCommit(), ran)
+    if (stale.length > 0) {
+      for (const problem of stale) console.error('proof: ' + problem)
+      console.error('gates: ' + String(stale.length) + ' recorded proof(s) do not describe the gates that just ran; run harness prove --record')
+      blocking += 1
+    }
   }
   if (typeof options.report === 'string') {
     const entry = { at: new Date().toISOString(), kind: 'gate-health', version: manifest.version, tool: toolVersion(), results: results.map((result) => ({ id: result.id, ok: result.ok, skipped: result.skipped, timedOut: result.timedOut, ms: result.ms })) }
@@ -472,6 +498,15 @@ function cmdSystemCheck(options) {
   if (!report.ready) process.exit(1)
 }
 
+function cmdSystemSnapshot(options) {
+  const report = materializeSystemSnapshot(
+    resolve(requireOption(options, 'manifest')),
+    options.bind ?? [],
+    resolve(requireOption(options, 'out')),
+  )
+  console.log(JSON.stringify(report, null, 2))
+}
+
 async function cmdSystemRun(options) {
   const path = resolve(requireOption(options, 'manifest'))
   const tier = requireOption(options, 'tier')
@@ -516,6 +551,21 @@ function cmdSystemCiTemplate(options) {
   const provider = requireOption(options, 'provider')
   if (options.out === undefined) process.stdout.write(renderSystemCiTemplate(provider))
   else console.log('wrote ' + writeSystemCiTemplate(provider, resolve(options.out), { force: options.force === true }))
+}
+
+async function cmdSystemGitlabObserve(options) {
+  const envName = requireOption(options, 'token-env')
+  if (!/^[A-Z][A-Z0-9_]*$/.test(envName)) throw new Error('--token-env must be an environment variable name')
+  const timeoutSeconds = options.timeout === undefined ? 10 : Number(options.timeout)
+  if (!Number.isInteger(timeoutSeconds) || timeoutSeconds < 1 || timeoutSeconds > 60) throw new Error('--timeout must be 1-60 seconds')
+  const report = await observeSystemGitlab(
+    resolve(requireOption(options, 'manifest')),
+    resolve(requireOption(options, 'targets')),
+    resolve(requireOption(options, 'out')),
+    { host: requireOption(options, 'host'), token: process.env[envName], timeoutMs: timeoutSeconds * 1000 },
+  )
+  console.log(JSON.stringify(report, null, 2))
+  if (!report.valid) process.exit(1)
 }
 
 async function cmdCommandReview(options) {
@@ -688,7 +738,7 @@ function cmdPacks(options) {
   for (const id of manifest.lock?.overrides ?? []) console.log('override: ' + id + ' (the repository version wins)')
 }
 
-const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, 'command-review': cmdCommandReview, 'command-review-check': cmdCommandReviewCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
+const COMMANDS = { survey: cmdSurvey, 'system-check': cmdSystemCheck, 'system-snapshot': cmdSystemSnapshot, 'system-run': cmdSystemRun, 'system-receipt-check': cmdSystemReceiptCheck, 'system-ci': cmdSystemCi, 'system-ci-template': cmdSystemCiTemplate, 'system-gitlab-observe': cmdSystemGitlabObserve, 'command-review': cmdCommandReview, 'command-review-check': cmdCommandReviewCheck, packs: cmdPacks, attest: cmdAttest, validate: cmdValidate, doctor: cmdDoctor, diff: cmdDiff, metrics: cmdMetrics, sync: cmdSync, check: cmdCheck, init: cmdInit, upgrade: cmdUpgrade, release: cmdRelease, scan: cmdScan, prove: cmdProve, gates: cmdGates, select: cmdSelect }
 
 try {
   const [command, ...rest] = process.argv.slice(2)
@@ -696,9 +746,21 @@ try {
     console.log(USAGE)
     process.exit(command === undefined ? 1 : 0)
   }
+  if (command === '--list-commands') {
+    console.log(JSON.stringify(Object.keys(COMMANDS).sort()))
+    process.exit(0)
+  }
   const handler = COMMANDS[command]
   if (handler === undefined) throw new Error(`unknown command: ${command}`)
-  await handler(parseOptions(rest))
+  const options = parseOptions(rest)
+  // `harness <command> --help` used to run the command: `--help` was not a boolean
+  // flag, so it swallowed the next argument or failed with "missing value", and a
+  // gate run could be started by someone asking what the command does.
+  if (options.help === true) {
+    console.log(USAGE)
+    process.exit(0)
+  }
+  await handler(options)
 } catch (error) {
   console.error(`harness: ${error.message}`)
   process.exit(1)

@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, lstatSync, readFileSync, readdirSync } from 'node:fs'
 import { basename, dirname, extname, relative, resolve, sep } from 'node:path'
+import { hasExternalHint } from './external-hints.mjs'
 
 const IGNORED_DIRECTORIES = new Set([
   '.codegraph', '.git', '.harness', '.next', '.tmp-registry', '.venv', '.wiscode', 'build', 'coverage', 'dist',
@@ -8,7 +9,6 @@ const IGNORED_DIRECTORIES = new Set([
 ])
 
 const SAFE_SCRIPT_NAMES = new Set(['check', 'lint', 'test', 'typecheck', 'verify'])
-const EXTERNAL_SIGNAL = /\b(curl|docker|http|https|kubectl|llm|mcp|mongo|mysql|oauth|openai|postgres|provider|redis|requests|socket|urllib|uvicorn)\b/i
 const HIGH_IMPACT_SIGNAL = /\b(delete|deploy|drop|migrat(?:e|ion)|npm publish|production|push|release|remove|rm)\b/i
 
 function git(root, args, options = {}) {
@@ -133,6 +133,38 @@ function commandAvailable(root, executable) {
   }
 }
 
+function trackedFiles(root) {
+  const output = git(root, ['ls-files', '-z']) ?? ''
+  return new Set(output.split('\0').filter(Boolean))
+}
+
+function foreignHarnessIntegration(root, files) {
+  const projectManifest = '.coding-harness/project.json'
+  const knownMarkers = [
+    projectManifest,
+    '.agents/skills/coding-harness/SKILL.md',
+    '.claude/skills/coding-harness/SKILL.md',
+  ]
+  const tracked = trackedFiles(root)
+  if (!files.includes(projectManifest) || !tracked.has(projectManifest)) return null
+
+  let project
+  try {
+    project = JSON.parse(readFileSync(resolve(root, projectManifest), 'utf8'))
+  } catch {
+    project = null
+  }
+  const executable = 'coding-harness'
+  return {
+    contract: 'ai-native-harness-kit-project',
+    markers: knownMarkers.filter((path) => files.includes(path) && tracked.has(path)),
+    project_manifest: projectManifest,
+    version: typeof project?.harness?.version === 'string' ? project.harness.version : null,
+    executable,
+    executable_resolvable: commandAvailable(root, executable),
+  }
+}
+
 function commandCandidate(root, candidate) {
   const commandMaterial = [candidate.command.join(' '), candidate.execution_material ?? ''].join('\n')
   const riskMaterial = [candidate.command.join(' '), candidate.material ?? ''].join('\n')
@@ -140,7 +172,7 @@ function commandCandidate(root, candidate) {
   const riskSignals = []
   if (/[*?[\]]/.test(commandMaterial)) issues.push('wildcards-are-not-executable-command-arguments')
   if (!commandAvailable(root, candidate.command[0])) issues.push('executable-not-resolvable')
-  if (EXTERNAL_SIGNAL.test(riskMaterial)) riskSignals.push('external-service')
+  if (hasExternalHint(riskMaterial)) riskSignals.push('external-service')
   if (HIGH_IMPACT_SIGNAL.test(riskMaterial)) riskSignals.push('high-impact')
   // Discovery is evidence about what exists, not authorization to run it.
   // A repository owner promotes a reviewed candidate into the manifest.
@@ -248,6 +280,7 @@ export function surveyRepository(dir) {
   const files = filesUnder(root)
   const manifestPath = 'harness.manifest.json'
   const hasManifest = files.includes(manifestPath)
+  const foreign = hasManifest ? null : foreignHarnessIntegration(root, files)
   const commands = [
     ...packageCommands(root, files),
     ...makeCommands(root, files),
@@ -265,10 +298,15 @@ export function surveyRepository(dir) {
       worktrees: worktrees(root),
     },
     integration: {
-      status: hasManifest ? 'adopted-unchecked' : 'not-adopted',
+      status: hasManifest ? 'adopted-unchecked' : foreign === null ? 'not-adopted' : 'foreign-integration-detected',
       manifest: hasManifest ? manifestPath : null,
       ready: false,
-      next: hasManifest ? 'run harness check and harness doctor' : 'review survey candidates before harness init',
+      ...(foreign === null ? {} : { foreign }),
+      next: hasManifest
+        ? 'run harness check and harness doctor'
+        : foreign === null
+          ? 'review survey candidates before harness init'
+          : 'restore the coding-harness runtime or review migration to this project; do not run foreign commands through ./harness',
     },
     agent_entrypoints: entrypoints,
     context: contextInventory(files),
@@ -287,7 +325,11 @@ export function surveyRepository(dir) {
       status: 'unavailable',
       reason: hasManifest
         ? 'survey does not execute or trust declared checks; run check, doctor, and gates'
-        : 'project manifest is missing',
+        : foreign === null
+          ? 'project manifest is missing'
+          : foreign.executable_resolvable
+            ? 'foreign Harness contract is not compatible with this tool'
+            : `foreign Harness executable is not resolvable: ${foreign.executable}`,
     },
   }
 }

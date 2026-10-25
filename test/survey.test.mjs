@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { surveyRepository } from '../src/survey.mjs'
@@ -51,6 +51,75 @@ test('survey reports an unadopted repository without declaring it healthy', () =
   assert.equal(report.context.contracts.count, 1)
   assert.equal(report.repository.working_tree.clean, true)
   assert.equal(report.repository.worktrees.length, 1)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('survey distinguishes a foreign Harness contract whose runtime is missing', () => {
+  const root = fixture()
+  mkdirSync(join(root, '.coding-harness'), { recursive: true })
+  writeFileSync(join(root, '.coding-harness', 'project.json'), JSON.stringify({
+    schema_version: 1,
+    harness: { mode: 'shadow', version: '0.25.0' },
+  }))
+  execFileSync('git', ['add', '.coding-harness/project.json'], { cwd: root })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'foreign harness'], { cwd: root })
+
+  const report = surveyRepository(root)
+
+  assert.equal(report.integration.status, 'foreign-integration-detected')
+  assert.equal(report.integration.ready, false)
+  assert.deepEqual(report.integration.foreign, {
+    contract: 'ai-native-harness-kit-project',
+    markers: ['.coding-harness/project.json'],
+    project_manifest: '.coding-harness/project.json',
+    version: '0.25.0',
+    executable: 'coding-harness',
+    executable_resolvable: false,
+  })
+  assert.match(report.integration.next, /restore the coding-harness runtime or review migration/)
+  assert.equal(report.qualification.status, 'unavailable')
+  assert.equal(report.qualification.reason, 'foreign Harness executable is not resolvable: coding-harness')
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('survey resolves but never executes a foreign Harness runtime', () => {
+  const root = fixture()
+  const bin = mkdtempSync(join(tmpdir(), 'coding-harness-survey-bin-'))
+  const marker = join(root, 'foreign-runtime-executed')
+  mkdirSync(join(root, '.coding-harness'), { recursive: true })
+  writeFileSync(join(root, '.coding-harness', 'project.json'), JSON.stringify({
+    schema_version: 1,
+    harness: { mode: 'shadow', version: '0.25.0' },
+  }))
+  writeFileSync(join(bin, 'coding-harness'), `#!/bin/sh\ntouch ${marker}\n`)
+  chmodSync(join(bin, 'coding-harness'), 0o755)
+  execFileSync('git', ['add', '.coding-harness/project.json'], { cwd: root })
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'foreign harness'], { cwd: root })
+
+  const output = execFileSync(process.execPath, [CLI, 'survey', '--dir', root], {
+    encoding: 'utf8',
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+  })
+  const report = JSON.parse(output)
+
+  assert.equal(report.integration.status, 'foreign-integration-detected')
+  assert.equal(report.integration.foreign.executable_resolvable, true)
+  assert.equal(report.verification.executed, false)
+  assert.equal(existsSync(marker), false)
+  rmSync(root, { recursive: true, force: true })
+  rmSync(bin, { recursive: true, force: true })
+})
+
+test('survey does not parse an untracked foreign Harness marker', () => {
+  const root = fixture()
+  mkdirSync(join(root, '.coding-harness'), { recursive: true })
+  writeFileSync(join(root, '.coding-harness', 'project.json'), '{not json')
+
+  const report = surveyRepository(root)
+
+  assert.equal(report.integration.status, 'not-adopted')
+  assert.equal(report.integration.foreign, undefined)
+  assert.equal(report.qualification.reason, 'project manifest is missing')
   rmSync(root, { recursive: true, force: true })
 })
 

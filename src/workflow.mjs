@@ -42,3 +42,20 @@ jobs:
           name: gate-report
           path: .harness/gates.jsonl
 `
+
+export const GITLAB_WORKFLOW = `# Review runner image and repository checkout before enabling this job.
+harness:
+  image: node:22
+  stage: test
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - ./harness gates --manifest harness.manifest.json --report .harness/gates.jsonl
+    - ./harness metrics --log .harness/gates.jsonl
+    - ./harness prove --manifest harness.manifest.json --isolated --timeout 300
+    - if ls dist/attestation-*.json >/dev/null 2>&1; then ./harness attest --manifest harness.manifest.json --verify; else echo 'no release attestation recorded'; fi
+  artifacts:
+    when: always
+    paths:
+      - .harness/gates.jsonl
+`

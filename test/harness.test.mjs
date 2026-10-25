@@ -115,7 +115,7 @@ test('init scaffolds a delta and a manifest', () => {
   const dist = join(root, 'dist')
   run(['release', '--base', 'base', '--out', dist, '--version', toolVersion()])
   const dir = join(root, 'consumer')
-  run(['init', '--dir', dir, '--base-source', dist, '--version', toolVersion()])
+  run(['init', '--dir', dir, '--base-source', dist, '--provider', 'github', '--version', toolVersion()])
   assert.match(readFileSync(join(dir, 'AGENTS.delta.md'), 'utf8'), /Repository delta/)
   run(['validate', '--manifest', manifestPath(dir)])
   rmSync(root, { recursive: true, force: true })

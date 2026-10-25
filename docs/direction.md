@@ -11,14 +11,14 @@ DeepSeek Harness supplies battle-tested parts: a gate aggregator with a worker p
 ## Four layers
 
 1. **Kernel** — what exists: composition of base and delta, versioned and hashed releases, a commit-pinned tool, the gate DAG and changed-surface selection, the rule that a gate must be watched to fail, proof binding and freshness, document, owner and CI drift checks, and the metrics window budget. Strict and product-free.
-2. **Packs** — next: released, hashed artifacts that contribute gates, surfaces, skills, and a CI matrix for one kind of repository (`node-typescript-monorepo`, `web-application`, `agent-runtime`, `python-library`, `cli-product`, `cross-platform-release`). A pack is a base-shaped release with a `pack.json`; a repository declares `packs`, and the merge is pinned per file in the lock, so a pack is never a soft recommendation. [packs.md](packs.md) is the working contract.
-3. **Legibility contract** — after packs: a declared adapter set — `start`, `ready`, `observe.ui`, `observe.logs`, `observe.metrics`, `observe.traces`, `reset`, `teardown` — so an agent can bring the application up from a worktree and read what it did. The harness validates the declaration and never implements a browser, a metrics store, or a trace backend.
-4. **Behavioral evals** — last: a task contract of fixture, task, world assertion, evidence, feedback, and retry, recorded as evaluation runs that feed the same metrics window (task success, first-pass rate, retries, time-to-green, human interventions). A gate proves a rule; an eval measures delivery.
+2. **Packs** — pinned releases contribute gates, surfaces and skills for a repository kind. [packs.md](packs.md) owns the implemented contract and its gaps.
+3. **Legibility contract** — declarations name how to start, observe, reset and stop an application. The repository owns the adapters; the harness checks their contract.
+4. **Behavioral evals** — declared tasks carry fixture, action, world assertion, evidence and retry rules. A gate proves an invariant; an eval measures delivery.
 
 ## Order and proportion
 
-- 50% toward legibility and evals, 30% toward DeepSeek-derived mechanisms delivered as packs, 20% toward the kernel: the pack interface and the release attestation below.
-- The work order is: release attestation, pack interface, the first packs (architecture, hygiene, web evidence), legibility, evals, and only then agent-to-agent review, repair, and merge.
+- The contracts for all four layers exist in the working tool. The current command inventory and release boundary live in [README.md](../README.md#status); the outstanding deployment and qualification work lives in [roadmap.md](roadmap.md).
+- Prioritize real consumer evidence and failure feedback before expanding the kernel or adding another pack.
 
 ## Non-goals
 

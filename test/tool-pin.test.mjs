@@ -84,7 +84,7 @@ test('init writes an executable bootstrap and a valid manifest', () => {
   const dist = join(root, 'dist')
   run(['release', '--base', 'base', '--out', dist, '--version', toolVersion()])
   const dir = join(root, 'consumer')
-  run(['init', '--dir', dir, '--base-source', dist, '--version', toolVersion()])
+  run(['init', '--dir', dir, '--base-source', dist, '--provider', 'github', '--version', toolVersion()])
   const shim = join(dir, 'harness')
   assert.ok(existsSync(shim))
   assert.ok((statSync(shim).mode & 0o111) !== 0, 'bootstrap is executable')

@@ -1,11 +1,15 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { sha256 } from './compose.mjs'
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
 import { writeAtomic } from './state.mjs'
+import { hasExternalHint } from './external-hints.mjs'
 
-export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications', 'qualification']
+export const SYSTEM_ROOT_KEYS = ['schema_version', 'id', 'repositories', 'contracts', 'verifications', 'qualification', 'change']
+export const SYSTEM_CHANGE_KEYS = ['id', 'records', 'bases']
+export const SYSTEM_CHANGE_RECORD_KEYS = ['repository', 'path']
+export const SYSTEM_CHANGE_BASE_KEYS = ['repository', 'revision']
 export const SYSTEM_REPOSITORY_KEYS = ['id', 'role', 'path', 'revision']
 export const SYSTEM_CONTRACT_KEYS = ['id', 'producer', 'consumers', 'evidence']
 export const SYSTEM_EVIDENCE_KEYS = ['repository', 'path']
@@ -13,16 +17,22 @@ export const SYSTEM_VERIFICATION_KEYS = ['id', 'repository', 'tier', 'command', 
 export const SYSTEM_QUALIFICATION_KEYS = ['required_tiers', 'max_receipt_age_seconds', 'promotion']
 export const SYSTEM_PROMOTION_KEYS = ['history_window', 'minimum_runs', 'minimum_healthy_rate', 'minimum_consecutive_healthy_runs']
 export const SYSTEM_TIERS = ['harness-check', 'unit', 'contract', 'integration', 'external-qualified']
-export const SYSTEM_RECEIPT_KEYS = ['schema_version', 'system_id', 'manifest', 'tier', 'started_at', 'finished_at', 'repositories', 'results', 'status']
+export const SYSTEM_RECEIPT_KEYS = ['schema_version', 'system_id', 'change_id', 'manifest', 'tier', 'started_at', 'finished_at', 'repositories', 'results', 'status']
 export const SYSTEM_RECEIPT_MANIFEST_KEYS = ['sha256']
 export const SYSTEM_RECEIPT_REPOSITORY_KEYS = ['id', 'revision']
 export const SYSTEM_RECEIPT_RESULT_KEYS = ['id', 'repository', 'command', 'ok', 'exit_code', 'signal', 'timed_out', 'duration_ms', 'stdout', 'stderr']
 export const SYSTEM_RECEIPT_STREAM_KEYS = ['bytes', 'sha256']
-export const SYSTEM_CI_REPORT_KEYS = ['schema_version', 'mode', 'system_id', 'observed_at', 'system_ready', 'system_problems', 'receipts', 'healthy', 'would_block', 'blocking', 'commands_executed', 'history']
+export const SYSTEM_CI_REPORT_KEYS = ['schema_version', 'mode', 'system_id', 'change_id', 'manifest_sha256', 'observed_at', 'system_ready', 'system_problems', 'receipts', 'healthy', 'would_block', 'blocking', 'commands_executed', 'history']
 export const SYSTEM_CI_RECEIPT_KEYS = ['tier', 'path', 'present', 'finished_at', 'age_seconds', 'fresh', 'valid', 'problems']
 export const SYSTEM_CI_HISTORY_KEYS = ['path', 'available', 'window', 'prior_observations', 'ignored_files', 'sample_size', 'healthy_runs', 'healthy_rate', 'consecutive_healthy_runs', 'promotion_eligible', 'promotion_problems']
 
-const EXTERNAL_SIGNAL = /\b(curl|docker|https?|kubectl|llm|mcp|oauth|openai|provider|socket|ssh|uvicorn)\b/i
+const CHANGE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
+
+function safeRecordPath(path) {
+  return typeof path === 'string' && path.length > 0 && !isAbsolute(path)
+    && !/[\\:\x00-\x1f\x7f]/.test(path)
+    && path.split('/').every((part) => part !== '' && part !== '.' && part !== '..')
+}
 
 function object(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -65,6 +75,46 @@ export function validateSystemManifest(manifest) {
   uniqueIds(issues, repositories, 'repositories')
   const repositoryIds = new Set(repositories.map((entry) => entry?.id).filter((id) => typeof id === 'string'))
 
+  if (manifest.change !== undefined) {
+    if (!object(manifest.change)) issues.push('change: required object')
+    else {
+      rejectUnknown(issues, manifest.change, SYSTEM_CHANGE_KEYS, 'change')
+      if (typeof manifest.change.id !== 'string' || !CHANGE_ID.test(manifest.change.id)) issues.push('change.id: required safe single-line Change ID')
+      if (!Array.isArray(manifest.change.records) || manifest.change.records.length === 0) issues.push('change.records: required non-empty array')
+      else {
+        const seen = new Set()
+        manifest.change.records.forEach((record, index) => {
+          const where = 'change.records[' + index + ']'
+          if (!object(record)) { issues.push(where + ': required object'); return }
+          rejectUnknown(issues, record, SYSTEM_CHANGE_RECORD_KEYS, where)
+          requiredString(issues, record.repository, where + '.repository')
+          requiredString(issues, record.path, where + '.path')
+          if (typeof record.repository === 'string' && !repositoryIds.has(record.repository)) issues.push(where + '.repository: unknown repository ' + record.repository)
+          if (typeof record.repository === 'string' && seen.has(record.repository)) issues.push(where + '.repository: duplicate repository ' + record.repository)
+          seen.add(record.repository)
+          if (!safeRecordPath(record.path)) issues.push(where + '.path: must be a safe repository-relative path')
+        })
+      }
+      if (manifest.change.bases !== undefined) {
+        if (!Array.isArray(manifest.change.bases) || manifest.change.bases.length === 0) issues.push('change.bases: required non-empty array')
+        else {
+          const seen = new Set()
+          manifest.change.bases.forEach((base, index) => {
+            const where = 'change.bases[' + index + ']'
+            if (!object(base)) { issues.push(where + ': required object'); return }
+            rejectUnknown(issues, base, SYSTEM_CHANGE_BASE_KEYS, where)
+            requiredString(issues, base.repository, where + '.repository')
+            if (typeof base.repository === 'string' && !repositoryIds.has(base.repository)) issues.push(where + '.repository: unknown repository ' + base.repository)
+            if (typeof base.repository === 'string' && seen.has(base.repository)) issues.push(where + '.repository: duplicate repository ' + base.repository)
+            seen.add(base.repository)
+            if (typeof base.revision !== 'string' || !/^[0-9a-f]{40}$/.test(base.revision)) issues.push(where + '.revision: required full 40-character lowercase Git commit')
+          })
+          for (const id of repositoryIds) if (!seen.has(id)) issues.push('change.bases: missing repository ' + id)
+        }
+      }
+    }
+  }
+
   const contracts = Array.isArray(manifest.contracts) ? manifest.contracts : []
   if (!Array.isArray(manifest.contracts)) issues.push('contracts: required array')
   contracts.forEach((entry, index) => {
@@ -102,7 +152,7 @@ export function validateSystemManifest(manifest) {
     if (typeof entry.command === 'string') {
       if (entry.command.includes('\n')) issues.push(where + '.command: required single line')
       if (/[*?[\]]/.test(entry.command)) issues.push(where + '.command: wildcards are not executable command arguments')
-      if (EXTERNAL_SIGNAL.test(entry.command) && entry.external !== true) issues.push(where + '.external: command has an external-service signal; declare external-qualified and external true')
+      if (hasExternalHint(entry.command) && entry.external !== true) issues.push(where + '.external: command has an external-service hint; declare external-qualified and external true')
     }
     if (typeof entry.external !== 'boolean') issues.push(where + '.external: required boolean')
     if (entry.external === true && entry.tier !== 'external-qualified') issues.push(where + '.tier: external commands belong in external-qualified')
@@ -151,6 +201,27 @@ function git(path, args) {
   }
 }
 
+function gitFile(path, revision, file) {
+  try {
+    return execFileSync('git', ['-C', path, 'show', revision + ':' + file], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1024 * 1024,
+    })
+  } catch {
+    return null
+  }
+}
+
+function gitChangedPaths(path, base, revision) {
+  try {
+    const output = execFileSync('git', ['-C', path, 'diff', '--name-only', '--no-renames', '-z', base, revision, '--'], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 4 * 1024 * 1024,
+    })
+    return output === '' ? [] : output.slice(0, -1).split('\0')
+  } catch {
+    return null
+  }
+}
+
 function commandAvailable(root, command) {
   if (typeof command !== 'string' || command.length === 0 || root === undefined) return false
   const executable = command.trim().split(/\s+/)[0]
@@ -167,9 +238,7 @@ function resolveRepository(base, declaredPath) {
   return resolve(base, declaredPath)
 }
 
-export function checkSystemManifest(path) {
-  const absoluteManifest = resolve(path)
-  const manifest = JSON.parse(readFileSync(absoluteManifest, 'utf8'))
+function inspectSystemManifest(manifest, absoluteManifest) {
   const structuralIssues = validateSystemManifest(manifest)
   const base = dirname(absoluteManifest)
   const repositories = (Array.isArray(manifest.repositories) ? manifest.repositories : []).map((entry) => {
@@ -192,6 +261,55 @@ export function checkSystemManifest(path) {
     }
   })
   const byId = new Map(repositories.map((entry) => [entry.id, entry]))
+  const bases = manifest.change?.bases === undefined ? null : (Array.isArray(manifest.change.bases) ? manifest.change.bases : []).map((entry) => {
+    const repository = byId.get(entry?.repository)
+    const revision = entry?.revision
+    const head = repository?.expected_revision
+    const valid = repository?.git && /^[0-9a-f]{40}$/.test(revision ?? '')
+      && git(repository.path, ['rev-parse', '--verify', revision + '^{commit}']) === revision
+    const ancestor = valid && /^[0-9a-f]{40}$/.test(head ?? '')
+      && git(repository.path, ['merge-base', '--is-ancestor', revision, head]) !== null
+    return {
+      repository: entry?.repository ?? null,
+      revision: revision ?? null,
+      pinned_revision: head ?? null,
+      exists: valid === true,
+      ancestor: ancestor === true,
+      changed_paths: ancestor ? gitChangedPaths(repository.path, revision, head) : null,
+    }
+  })
+  const basesById = new Map((bases ?? []).map((entry) => [entry.repository, entry]))
+  const change = manifest.change === undefined ? null : {
+    id: manifest.change?.id ?? null,
+    bases,
+    records: (Array.isArray(manifest.change?.records) ? manifest.change.records : []).map((record) => {
+      const repository = byId.get(record?.repository)
+      const revision = repository?.expected_revision
+      const path = record?.path
+      const safe = safeRecordPath(path)
+      const treeEntry = repository?.git && /^[0-9a-f]{40}$/.test(revision ?? '') && safe
+        ? git(repository.path, ['ls-tree', revision, '--', path]) : null
+      const tracked = treeEntry !== null && /^100(644|755) blob [0-9a-f]{40}\t/.test(treeEntry)
+        && treeEntry.slice(treeEntry.indexOf('\t') + 1) === path
+      const content = tracked ? gitFile(repository.path, revision, path) : null
+      return {
+        repository: record?.repository ?? null,
+        path: path ?? null,
+        revision: revision ?? null,
+        tracked: tracked && content !== null,
+        change_id_match: content !== null && content.split(/\r?\n/).includes('Change-ID: ' + manifest.change.id),
+        record_changed: bases === null ? null : (basesById.get(record?.repository)?.changed_paths?.includes(path) ?? false),
+      }
+    }),
+  }
+  const diffCoverage = change?.bases === null || change === null || (
+    change.bases.length === repositories.length
+    && change.bases.every((entry) => entry.exists && entry.ancestor && entry.changed_paths !== null)
+    && change.bases.every((entry) => {
+      const record = change.records.find((item) => item.repository === entry.repository)
+      return entry.changed_paths.length === 0 ? record === undefined : record?.record_changed === true
+    })
+  )
   const contracts = (Array.isArray(manifest.contracts) ? manifest.contracts : []).map((entry) => {
     const repository = byId.get(entry?.evidence?.repository)
     const evidencePath = repository?.path && typeof entry?.evidence?.path === 'string'
@@ -218,12 +336,15 @@ export function checkSystemManifest(path) {
   const ready = structuralIssues.length === 0
     && repositories.every((entry) => entry.exists && entry.git && entry.revision_match && entry.clean)
     && contracts.every((entry) => entry.evidence_exists)
+    && (change === null || change.records.length > 0 && change.records.every((entry) => entry.tracked && entry.change_id_match))
+    && diffCoverage
     && verifications.every((entry) => entry.executable_resolvable)
   return {
     schema_version: 'coding-harness.system-check/v1',
     system: { id: manifest?.id ?? null, manifest: absoluteManifest },
     structural: { valid: structuralIssues.length === 0, issues: structuralIssues },
     repositories,
+    change,
     contracts,
     verifications,
     ready,
@@ -238,9 +359,60 @@ export function checkSystemManifest(path) {
   }
 }
 
+export function checkSystemManifest(path) {
+  const absoluteManifest = resolve(path)
+  return inspectSystemManifest(JSON.parse(readFileSync(absoluteManifest, 'utf8')), absoluteManifest)
+}
+
 function inside(path, root) {
   const rel = relative(root, path)
   return rel === '' || (!rel.startsWith('..' + sep) && rel !== '..' && !isAbsolute(rel))
+}
+
+export function materializeSystemSnapshot(declarationPath, revisions, outPath) {
+  const source = resolve(declarationPath)
+  const output = resolve(outPath)
+  const declaration = JSON.parse(readFileSync(source, 'utf8'))
+  const issues = validateSystemManifest(declaration)
+  if (issues.length > 0) throw new Error('invalid system declaration: ' + issues.join('; '))
+  if (existsSync(output)) throw new Error('snapshot already exists; choose another output path')
+
+  const repositories = new Map(declaration.repositories.map((entry) => [entry.id, entry]))
+  const bindings = new Map()
+  for (const item of revisions) {
+    if (typeof item !== 'string' || !/^[^=]+=[0-9a-f]{40}$/.test(item)) throw new Error('--bind requires <id>=<full-lowercase-sha>')
+    const index = item.indexOf('=')
+    const id = item.slice(0, index)
+    const revision = item.slice(index + 1)
+    if (!repositories.has(id)) throw new Error('unknown repository binding: ' + id)
+    if (bindings.has(id)) throw new Error('duplicate repository binding: ' + id)
+    if (repositories.get(id).revision !== null) throw new Error('repository already has a declared revision: ' + id)
+    bindings.set(id, revision)
+  }
+  for (const entry of declaration.repositories) {
+    if (entry.revision === null && !bindings.has(entry.id)) throw new Error('missing explicit revision binding: ' + entry.id)
+  }
+
+  const sourceDir = dirname(source)
+  const outputDir = dirname(output)
+  const effectiveOutput = resolve(realpathSync(outputDir), basename(output))
+  const snapshot = {
+    ...declaration,
+    repositories: declaration.repositories.map((entry) => {
+      const repositoryPath = resolve(sourceDir, entry.path)
+      const effectiveRepository = existsSync(repositoryPath) ? realpathSync(repositoryPath) : repositoryPath
+      if (inside(effectiveOutput, effectiveRepository)) throw new Error('snapshot output must be outside every declared repository')
+      return {
+        ...entry,
+        path: relative(outputDir, repositoryPath) || '.',
+        revision: entry.revision ?? bindings.get(entry.id),
+      }
+    }),
+  }
+  const report = inspectSystemManifest(snapshot, output)
+  if (!report.ready) throw new Error('pinned system snapshot is not ready; check revisions, clean trees, contract evidence, and reviewed commands')
+  writeFileSync(output, JSON.stringify(snapshot, null, 2) + '\n', { flag: 'wx' })
+  return { snapshot: output, system_id: snapshot.id, repositories: report.repositories.map(({ id, current_revision }) => ({ id, revision: current_revision })), ready: true, commands_executed: false }
 }
 
 function streamReceipt(value) {
@@ -287,6 +459,7 @@ export async function runSystemTier(manifestPath, tier, outPath, options = {}) {
   const receipt = {
     schema_version: 'coding-harness.system-receipt/v1',
     system_id: check.system.id,
+    ...(check.change === null ? {} : { change_id: check.change.id }),
     manifest: { sha256: sha256(rawManifest) },
     tier,
     started_at: startedAt,
@@ -309,6 +482,7 @@ export function validateSystemReceipt(receipt) {
   rejectUnknown(issues, receipt, SYSTEM_RECEIPT_KEYS, 'root')
   if (receipt.schema_version !== 'coding-harness.system-receipt/v1') issues.push('schema_version: must be coding-harness.system-receipt/v1')
   for (const key of ['system_id', 'tier', 'started_at', 'finished_at', 'status']) receiptString(issues, receipt[key], key)
+  if (receipt.change_id !== undefined && (typeof receipt.change_id !== 'string' || !CHANGE_ID.test(receipt.change_id))) issues.push('change_id: required safe single-line Change ID')
   if (!SYSTEM_TIERS.includes(receipt.tier)) issues.push('tier: must be one of ' + SYSTEM_TIERS.join(', '))
   if (!['passed', 'failed'].includes(receipt.status)) issues.push('status: must be passed or failed')
   const started = Date.parse(receipt.started_at)
@@ -363,6 +537,7 @@ export function checkSystemReceipt(manifestPath, receiptPath) {
   const check = checkSystemManifest(absoluteManifest)
   if (receipt?.manifest?.sha256 !== sha256(readFileSync(absoluteManifest))) problems.push('manifest hash does not match receipt')
   if (receipt?.system_id !== check.system.id) problems.push('system id does not match manifest')
+  if (receipt?.change_id !== (check.change?.id ?? undefined)) problems.push('change id does not match manifest')
   const expectedRepositories = check.repositories.map((entry) => ({ id: entry.id, revision: entry.current_revision }))
   if (JSON.stringify(receipt?.repositories) !== JSON.stringify(expectedRepositories)) problems.push('repository revision set does not match current snapshot')
   const expectedResults = check.verifications.filter((entry) => entry.tier === receipt?.tier).map((entry) => ({ id: entry.id, repository: entry.repository, command: entry.command }))
@@ -392,6 +567,9 @@ export function validateSystemCiReport(report) {
   if (report.schema_version !== 'coding-harness.system-ci/v1') issues.push('schema_version: must be coding-harness.system-ci/v1')
   if (!['shadow', 'enforce'].includes(report.mode)) issues.push('mode: must be shadow or enforce')
   if (report.system_id !== null) receiptString(issues, report.system_id, 'system_id')
+  if (report.change_id !== null && (typeof report.change_id !== 'string' || !CHANGE_ID.test(report.change_id))) issues.push('change_id: required safe Change ID or null')
+  if (report.manifest_sha256 !== null && (typeof report.manifest_sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(report.manifest_sha256))) issues.push('manifest_sha256: required SHA-256 or null')
+  if (report.system_id !== null && report.manifest_sha256 === null) issues.push('manifest_sha256: required for an available system')
   if (!Number.isFinite(Date.parse(report.observed_at))) issues.push('observed_at: required timestamp')
   for (const key of ['system_ready', 'healthy', 'would_block', 'blocking', 'commands_executed']) if (typeof report[key] !== 'boolean') issues.push(key + ': required boolean')
   stringArray(issues, report.system_problems, 'system_problems')
@@ -436,6 +614,8 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       schema_version: 'coding-harness.system-ci/v1',
       mode: enforce ? 'enforce' : 'shadow',
       system_id: null,
+      change_id: null,
+      manifest_sha256: null,
       observed_at: new Date(options.now ?? Date.now()).toISOString(),
       system_ready: false,
       system_problems: [error.message],
@@ -461,6 +641,7 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
   }
   const now = new Date(options.now ?? Date.now())
   if (!Number.isFinite(now.getTime())) throw new Error('system-ci now must be a valid timestamp')
+  const manifestSha256 = sha256(readFileSync(absoluteManifest))
   const systemProblems = [...check.structural.issues]
   for (const repository of check.repositories) {
     if (!repository.exists) systemProblems.push('repository missing: ' + repository.id)
@@ -469,6 +650,17 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
     if (repository.git && !repository.clean) systemProblems.push('repository is dirty: ' + repository.id)
   }
   for (const contract of check.contracts) if (!contract.evidence_exists) systemProblems.push('contract evidence missing: ' + contract.id)
+  for (const record of check.change?.records ?? []) {
+    if (!record.tracked) systemProblems.push('change record missing at pinned revision: ' + record.repository + ':' + record.path)
+    else if (!record.change_id_match) systemProblems.push('change id missing from pinned record: ' + record.repository + ':' + record.path)
+    if (record.record_changed === false) systemProblems.push('change record not changed since baseline: ' + record.repository + ':' + record.path)
+  }
+  for (const base of check.change?.bases ?? []) {
+    if (!base.exists) systemProblems.push('change baseline missing: ' + base.repository)
+    else if (!base.ancestor) systemProblems.push('change baseline is not ancestor: ' + base.repository)
+    else if (base.changed_paths === null) systemProblems.push('change diff unavailable: ' + base.repository)
+    else if (base.changed_paths.length > 0 && !check.change.records.some((record) => record.repository === base.repository)) systemProblems.push('changed repository has no Change ID record: ' + base.repository)
+  }
   for (const verification of check.verifications) if (!verification.executable_resolvable) systemProblems.push('verification executable unresolved: ' + verification.id)
   const tiers = check.qualification.required_tiers
   const maxReceiptAgeSeconds = Number.isInteger(check.qualification.max_receipt_age_seconds) && check.qualification.max_receipt_age_seconds >= 1
@@ -512,7 +704,9 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
       try {
         const value = JSON.parse(readFileSync(resolve(historyPath, name), 'utf8'))
         const observed = Date.parse(value.observed_at)
-        if (validateSystemCiReport(value).length !== 0 || value.system_id !== check.system.id || observed > now.getTime()) ignoredFiles += 1
+        if (validateSystemCiReport(value).length !== 0 || value.system_id !== check.system.id
+          || value.change_id !== (check.change?.id ?? null) || value.manifest_sha256 !== manifestSha256
+          || observed > now.getTime()) ignoredFiles += 1
         else previous.push({ observed_at: value.observed_at, healthy: value.healthy })
       } catch {
         ignoredFiles += 1
@@ -546,6 +740,8 @@ export function systemCiReport(manifestPath, receiptsDir, options = {}) {
     schema_version: 'coding-harness.system-ci/v1',
     mode: enforce ? 'enforce' : 'shadow',
     system_id: check.system.id,
+    change_id: check.change?.id ?? null,
+    manifest_sha256: manifestSha256,
     observed_at: observedAt,
     system_ready: check.ready,
     system_problems: systemProblems,

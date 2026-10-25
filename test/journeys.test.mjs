@@ -32,7 +32,7 @@ test('journey: init a consumer, customize it, check it, then prove it', () => {
   cpSync(resolve(import.meta.dirname, '../base'), join(root, 'base'), { recursive: true })
   run(['release', '--base', join(root, 'base'), '--out', join(root, 'dist'), '--version', toolVersion(), '--force'])
   const consumer = join(root, 'consumer')
-  run(['init', '--dir', consumer, '--base-source', join(root, 'dist'), '--version', toolVersion()])
+  run(['init', '--dir', consumer, '--base-source', join(root, 'dist'), '--provider', 'github', '--version', toolVersion()])
   writeFileSync(join(consumer, 'AGENTS.delta.md'), '# Delta\n\n- Run the tests before reporting done.\n')
   run(['sync', '--manifest', join(consumer, 'harness.manifest.json')])
   run(['check', '--manifest', join(consumer, 'harness.manifest.json')])

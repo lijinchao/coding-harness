@@ -14,6 +14,7 @@ import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { sha256 } from './compose.mjs'
 import { installForwarding, removeForwarding, runCommand, terminateAll } from './process.mjs'
 import { writeAtomic } from './state.mjs'
+import { hasExternalHint } from './external-hints.mjs'
 
 export const COMMAND_REVIEW_KEYS = [
   'schema_version',
@@ -35,7 +36,6 @@ export const COMMAND_REVIEW_STREAM_KEYS = ['bytes', 'sha256']
 export const COMMAND_REVIEW_FILESYSTEM_KEYS = ['scope', 'before_sha256', 'after_sha256', 'added', 'modified', 'removed']
 export const COMMAND_REVIEW_OBSERVABILITY_KEYS = ['filesystem', 'network', 'child_processes', 'outside_tree_writes', 'external_execution_allowed']
 
-const EXTERNAL_SIGNAL = /\b(curl|docker|https?|kubectl|llm|mcp|oauth|openai|provider|socket|ssh|uvicorn)\b/i
 
 function object(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -120,7 +120,7 @@ export async function runCommandReview(repositoryPath, revision, command, outPat
   if (existsSync(out) && options.force !== true) throw new Error('review receipt already exists; choose another path or pass --force')
   if (typeof command !== 'string' || command.length === 0 || command.includes('\n')) throw new Error('--command must be a non-empty single line')
   if (/[*?[\]]/.test(command)) throw new Error('--command must not contain wildcard arguments')
-  if (EXTERNAL_SIGNAL.test(command) && options.allowExternal !== true) throw new Error('command has an external-service signal; pass --allow-external only with explicit authority')
+  if (hasExternalHint(command) && options.allowExternal !== true) throw new Error('command has an external-service hint; pass --allow-external only with explicit authority')
   const resolvedRevision = revisionAt(repository, revision)
   if (resolvedRevision !== revision) throw new Error('revision did not resolve to the exact requested commit')
 
