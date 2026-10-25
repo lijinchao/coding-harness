@@ -1,9 +1,9 @@
 {
-  "version": "0.1.45",
+  "version": "0.1.46",
   "tool": {
-    "version": "0.1.45",
+    "version": "0.1.46",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c"
+    "commit": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -407,7 +407,10 @@
     ],
     "changes": "docs/changes",
     "docs": [
-      {"path": "docs/native-agents.md", "maxBytes": 9000},
+      {
+        "path": "docs/native-agents.md",
+        "maxBytes": 9000
+      },
       {
         "path": "docs/review-0.1.45.md",
         "maxBytes": 7000
@@ -513,9 +516,9 @@
     }
   },
   "lock": {
-    "version": "0.1.45",
+    "version": "0.1.46",
     "tool": {
-      "version": "0.1.45",
+      "version": "0.1.46",
       "files": {
         "bin/harness.mjs": "dac5e01504ba58df73ba43ffd80cd43c2a6264724159ad30398f43075c7bc62b",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
@@ -548,29 +551,29 @@
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
         "src/workflow.mjs": "3a11dc98d197897f900c85d85928354dadb16196e113e77e59c2520c8f51e64e",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "66368314ab0761c878b6e5462e024ab3c098bf25f5188dc2530e9aa5d347674b"
+        "package.json": "91f852ee6857cb399c4e978d9042d3029fd4f64e458f07ef424d05477db6ba19"
       },
-      "commit": "3e31450140ae940b42f0178c6c2205ec49a2bf0c"
+      "commit": "1638ba8d1a14689d2bbe5655a2d0bac53bd09ea7"
     },
     "outputs": {
       "AGENTS.md": "4be2d6fdf4dcb7d5f19fa328198cf9a1f46b6863d5165fda52647060344b0f30",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
       ".agents/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
       ".agents/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
-      ".agents/skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
+      ".agents/skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527",
       ".claude/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
       ".claude/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
-      ".claude/skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41"
+      ".claude/skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527"
     },
     "base": {
-      "version": "0.1.45",
+      "version": "0.1.46",
       "files": {
         "AGENTS.base.md": "997ba570678141d8be247c93705448fa1a39020f43ee6fd20d549e66972a6327",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "e27ac3672d30adb34fd07260d4336f616a5535cd69b97691abdeaf9c3e4d63e4",
+        "VERSION": "c1e40add794a52b012ead4401c354662b2eaea818eab9cbc5806ed88ff10abb9",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
-        "skills/verification-tiers/SKILL.md": "c4af570bcf1a0b84be1f38601142ba37ffba370e8e2e10d2241e1ba2b69bcb41",
+        "skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527",
         "skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
         "templates/change-record.md": "b65a4e185e03968fb931745dfbbf28e64b632e64e092e0fed4a9dce08a73a217",
         "templates/decision-record.md": "42649218463664519be18ed153b865ee90fc978022e94c50d17be5965b5deb45",
