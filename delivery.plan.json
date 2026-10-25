@@ -1,29 +1,115 @@
 {
   "schema_version": "coding-harness.delivery/v1",
-  "id": "delivery-flow-pilot",
-  "outcome": "An owner can inspect which tests prove each delivery criterion, identify omitted tiers, and see that human acceptance is still pending.",
-  "design": "docs/decisions/0044-delivery-flow-starts-with-an-acceptance-map.md",
+  "id": "integration-and-proof-boundaries",
+  "outcome": "The integrated tool preserves upstream capabilities and publishes verifiable context, delivery and proof behavior for owner review.",
+  "design": "docs/decisions/0047-integrate-and-review-before-pr.md",
   "constraints": [
-    "Use the existing pinned kernel, pack release hashes, and command-review receipts.",
-    "Do not execute product test commands during plan or receipt checking.",
-    "Never infer human approval from test success or authenticate a typed reviewer name.",
-    "Keep game-design product code and its existing sources of truth unchanged."
+    "Zero runtime dependencies",
+    "Keep published versions immutable",
+    "No self-approval, automatic merge or game product changes",
+    "Separate local evidence from remote CI and human acceptance"
   ],
-  "scope": ["packs/delivery-flow", "test/delivery-flow.test.mjs", "scripts/check-delivery.mjs", "dist/packs/delivery-flow"],
+  "scope": [
+    "src",
+    "bin",
+    "schema",
+    "test",
+    "scripts",
+    "packs",
+    "dist",
+    "base",
+    "docs",
+    "README.md",
+    "harness.manifest.json",
+    "examples/consumer"
+  ],
   "acceptance": [
-    {"id": "AC-01", "description": "A plan with missing criteria, dangling references, escaping paths, or unaddressed test tiers fails.", "checks": ["delivery"]},
-    {"id": "AC-02", "description": "The pinned pack composes into a real fixture consumer, runs repeatedly, fails on injected damage, and passes after revert.", "checks": ["delivery"]},
-    {"id": "AC-03", "description": "A planned report cannot claim verified evidence, human acceptance, or merge authorization.", "checks": ["delivery"]}
+    {
+      "id": "AC-01",
+      "description": "Upstream capabilities and CLI inventory survive integration",
+      "checks": [
+        "suite"
+      ]
+    },
+    {
+      "id": "AC-02",
+      "description": "Interrupted or unrestored failures cannot create successful proofs",
+      "checks": [
+        "proofs"
+      ]
+    },
+    {
+      "id": "AC-03",
+      "description": "Containment rejects Windows parent/sibling/drive escapes",
+      "checks": [
+        "paths"
+      ]
+    },
+    {
+      "id": "AC-04",
+      "description": "Proof qualification reaches both metrics summaries",
+      "checks": [
+        "metrics"
+      ]
+    },
+    {
+      "id": "AC-05",
+      "description": "Immutable release and consumer pins validate",
+      "checks": [
+        "pins",
+        "suite"
+      ]
+    }
   ],
-  "checks": [{
-    "id": "delivery",
-    "tier": "integration",
-    "command": "node --test test/delivery-flow.test.mjs",
-    "test_files": ["test/delivery-flow.test.mjs"],
-    "expected_failure": "0 !== 1"
-  }],
+  "checks": [
+    {
+      "id": "suite",
+      "tier": "integration",
+      "command": "npm test",
+      "test_files": [
+        "test/self-product-status.test.mjs",
+        "test/delivery-flow.test.mjs"
+      ]
+    },
+    {
+      "id": "proofs",
+      "tier": "integration",
+      "command": "node --test test/proof-failure-boundary.test.mjs",
+      "test_files": [
+        "test/proof-failure-boundary.test.mjs"
+      ]
+    },
+    {
+      "id": "paths",
+      "tier": "unit",
+      "command": "node --test --test-name-pattern=containment test/context-map.test.mjs",
+      "test_files": [
+        "test/context-map.test.mjs"
+      ]
+    },
+    {
+      "id": "metrics",
+      "tier": "integration",
+      "command": "node --test test/gates.test.mjs test/metrics.test.mjs",
+      "test_files": [
+        "test/gates.test.mjs",
+        "test/metrics.test.mjs"
+      ]
+    },
+    {
+      "id": "pins",
+      "tier": "integration",
+      "command": "./harness check --manifest harness.manifest.json && ./harness check --manifest examples/consumer/harness.manifest.json",
+      "test_files": [
+        "harness.manifest.json",
+        "examples/consumer/harness.manifest.json"
+      ]
+    }
+  ],
   "tier_waivers": [
-    {"tier": "unit", "reason": "This pilot checks the checker and real CLI/pack composition together; receipt semantics have additional module-seam coverage in test/delivery-evidence.test.mjs."},
-    {"tier": "e2e", "reason": "The fixture exercises a local hashed pack and source CLI, not a remotely published release or a graphical application. Shipping-product and game acceptance remain outside this pilot."}
+    {
+      "tier": "e2e",
+      "reason": "The mapped checks do not test an application or remote GitLab instance. Remote release bootstrap and PR CI are separately verified; no game E2E or owner acceptance is claimed."
+    }
   ]
 }

@@ -369,6 +369,7 @@
     ],
     "changes": "docs/changes",
     "docs": [
+      {"path": "docs/review-0.1.45.md", "maxBytes": 7000},
       {
         "path": "docs/context-map-pilot.md",
         "maxBytes": 6500
@@ -543,53 +544,53 @@
     },
     "proofs": {
       "harness-drift": {
-        "at": "2026-10-25T07:11:55.841Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:04:19.962Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "ef9d08b1c8f612f0e15677f8e422ae303f9b00c01bebc161312a5ab6d4aa6171"
       },
       "doctor": {
-        "at": "2026-10-25T07:11:57.487Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:04:21.402Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "6ff094309c342c1070ef98af62f505887eecdd1bd1c12ec8958245b90646fac2"
       },
       "validate": {
-        "at": "2026-10-25T07:11:58.937Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:04:22.781Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
       },
       "tests": {
-        "at": "2026-10-25T07:12:56.627Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:05:39.054Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
       },
       "release": {
-        "at": "2026-10-25T07:12:57.150Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
-        "definition": "0b003dc204854ed88316fa96f1ed06a8e4b06614bf8f43e6a7f644fa5e76b02e"
+        "at": "2026-10-25T08:05:39.521Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
+        "definition": "6785a37bd333f993d80f3878f782b8d3d74597b7b3e4361a4f50cebdf7c817b1"
       },
       "example": {
-        "at": "2026-10-25T07:12:59.667Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:05:41.758Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
       },
       "metrics": {
-        "at": "2026-10-25T07:13:02.521Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:05:44.308Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
       },
       "release-ready": {
-        "at": "2026-10-25T07:13:01.239Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:05:43.169Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
       },
       "command-review": {
-        "at": "2026-10-25T07:13:05.056Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:05:46.530Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "555fe9389f59ff92fa4576a4c0eb790e2087ba6dc2e06faf584be91d6e00c03a"
       },
       "delivery-flow/plan": {
-        "at": "2026-10-25T07:13:05.585Z",
-        "tool": "0e1c61df050c74b29974d9aab404e11520330cf5",
+        "at": "2026-10-25T08:05:47.010Z",
+        "tool": "3e31450140ae940b42f0178c6c2205ec49a2bf0c",
         "definition": "842b8b0a30c3ce341c445cc086249ba8129afb0b38293de7c0d4b01c02eb3326"
       }
     }
