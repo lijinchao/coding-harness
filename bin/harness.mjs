@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { loadManifest, validateManifest } from '../src/manifest.mjs'
-import { mergePacks, packDiff } from '../src/pack.mjs'
+import { mergePacks, packDiff, PACK_RAW } from '../src/pack.mjs'
 import { buildAttestation, verifyAttestation } from '../src/attest.mjs'
 import { composeText } from '../src/compose.mjs'
 import { createRelease, declaredVersion } from '../src/release.mjs'
@@ -249,6 +249,9 @@ function cmdUpgrade(options) {
   const stale = /base@\d+\.\d+\.\d+/g
   const rewrite = (value) => (typeof value === 'string' ? value.replace(stale, newPin) : value)
   manifest.version = to
+  // Pack resolution shallow-copies the root, so primitive pin changes must
+  // also reach the repository object that applySync persists.
+  if (manifest[PACK_RAW] !== undefined) manifest[PACK_RAW].version = to
   if (manifest.tool !== undefined) manifest.tool.version = to
   if (manifest.tool !== undefined && options['tool-commit'] !== undefined) manifest.tool.commit = options['tool-commit']
   for (const gate of manifest.gates) {
@@ -614,7 +617,9 @@ async function cmdProve(options) {
   if (options.record === true) {
     manifest.lock = manifest.lock ?? { version: manifest.version, outputs: {} }
     manifest.lock.proofs = { ...(manifest.lock.proofs ?? {}), ...recorded }
-    writeAtomic(path, `${JSON.stringify(manifest, null, 2)}\n`)
+    const persisted = manifest[PACK_RAW] ?? manifest
+    persisted.lock = manifest.lock
+    writeAtomic(path, `${JSON.stringify(persisted, null, 2)}\n`)
     console.log(`proofs recorded: ${Object.keys(recorded).length}`)
   }
 }

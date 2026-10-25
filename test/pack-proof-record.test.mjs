@@ -15,7 +15,7 @@ test('recording pack proofs and upgrading preserve the raw repository declaratio
   writeFileSync(join(base, 'AGENTS.base.md'), '# Shared\n')
   for (const version of ['0.1.41', '0.1.42']) run('release', '--base', base, '--out', join(root, 'bases'), '--version', version)
   const gate = { id: 'sample/guard', command: 'test ! -f violated', protects: 'no violation', severity: 'blocking', prove_fires: 'create violated', prove_fires_command: ': > violated', revert_command: 'rm violated', expect: { forbid: ['ERROR:'] }, always: true }
-  writeFileSync(join(pack, 'pack.json'), JSON.stringify({ id: 'sample', gates: [gate], skills: [], surfaces: [] }))
+  writeFileSync(join(pack, 'pack.json'), JSON.stringify({ id: 'sample', gates: [gate], skills: [], surfaces: [{ id: 'sample/all', paths: ['**'], requires: ['sample/guard'] }] }))
   run('release', '--base', pack, '--out', join(root, 'packs'), '--version', '0.1.0')
   writeFileSync(join(consumer, 'AGENTS.delta.md'), '# Local\n')
   const path = join(consumer, 'harness.manifest.json')

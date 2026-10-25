@@ -14,8 +14,9 @@ receipts, diagnostic hashes, changed scope, and unapproved acceptance.
 The existing kernel resolves it, verifies its hashes, and records it in
 `lock.packs`. `scripts/check-delivery.mjs` imports that released checker.
 The pack's always-selected plan gate fails on empty acceptance criteria and
-passes after restoring the plan. The base/tool pin remains 0.1.41; no remote
-pack tag or new kernel release is published.
+passes after restoring the plan. The first trial used kernel 0.1.41. It exposed
+a writeback defect, so the self/example pins move to a local 0.1.42 release;
+neither its tag nor a pack tag is published to the remote.
 
 The first red test scaffold printed `unimplemented`. With the test runner
 working, criteria validation still failed (`0 !== 1`) and the positive report
@@ -102,6 +103,13 @@ observable drift opportunity, not evidence that today's commands differ.
    Deterministically introducing another caller's directory reproduced that
    false failure. It now checks deletion of its actual export and parent and
    preservation of the unrelated caller, rather than weakening cleanup checks.
+8. **Proof recording broke a real pack consumer.** All ten proofs passed, but
+   the writer persisted merged pack gates/surfaces into the raw manifest. The
+   next command failed on a duplicate contribution. The kernel now persists
+   the original declarations plus the updated lock. The adjacent upgrade path
+   also needed to persist its new root version. A regression covers record,
+   reload, re-prove, upgrade, and check; this is why a green single run was not
+   sufficient evidence for the delivery workflow.
 
 ## How to combine this with ordinary development
 
