@@ -11,9 +11,12 @@ existing tests and records the adoption gaps found in game-design.
 
 Three things, in order.
 
-1. **Qualify self-governance.** Keep the documented command inventory tied to the executable CLI, and check status claims when capabilities change. Record a failing case before trusting the gate.
-2. **Exercise one GitLab multi-repository pilot.** Pin the tool and each member revision, run the named local tiers, then validate the read-only collaboration observer against the target GitLab instance. Review the CI artifact provenance separately.
-3. **Measure actual adoption.** Keep gate and eval results bound to their version and snapshot; use consumer failures to decide which rules belong in the base, a pack, or a repository delta.
+1. **Correct knowledge before expanding governance.** The owner accepted [SPEC 0052](decisions/0052-evidence-first-delivery.md). Correct superseded proof/release descriptions and submit the [cost-reduction proposal](governance-cost-review.md); do not change adoption policy before its review.
+2. **Reduce only approved adoption burden.** Reuse existing tests and reports, preserve safety/contract/boundary checks, and distinguish development feedback from delivery acceptance. No new Kernel feature or pack is planned for this stage.
+3. **Observe three real deliveries.** On separately authorized tasks, link acceptance criteria, checks, evidence limits and human decisions; observe governance cost without treating gate pass rate or file-change counts as productivity. The pilot is not yet performed.
+
+The GitLab multi-repository qualification remains unperformed and deferred while
+this adoption review takes priority; it is not silently marked complete.
 
 ## Milestones
 

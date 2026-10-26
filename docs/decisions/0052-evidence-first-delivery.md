@@ -76,3 +76,9 @@ Stage-one verification uses document review plus existing doctor, full tests,
 example check and consumer gates; it does not claim an automated prose-truth test.
 The next owner decision is the reduction proposal, not a declaration that the
 three-task pilot or product acceptance is complete.
+
+Execution departure: another task edited and committed consumer runtime files
+during documentation work, including our staged consumer documents in its commit.
+Preserve that history and do not claim its changes as this SPEC's implementation.
+Qualify an exact consumer snapshot in a detached worktree rather than treating
+the concurrently changing source checkout as a docs-only candidate.
