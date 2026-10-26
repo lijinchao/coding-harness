@@ -11,8 +11,8 @@ existing tests and records the adoption gaps found in game-design.
 
 Three things, in order.
 
-1. **Correct knowledge before expanding governance.** The owner accepted [SPEC 0052](decisions/0052-evidence-first-delivery.md). Correct superseded proof/release descriptions and submit the [cost-reduction proposal](governance-cost-review.md); do not change adoption policy before its review.
-2. **Reduce only approved adoption burden.** Reuse existing tests and reports, preserve safety/contract/boundary checks, and distinguish development feedback from delivery acceptance. No new Kernel feature or pack is planned for this stage.
+1. **Qualify approved adoption reduction.** Knowledge corrections are recorded in change 0019. The owner approved A/B in the [cost-reduction plan](governance-cost-review.md): remove only non-entry budgets and replace automatic gate proliferation with reuse-first guidance. Retain document checks and full delivery qualification.
+2. **Review the resulting adoption evidence.** Keep safety/contract/boundary coverage and proof policy unchanged. Configuration acceptance does not establish productivity benefit; no new Kernel feature or pack is planned for this stage.
 3. **Observe three real deliveries.** On separately authorized tasks, link acceptance criteria, checks, evidence limits and human decisions; observe governance cost without treating gate pass rate or file-change counts as productivity. The pilot is not yet performed.
 
 The GitLab multi-repository qualification remains unperformed and deferred while

@@ -1,6 +1,6 @@
 # Governance cost review — stage-one proposal
 
-Status: accepted for A/B implementation; not yet qualified as effective.
+Status: A/B implemented and configuration-verified; net benefit unmeasured.
 Date: 2026-10-27
 
 [Decision 0052](decisions/0052-evidence-first-delivery.md) owns the accepted SPEC.
@@ -8,7 +8,8 @@ This is its bounded adoption plan, not a new runtime contract or pack. The owner
 approved A/B on 2026-10-27. Consumer decision 0031 owns the implementation plan:
 first commit its scope, compare parsed manifests and run disposable counterexamples,
 then qualify the committed candidate. Gate consolidation and product tasks remain
-outside this approval. Implementation evidence will be linked after verification.
+outside this approval. Consumer change record 0050-non-entry-budget-reduction
+records the implementation and qualification; the three-task pilot is unperformed.
 
 ## Observed baseline
 
@@ -136,3 +137,21 @@ The owner approved **A/B only**: remove the 100 non-entry budgets
 while retaining all document checks, and replace automatic gate proliferation
 with reuse-first development guidance. Gate consolidation, metrics enforcement,
 proof inventory repair and actual product tasks remain separately scoped work.
+
+## A/B implementation evidence
+
+Consumer candidate af0253b preserves all 104 document declarations and leaves
+exactly four entries budgeted. Parsed comparison with integration baseline 58f96f8
+confirms only the approved budget fields changed, retaining its concurrently
+updated proof lock. Guide changes preserve full delivery and proof requirements.
+Eight disposable configuration checks went from 6 pass / 2 fail on old settings
+to 8/8 on the candidate; missing documents, broken links, retained entry limits
+and the unchanged forbid checker still reject their fixtures. This is not a
+new gate or a measurement of saved tokens or developer time.
+
+The exact committed integration candidate passed all 14 gates (567 tests),
+strict doctor, eight composition checks and fourteen current proofs in a clean
+detached worktree. Producer document tests passed 5/5, full tests 292/292 and
+the pinned example check passed. No proof was re-recorded by this change.
+Full commands and local evidence locations live in consumer change record 0050;
+product effectiveness and the three-task pilot remain unqualified.

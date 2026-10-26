@@ -2,7 +2,7 @@
 
 This project is a portable control plane for agent-first delivery at bounded governance cost. Reuse a repository's plans, tests, reports and PRs to connect acceptance criteria with checkable evidence; released, pinned artifacts carry shared rules. [roadmap.md](roadmap.md) owns the forward plan; this document owns direction.
 
-Checks passed, evidence adequacy reviewed, and product accepted are separate states. Green gates establish neither sound measurement nor human acceptance. [Decision 0052](decisions/0052-evidence-first-delivery.md) owns the accepted phased SPEC; its [reduction proposal](governance-cost-review.md) awaits approval before adoption settings change.
+Checks passed, evidence adequacy reviewed, and product accepted are separate states. Green gates establish neither sound measurement nor human acceptance. [Decision 0052](decisions/0052-evidence-first-delivery.md) owns the phased SPEC; its [reduction plan](governance-cost-review.md) has owner approval for A/B only. Product tasks and other governance changes remain separately scoped.
 
 ## Two references, two jobs
 
