@@ -1,10 +1,14 @@
 # Governance cost review — stage-one proposal
 
-Status: proposed; settings below are **not applied**.
+Status: accepted for A/B implementation; not yet qualified as effective.
 Date: 2026-10-27
 
 [Decision 0052](decisions/0052-evidence-first-delivery.md) owns the accepted SPEC.
-This is its bounded adoption proposal, not a new runtime contract or pack.
+This is its bounded adoption plan, not a new runtime contract or pack. The owner
+approved A/B on 2026-10-27. Consumer decision 0031 owns the implementation plan:
+first commit its scope, compare parsed manifests and run disposable counterexamples,
+then qualify the committed candidate. Gate consolidation and product tasks remain
+outside this approval. Implementation evidence will be linked after verification.
 
 ## Observed baseline
 
@@ -22,7 +26,7 @@ without rewriting historical results. The new models contract test is executed b
 the test glob but absent from models.proof_inputs. Fresh proofs do not establish
 that the checker inventory is complete. No dependency inference is promised.
 
-## Proposed next change: two small adoption adjustments
+## Approved change: two small adoption adjustments
 
 ### A. Keep document checks, reduce hard budgets from 104 entries to four
 
@@ -87,7 +91,7 @@ do not advertise it as approved now or bypass proof checks to achieve green.
 | CI / proof age / bot permissions | Unchanged. Weekly checks remain read-only; no automatic renewal or Agent wakeup. |
 | delivery pack / legibility / eval migration | Do not require adoption to use the pilot; reuse the project's owners and report outlet. |
 
-## Validation for A/B, if approved
+## Validation for A/B
 
 1. Freeze the current source revision and inventory. Compare parsed manifests:
    only the listed document maxWords/maxBytes fields may change; gate definitions,
@@ -126,9 +130,9 @@ Stop and revise if duplication or list maintenance dominates, traceability does
 not improve, or safety/contract/boundary checks weaken. At pilot end, the owner
 chooses retain, revise or revert; there is no automatic promotion to Kernel.
 
-## Approval requested
+## Approval boundary
 
-Approve **A/B only** as the next implementation: remove the 100 non-entry budgets
+The owner approved **A/B only**: remove the 100 non-entry budgets
 while retaining all document checks, and replace automatic gate proliferation
 with reuse-first development guidance. Gate consolidation, metrics enforcement,
 proof inventory repair and actual product tasks remain separately scoped work.
