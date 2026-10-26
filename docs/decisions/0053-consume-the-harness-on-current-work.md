@@ -59,3 +59,10 @@ human decision still pending. No live model, dependency, remote push, PR or merg
 Operator receipts observe archived tree changes, not OS-level isolation; no
 network or credential sandbox is claimed. A future task must update its own
 acceptance source rather than leave this plan silently governing unrelated work.
+
+Integration finding: renaming a generated CI step broke the existing workflow
+equality test. Withdraw that cosmetic edit instead of changing the generator or
+the assertion. A simultaneous full-suite run also missed a five-second offline
+fixture deadline; isolate the rerun and serialize final delivery checks, without
+increasing its timeout or declaring an unproven flakiness diagnosis. The failed
+post-revert proof records no new evidence.

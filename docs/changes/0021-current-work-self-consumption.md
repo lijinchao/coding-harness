@@ -28,3 +28,10 @@ This record is outside the explicitly listed implementation scope so recording
 receipt results does not pretend that a receipt can hash its own future report.
 The final report must name the exact implementation candidate; evidence does not
 qualify unrelated files or grant human approval.
+
+First full run: 295 pass / 2 fail. The workflow generator equality test caught
+our cosmetic edit of a generated step name; withdraw it, retaining the assertion.
+The manual-worktree offline fixture also returned null status at its five-second
+deadline while full suites ran concurrently. Resource contention is a hypothesis,
+not a demonstrated cause; rerun it independently, then serialize final checks.
+The isolated tests proof failed after revert and did not record a replacement.
