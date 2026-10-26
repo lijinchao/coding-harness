@@ -22,8 +22,8 @@ the archive replay will verify its actual failures. Local candidate: 5/5 pass.
 The new test is registered in the existing tests gate's proof_inputs.
 
 Strict doctor passed. prove --check correctly rejected changed tests and
-command-review inputs; it was not bypassed. Remaining checks: affected fault
-proofs, complete tests/example/gates, attestation and exact-revision receipts.
+command-review inputs; it was not bypassed. Exact-revision capture follows the
+committed proof/attestation candidate below.
 This record is outside the explicitly listed implementation scope so recording
 receipt results does not pretend that a receipt can hash its own future report.
 The final report must name the exact implementation candidate; evidence does not
@@ -35,3 +35,28 @@ The manual-worktree offline fixture also returned null status at its five-second
 deadline while full suites ran concurrently. Resource contention is a hypothesis,
 not a demonstrated cause; rerun it independently, then serialize final checks.
 The isolated tests proof failed after revert and did not record a replacement.
+
+## Final delivery checks
+
+Independent `HARNESS_OFFLINE=1 node --test test/offline.test.mjs test/workflow.test.mjs`:
+5 pass / 0 fail, without changing fixture deadlines or assertions.
+Serialized `./harness prove --manifest harness.manifest.json --gate <id>
+--isolated --record --timeout 300 --offline` for tests, command-review, metrics:
+each injected failure fired and normal recovery passed. Only affected proofs
+were refreshed; the seven other records were retained.
+
+`./harness gates --manifest harness.manifest.json --offline --report
+.harness/self-consumption-gates.XXXXXX.jsonl`: 10/10 gates passed, npm test
+297 pass / 0 fail, proofs_checked=true, proof_problems=[]. The newly created
+report contains exactly one run; its literal X filename is a local artifact,
+not a promise that this template is portable unique-name generation.
+`./harness metrics --log .harness/self-consumption-gates.XXXXXX.jsonl --offline`:
+1 run / 1 green. Historical 0.80 is separately labeled, never described as this
+delivery's health or a productivity gain. Metrics remains advisory.
+
+Example check: 2 compositions match 0.1.49; strict doctor: ok; prove --check:
+10 current, 10/10 input declarations. `./harness attest --manifest
+harness.manifest.json --example examples/consumer/harness.manifest.json --offline`
+regenerated the derived snapshot; --verify succeeds. No old base/pack/tool release
+was edited. Logs: `/tmp/harness-self-repair-gates.log` and the three
+`/tmp/harness-self-proof-*.log` failure/recovery logs.

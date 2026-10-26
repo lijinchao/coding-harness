@@ -917,9 +917,9 @@
         }
       },
       "metrics": {
-        "at": "2026-10-25T14:18:10.167Z",
+        "at": "2026-10-26T17:14:15.165Z",
         "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-        "definition": "2affe866030a8ed21c601360fa60b7d71ae645e0baa01b797e8f4a254d67db26",
+        "definition": "005727112e4fea8de6177f085baa9cad8b7ca0fae8ea6a17ac457605f7a3324f",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
           "src/metrics.mjs": "f3d1bf431ea0e5b8fdf7eee6ca8a0d3605b45fadedd17df8074d1bfaca346b82",

@@ -1,6 +1,6 @@
 # 0053 — Consume the harness on current work, not only on itself
 
-Status: accepted
+Status: implemented
 Date: 2026-10-27
 
 ## Problem
@@ -66,3 +66,9 @@ the assertion. A simultaneous full-suite run also missed a five-second offline
 fixture deadline; isolate the rerun and serialize final delivery checks, without
 increasing its timeout or declaring an unproven flakiness diagnosis. The failed
 post-revert proof records no new evidence.
+
+Independent offline/workflow rerun passed 5/5. The serialized final suite passed
+297/297 and all ten gates passed. All three affected gates were watched to fail
+and recover, recorded with the pinned tool, and the derived attestation verifies.
+The active plan's exact-revision capture is recorded in change 0021; final human
+acceptance is not granted by the implementation status.
