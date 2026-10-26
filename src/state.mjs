@@ -2,7 +2,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSy
 import { dirname, resolve } from 'node:path'
 import { composeText, sha256 } from './compose.mjs'
 import { loadRelease, verifyRelease } from './release.mjs'
-import { ensureGitCheckout, isGitSource } from './fetch.mjs'
+import { ensureGitCheckout, isGitSource, sharedCacheRoot } from './fetch.mjs'
 import { toolCommit, toolFiles, toolVersion } from './tool.mjs'
 import { adoptionProblems, loadRequirements } from './adopt.mjs'
 import { SHIM } from './shim.mjs'
@@ -25,7 +25,7 @@ export function resolveBase(root, manifest, options = {}) {
   let registry
   if (isGitSource(config.source)) {
     const cacheRoot = resolve(root, config.cache ?? '.harness')
-    const repoDir = ensureGitCheckout(config.source, manifest.version, cacheRoot, options.tag)
+    const repoDir = ensureGitCheckout(config.source, manifest.version, cacheRoot, options.tag, sharedCacheRoot(root, config.cache ?? '.harness'))
     registry = resolve(repoDir, config.registry ?? 'dist')
   } else {
     registry = resolve(root, config.source)

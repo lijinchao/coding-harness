@@ -1,9 +1,9 @@
 {
-  "version": "0.1.47",
+  "version": "0.1.49",
   "tool": {
-    "version": "0.1.47",
+    "version": "0.1.49",
     "source": "git:https://github.com/lijinchao/coding-harness.git",
-    "commit": "122c44d45e4ae39ae1959620959a624a2a609051"
+    "commit": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c"
   },
   "base": {
     "source": "git:https://github.com/lijinchao/coding-harness.git",
@@ -110,7 +110,18 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/compose.mjs",
+        "src/fetch.mjs",
+        "src/pack.mjs",
+        "src/process.mjs",
+        "src/proof.mjs",
+        "src/shim.mjs",
+        "src/state.mjs",
+        "src/tool.mjs"
+      ]
     },
     {
       "id": "doctor",
@@ -124,7 +135,19 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/adopt.mjs",
+        "src/artifacts.mjs",
+        "src/context.mjs",
+        "src/doctor.mjs",
+        "src/documents.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/product.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "validate",
@@ -138,7 +161,15 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "schema/harness.manifest.schema.json",
+        "src/artifacts.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "tests",
@@ -152,7 +183,87 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "package.json",
+        "scripts/capture-delivery-pilot.mjs",
+        "scripts/check-command-review.mjs",
+        "scripts/check-delivery.mjs",
+        "scripts/native-agent-eval.mjs",
+        "src/adopt.mjs",
+        "src/artifacts.mjs",
+        "src/attest.mjs",
+        "src/command-review.mjs",
+        "src/compose.mjs",
+        "src/context.mjs",
+        "src/doctor.mjs",
+        "src/documents.mjs",
+        "src/external-hints.mjs",
+        "src/fetch.mjs",
+        "src/gates.mjs",
+        "src/manifest.mjs",
+        "src/metrics.mjs",
+        "src/pack.mjs",
+        "src/process.mjs",
+        "src/product.mjs",
+        "src/proof.mjs",
+        "src/prove.mjs",
+        "src/release.mjs",
+        "src/scan.mjs",
+        "src/select.mjs",
+        "src/shim.mjs",
+        "src/state.mjs",
+        "src/survey.mjs",
+        "src/system-ci-template.mjs",
+        "src/system-gitlab.mjs",
+        "src/system.mjs",
+        "src/tool.mjs",
+        "src/workflow.mjs",
+        "src/worktree.mjs",
+        "test/adopt.test.mjs",
+        "test/artifacts.test.mjs",
+        "test/attest.test.mjs",
+        "test/batch-c.test.mjs",
+        "test/command-review-gate.test.mjs",
+        "test/command-review.test.mjs",
+        "test/context-map.test.mjs",
+        "test/delivery-evidence.test.mjs",
+        "test/delivery-flow.test.mjs",
+        "test/doctor.test.mjs",
+        "test/documents.test.mjs",
+        "test/evals.test.mjs",
+        "test/failclosed.test.mjs",
+        "test/gates.test.mjs",
+        "test/harness.test.mjs",
+        "test/journeys.test.mjs",
+        "test/legibility.test.mjs",
+        "test/metrics.test.mjs",
+        "test/native-eval.test.mjs",
+        "test/offline.test.mjs",
+        "test/output-assertions.test.mjs",
+        "test/pack-conformance.test.mjs",
+        "test/pack-proof-record.test.mjs",
+        "test/packs.test.mjs",
+        "test/pinned-base.test.mjs",
+        "test/postmortems.test.mjs",
+        "test/product.test.mjs",
+        "test/proof-failure-boundary.test.mjs",
+        "test/proof-inputs.test.mjs",
+        "test/proofs.test.mjs",
+        "test/scan-prove.test.mjs",
+        "test/schema-agreement.test.mjs",
+        "test/select.test.mjs",
+        "test/self-product-status.test.mjs",
+        "test/shim.test.mjs",
+        "test/strictness.test.mjs",
+        "test/survey.test.mjs",
+        "test/system-ci-template.test.mjs",
+        "test/system-gitlab.test.mjs",
+        "test/system.test.mjs",
+        "test/tool-pin.test.mjs",
+        "test/workflow.test.mjs"
+      ]
     },
     {
       "id": "release",
@@ -170,7 +281,13 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/process.mjs",
+        "src/proof.mjs",
+        "src/release.mjs"
+      ]
     },
     {
       "id": "example",
@@ -187,7 +304,16 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/compose.mjs",
+        "src/fetch.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/proof.mjs",
+        "src/state.mjs"
+      ]
     },
     {
       "id": "release-ready",
@@ -201,7 +327,19 @@
         "forbid": [
           "harness:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/adopt.mjs",
+        "src/artifacts.mjs",
+        "src/context.mjs",
+        "src/doctor.mjs",
+        "src/documents.mjs",
+        "src/manifest.mjs",
+        "src/process.mjs",
+        "src/product.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "metrics",
@@ -215,7 +353,13 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "src/metrics.mjs",
+        "src/process.mjs",
+        "src/proof.mjs"
+      ]
     },
     {
       "id": "command-review",
@@ -229,7 +373,36 @@
         "forbid": [
           "ERROR:"
         ]
-      }
+      },
+      "proof_inputs": [
+        "bin/harness.mjs",
+        "docs/fixtures/command-review.json",
+        "scripts/check-command-review.mjs",
+        "src/command-review.mjs",
+        "src/process.mjs",
+        "src/proof.mjs"
+      ]
+    },
+    {
+      "id": "delivery-flow/plan",
+      "command": "node scripts/check-delivery.mjs --manifest delivery.plan.json --stage planned",
+      "protects": "Every acceptance criterion maps to an existing test, and each test tier is covered or explicitly waived.",
+      "prove_fires": "Empty the acceptance criteria; the plan check must fail, then pass after revert.",
+      "prove_fires_command": "node -e \"const fs=require('fs');const p='delivery.plan.json';const m=JSON.parse(fs.readFileSync(p));m.acceptance=[];fs.writeFileSync(p,JSON.stringify(m,null,2)+'\\n')\"",
+      "revert_command": "git restore -- delivery.plan.json",
+      "severity": "blocking",
+      "expect": {
+        "forbid": [
+          "\"status\": \"blocked\""
+        ]
+      },
+      "always": true,
+      "override": true,
+      "proof_inputs": [
+        "scripts/check-delivery.mjs",
+        "dist/packs/delivery-flow/base@0.1.1/check.mjs",
+        "dist/packs/delivery-flow/base@0.1.1/delivery.schema.json"
+      ]
     }
   ],
   "surfaces": [
@@ -494,6 +667,10 @@
       {
         "path": "docs/delivery-flow-pilot.md",
         "maxWords": 1300
+      },
+      {
+        "path": "docs/proof-inputs-offline.md",
+        "maxBytes": 8500
       }
     ],
     "instructions": [
@@ -506,7 +683,8 @@
     "manualVerification": "docs/MANUAL_VERIFICATION.md",
     "proofs": {
       "require": "blocking",
-      "maxAgeDays": 30
+      "maxAgeDays": 30,
+      "requireInputs": true
     },
     "metrics": {
       "log": "docs/metrics.jsonl",
@@ -520,11 +698,11 @@
     }
   },
   "lock": {
-    "version": "0.1.47",
+    "version": "0.1.49",
     "tool": {
-      "version": "0.1.47",
+      "version": "0.1.49",
       "files": {
-        "bin/harness.mjs": "dac5e01504ba58df73ba43ffd80cd43c2a6264724159ad30398f43075c7bc62b",
+        "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
         "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
         "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
         "src/attest.mjs": "83e4637cc9dcc1e28d1ee63a155359aa3a94072e37d2ae8c6c0f3da6d3a8481a",
@@ -534,20 +712,20 @@
         "src/doctor.mjs": "ddc578a1e5fdfba7f416fe75ecb80f9fd7f98c15a2fd358a4ad2c6257430663c",
         "src/documents.mjs": "7829a7fc2c6c26d576a688d2f411418fcf49a79f952cb1528603954824ba4916",
         "src/external-hints.mjs": "ce091d8c401b3bb06df711f1ac5ee2b3f7b85ea51b30cbf53d7d9e428bf2a310",
-        "src/fetch.mjs": "cd43a0439c0cdd31637237d5b15cbab799273262dd833f7cd7b7210a1db7d51b",
+        "src/fetch.mjs": "a32bf52873d23f3877d5a2e6e86d4f5f3c348d4aebfc1bb1003393132c3659e0",
         "src/gates.mjs": "5215180a9dbc85d328f9ee2701a77a05c0b0aafc05a63ca8bda7b2453adf2e34",
-        "src/manifest.mjs": "7b93127c3cbb8559be4ac9575141f9e51df73b90c75386215aaec749ff563280",
+        "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
         "src/metrics.mjs": "f3d1bf431ea0e5b8fdf7eee6ca8a0d3605b45fadedd17df8074d1bfaca346b82",
         "src/pack.mjs": "6de1f9152017bdf89a44a44fa62fe88392aebdbb7567d9a3efa270e8dccc7c6c",
         "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
         "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
-        "src/proof.mjs": "af56a190eeef321d30e2fce82e34b1b3f7f3fd978972cb4dbf1dd846f65924cf",
+        "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
         "src/prove.mjs": "8cc3d33f819fdfd7d08c3df3729f13c6af755fb4099fbd5ae0725b66cf083b8b",
         "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
         "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
         "src/select.mjs": "bd3fd4063c4422e284966e8c286d2472dce97925501ee054ec3ee544ef980c6e",
-        "src/shim.mjs": "565579029f2cbd87ec02cf186331c5a3a5a53e07d4ba590da3a0778235aa3fc5",
-        "src/state.mjs": "8d915d3d5c591ed806da105c9348cb14912cdb3119e306e148a974c11d28fdfa",
+        "src/shim.mjs": "ec87aa104ff9c9737173e71a5b7fd45c45762699317c488f3a7012c682386166",
+        "src/state.mjs": "a63084baa55e4bffdad199d5161707ea66b8404ff742ecd3296feaff4f149aeb",
         "src/survey.mjs": "0f45e0628e2e95c01719a73c2b1cc1f1a16f4018db0ce62be92d56d07ad4dd29",
         "src/system-ci-template.mjs": "714343ebef940e9facbd17dbba3febe417bfa84d022a242cd8e736c0371b73cb",
         "src/system-gitlab.mjs": "26800e9caef6631e4fbad61e5a9c5113ff9bdc5a8e0bd6d67b5e6a96bc9acb1b",
@@ -555,9 +733,9 @@
         "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
         "src/workflow.mjs": "3a11dc98d197897f900c85d85928354dadb16196e113e77e59c2520c8f51e64e",
         "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
-        "package.json": "2e8b3732e4b57ae216f66d2509bc71d28457174a85821eea8769f677fc7db4fb"
+        "package.json": "c4c64038c2dd23dfcbd99bf356f3e0f79df2822b724b3ec6474934078c6f337b"
       },
-      "commit": "122c44d45e4ae39ae1959620959a624a2a609051"
+      "commit": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c"
     },
     "outputs": {
       "AGENTS.md": "4be2d6fdf4dcb7d5f19fa328198cf9a1f46b6863d5165fda52647060344b0f30",
@@ -570,11 +748,11 @@
       ".claude/skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527"
     },
     "base": {
-      "version": "0.1.47",
+      "version": "0.1.49",
       "files": {
         "AGENTS.base.md": "997ba570678141d8be247c93705448fa1a39020f43ee6fd20d549e66972a6327",
         "REVIEW.base.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
-        "VERSION": "339576cb65d219c73663037939204654d18f39683f3b38ed72ecd3edba722f57",
+        "VERSION": "b2530d229ed75601505963b7cb9f87d882aa3a255a752ca37d35950595d052c5",
         "requirements.json": "01803c28380e0f191bb684d7c4c40b1e45b093de4601de3c280abceffa931386",
         "skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
         "skills/verification-tiers/SKILL.md": "3d0ae0f4a7eba20746105ca500cc225009b01f875602e60aff8b7a63a67be527",
@@ -597,56 +775,216 @@
         }
       }
     },
+    "overrides": [
+      "delivery-flow/plan"
+    ],
     "proofs": {
       "harness-drift": {
-        "at": "2026-10-25T13:00:57.020Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "132e6590cd01239c68d753a964c9b1418f7e864e8d1e2cb77ca31e1af0a63af9"
+        "at": "2026-10-25T14:16:33.425Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "2839744b9b2c92cd12685061f9d54d54f4713a8fd5b7547fb7825aa34b13f463",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
+          "src/fetch.mjs": "a32bf52873d23f3877d5a2e6e86d4f5f3c348d4aebfc1bb1003393132c3659e0",
+          "src/pack.mjs": "6de1f9152017bdf89a44a44fa62fe88392aebdbb7567d9a3efa270e8dccc7c6c",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
+          "src/shim.mjs": "ec87aa104ff9c9737173e71a5b7fd45c45762699317c488f3a7012c682386166",
+          "src/state.mjs": "a63084baa55e4bffdad199d5161707ea66b8404ff742ecd3296feaff4f149aeb",
+          "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561"
+        }
       },
       "doctor": {
-        "at": "2026-10-25T13:00:58.470Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "6ff094309c342c1070ef98af62f505887eecdd1bd1c12ec8958245b90646fac2"
+        "at": "2026-10-25T14:16:35.014Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "a3a90283a8132c853690652086834618b265dbe73f00be82d90f99a581bac33b",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
+          "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
+          "src/context.mjs": "1ac405d5dbeafc33eae3c371dfb423b49bf254bb73a71b4bbd75b1b3bb70ce72",
+          "src/doctor.mjs": "ddc578a1e5fdfba7f416fe75ecb80f9fd7f98c15a2fd358a4ad2c6257430663c",
+          "src/documents.mjs": "7829a7fc2c6c26d576a688d2f411418fcf49a79f952cb1528603954824ba4916",
+          "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
+        }
       },
       "validate": {
-        "at": "2026-10-25T13:00:59.850Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "5bcda5c61dbe3c4337b68ff6cb05d29ebdca98c659fb44971b9e6255e9031538"
+        "at": "2026-10-25T14:16:36.469Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "85883936543f45260613633b1dfa0e80f3a262058c41e384318e9b1f3ae224f6",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "schema/harness.manifest.schema.json": "b6494f0960de55e5dc85aff6b28a45ea3faab4252a0548fa231b57f781c6dd5e",
+          "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
+          "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
+        }
       },
       "tests": {
-        "at": "2026-10-25T13:02:29.702Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "8da94e541d172c34ceccd2e47c39e9f712522368c93c3d09f894b163f1c6194b"
+        "at": "2026-10-25T14:18:04.961Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "d02b64a46a8ecf83385511144101fa4a072714a5d12e35ff75a3d265b7be9b14",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "package.json": "c4c64038c2dd23dfcbd99bf356f3e0f79df2822b724b3ec6474934078c6f337b",
+          "scripts/capture-delivery-pilot.mjs": "48ce17f972621de1a2a9fe771ba87169b9447dd0c8893f543447c4b962f677e7",
+          "scripts/check-command-review.mjs": "079a44dc5a670202b0235a863415a8e732b94a551bfbbbf959002534cc941665",
+          "scripts/check-delivery.mjs": "e8c687c3d476ebf3b4884c9bdb6972ac44f8f00da7cbe8738f894021f521fd12",
+          "scripts/native-agent-eval.mjs": "2a3808f9fbc950e08d6854309b95f1b6c2dc0fdf5c08cdb533bcd3863636a040",
+          "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
+          "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
+          "src/attest.mjs": "83e4637cc9dcc1e28d1ee63a155359aa3a94072e37d2ae8c6c0f3da6d3a8481a",
+          "src/command-review.mjs": "cf62b228512df4f6ec00e4021fb81dc0fba58f46bf5dcc26af502e20fb7c4f8c",
+          "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
+          "src/context.mjs": "1ac405d5dbeafc33eae3c371dfb423b49bf254bb73a71b4bbd75b1b3bb70ce72",
+          "src/doctor.mjs": "ddc578a1e5fdfba7f416fe75ecb80f9fd7f98c15a2fd358a4ad2c6257430663c",
+          "src/documents.mjs": "7829a7fc2c6c26d576a688d2f411418fcf49a79f952cb1528603954824ba4916",
+          "src/external-hints.mjs": "ce091d8c401b3bb06df711f1ac5ee2b3f7b85ea51b30cbf53d7d9e428bf2a310",
+          "src/fetch.mjs": "a32bf52873d23f3877d5a2e6e86d4f5f3c348d4aebfc1bb1003393132c3659e0",
+          "src/gates.mjs": "5215180a9dbc85d328f9ee2701a77a05c0b0aafc05a63ca8bda7b2453adf2e34",
+          "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
+          "src/metrics.mjs": "f3d1bf431ea0e5b8fdf7eee6ca8a0d3605b45fadedd17df8074d1bfaca346b82",
+          "src/pack.mjs": "6de1f9152017bdf89a44a44fa62fe88392aebdbb7567d9a3efa270e8dccc7c6c",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
+          "src/prove.mjs": "8cc3d33f819fdfd7d08c3df3729f13c6af755fb4099fbd5ae0725b66cf083b8b",
+          "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75",
+          "src/scan.mjs": "0510229545f47dae343a64041e68be94e10ae97a97112d41ea1ffa4b3fed2366",
+          "src/select.mjs": "bd3fd4063c4422e284966e8c286d2472dce97925501ee054ec3ee544ef980c6e",
+          "src/shim.mjs": "ec87aa104ff9c9737173e71a5b7fd45c45762699317c488f3a7012c682386166",
+          "src/state.mjs": "a63084baa55e4bffdad199d5161707ea66b8404ff742ecd3296feaff4f149aeb",
+          "src/survey.mjs": "0f45e0628e2e95c01719a73c2b1cc1f1a16f4018db0ce62be92d56d07ad4dd29",
+          "src/system-ci-template.mjs": "714343ebef940e9facbd17dbba3febe417bfa84d022a242cd8e736c0371b73cb",
+          "src/system-gitlab.mjs": "26800e9caef6631e4fbad61e5a9c5113ff9bdc5a8e0bd6d67b5e6a96bc9acb1b",
+          "src/system.mjs": "9dfe613b810bf8daddf5b67c2e00638446a9a3f6fc0e96f859bc95a0fa139102",
+          "src/tool.mjs": "32bc86a2f7f020a477bed8398c8270ea22f47e2a7c189017747aadc77f60e561",
+          "src/workflow.mjs": "3a11dc98d197897f900c85d85928354dadb16196e113e77e59c2520c8f51e64e",
+          "src/worktree.mjs": "c73ac3dd702f461bbf262a304c391a0cc82a1b96b7ca7b31e40d1460248a73fb",
+          "test/adopt.test.mjs": "5f1cdd7ed6faa94c5ef99a475a326183bedeaa50e3d5f39f7cf2541745f4babb",
+          "test/artifacts.test.mjs": "c37df4d2a9b9b4f45a7e306b28f3e67ebd300ee9f244e0dc33f2270ae118ae2f",
+          "test/attest.test.mjs": "8f68da91576129abea9470fc42dceae5c858a3b5ae9e25c1f656d1118ee4ea17",
+          "test/batch-c.test.mjs": "5d38cad0d37899f81a349bfb810331010cde6f735988ffb8acc4c894bb8547a4",
+          "test/command-review-gate.test.mjs": "7d6952a356f694ff636a08094a9f4356af056e46ce29c838f34a45dd5a365647",
+          "test/command-review.test.mjs": "a805d4788dcfb8b83475b29fec5409be8eedaee8d3a641d9c3eadcbb74d32423",
+          "test/context-map.test.mjs": "d6b29b7ba5426bb6e7f2634e9805ccba05ac3d1e5a6b4226614cc0f446f18c88",
+          "test/delivery-evidence.test.mjs": "0bb7a843f41f049f4fd2f965604ce7878a9ebef70d99123bf163193b91703a35",
+          "test/delivery-flow.test.mjs": "7db3b286cb099326b5105c912ef113520933f4c411def3028ad50183b9ed88b6",
+          "test/doctor.test.mjs": "0d8c9e619e306215bdb234f5ac5252ee7e3394f67538ca302925f23ea709828e",
+          "test/documents.test.mjs": "9d588366955b94ade6d8464cad2991f4cdb63ab51a0edddeca2fa37c8ff5cbc5",
+          "test/evals.test.mjs": "5b0e7c9e31735132ce896557660da9e6390d34a5d71c1b6c4f9afbbacd597739",
+          "test/failclosed.test.mjs": "fcbd5f575675b1c397b9e142e09e96a92758fbf095e8074eb307321a4bee386e",
+          "test/gates.test.mjs": "c229a685da10aa0619e311153b24b774a427e6953c8927d10e06f8104236b232",
+          "test/harness.test.mjs": "5d3fd56b46577c85ecd7798c9a821ee66f17d59283a36c2403cc23b18bcfaa6a",
+          "test/journeys.test.mjs": "e6b42786d5945b70d5c5c31a4b3d91604f8f42ccd9306c20ea9ae90c3cbd9031",
+          "test/legibility.test.mjs": "e30b2ce8d2774e87b59b73e17f370523f86caf59cc161adcc970a7564f218e3f",
+          "test/metrics.test.mjs": "8047a02e23326a2de7dd723876a5a33e9e86cfe37278fc09f06830e7729a28d6",
+          "test/native-eval.test.mjs": "ea394fdc294ad591a9673fc35fc6bdc0b5cb27d605b9275ef5837eadd8104983",
+          "test/offline.test.mjs": "e7ba7e48476e25a909eef77ce4feff42b104011761d6f5385a192c3a03012c5e",
+          "test/output-assertions.test.mjs": "ed7e4c5192301f3d4f0734ff7d5241f294ee5228e67116d16e4185f1f79fd440",
+          "test/pack-conformance.test.mjs": "98eed47b57b82427e71ae60a993fc2dd86ac8076496d67e6a3cc5f3777c1a420",
+          "test/pack-proof-record.test.mjs": "859e1bc58c500ffa0f7464fdf58d3ac43152d3152c9da2480e9b8f1c5525b087",
+          "test/packs.test.mjs": "02547fb7e7e0a541760f7ab98266f3dc61027d7db4ac9a6b047816fa55cf13e4",
+          "test/pinned-base.test.mjs": "9e83166904ac5172b7ac1ff61565e2ef86cdb231eae2f50371711f44fa7167ef",
+          "test/postmortems.test.mjs": "517e8eff72aa219a3f0a9cb182fe2f22f3f9ad5b06dabb11de997ee6a04db4fb",
+          "test/product.test.mjs": "ce20a4438c0a2f9af9a9e206b856d762796c0e48e04c6655662f389f98da1f46",
+          "test/proof-failure-boundary.test.mjs": "91b17d3105771ea1ec8ab91f09fd48e4536a69e53f6f5fd45a0c44dd36614126",
+          "test/proof-inputs.test.mjs": "7b3c8ecd3dae885dcd3679dc88e15eda6b11014bf5883f6a9139c6e8dbe211d2",
+          "test/proofs.test.mjs": "ccdc4b87ef954a9165848cdd029cba631123d35758ba15f9e79c23ba1d2ae5b3",
+          "test/scan-prove.test.mjs": "22af8e1e0d41f7570396ccd90e8a16d94d9cacbbf9c4cd54096c028eab897b9e",
+          "test/schema-agreement.test.mjs": "1b519c47fa9a9eb8a2298f99910d3de3745bf1a1c9a7090e3ac082dda6d18e9e",
+          "test/select.test.mjs": "499179e70fb15e069d2fd483bfb048be8f56d220d1551f0fe238da68649bfcef",
+          "test/self-product-status.test.mjs": "0f5e639fa0a9b6a23487b271cd31c5d3e88f6959dc8a1bf384d20189ba77ebe5",
+          "test/shim.test.mjs": "094d37b0724d8cacabc0a6f5e9f9b3c5aca825bd06c5a1a2bb6355d1aeb71a72",
+          "test/strictness.test.mjs": "894170b6a2ad244cfc8410e3bdd687d8eb7bdd268e7be36add9561cd02f42b80",
+          "test/survey.test.mjs": "d9b58be863b1067754061f017ca5754feb6038d350ec364891f40fb5668ba0ca",
+          "test/system-ci-template.test.mjs": "b88b03a901090c31cf91d6a208c17f477bfca131f613f4256a44f7e6b3254ebc",
+          "test/system-gitlab.test.mjs": "a504389ed7ca48ff5f8bf4befb275bd4d61efad7495b7f1295766f2ee51baf3d",
+          "test/system.test.mjs": "c955b47093ad1db7eeef8a493c7032b31c573b7b2bbf271cd90bacf9efcb6690",
+          "test/tool-pin.test.mjs": "5bf998c49acf7cdf7b9f0e130f9d54149a410b37dded07d95bf8e8e2b5f4c3cc",
+          "test/workflow.test.mjs": "a93e1cfaff02dd8db54deaa947a0c7d7eb4596775d2e0324be050aceba206d9b"
+        }
       },
       "release": {
-        "at": "2026-10-25T13:02:30.374Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "6785a37bd333f993d80f3878f782b8d3d74597b7b3e4361a4f50cebdf7c817b1"
+        "at": "2026-10-25T14:18:05.440Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "e0631859b8b88c0536c727e35cc97bcc447b858212c5a297bf6fc1fbba73b379",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
+          "src/release.mjs": "84cb248d97823a3b034be0c99fbfb9ede58213da965ae5846efb2ee0bc874d75"
+        }
       },
       "example": {
-        "at": "2026-10-25T13:02:32.858Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "310d4502b4ec578af1f734b08138664e96e469b9eedf5c3ef0df374987dd1a13"
+        "at": "2026-10-25T14:18:07.612Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "ed81b9a29063bb3cc30ced45ccc0be8a5290bcc9e83d314e724107b725f4cc5d",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "src/compose.mjs": "0ba04d4dc3b881f2d9137dcb7d9d8338f1c6a27bf00e6852d75ec7d2df1b20d4",
+          "src/fetch.mjs": "a32bf52873d23f3877d5a2e6e86d4f5f3c348d4aebfc1bb1003393132c3659e0",
+          "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f",
+          "src/state.mjs": "a63084baa55e4bffdad199d5161707ea66b8404ff742ecd3296feaff4f149aeb"
+        }
       },
       "metrics": {
-        "at": "2026-10-25T13:02:35.594Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "086e89f9d23ab59c27664ad7ecd2b0d6e4e210815ad8ff161c9a15d5b1e5e768"
+        "at": "2026-10-25T14:18:10.167Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "2affe866030a8ed21c601360fa60b7d71ae645e0baa01b797e8f4a254d67db26",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "src/metrics.mjs": "f3d1bf431ea0e5b8fdf7eee6ca8a0d3605b45fadedd17df8074d1bfaca346b82",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
+        }
       },
       "release-ready": {
-        "at": "2026-10-25T13:02:34.358Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "8e3f332cd199d0f410cebeab7402b830d1a3b3bc4cbebaedd75350c110a1740d"
+        "at": "2026-10-25T14:18:09.034Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "49cfa1ff59d896a45fa96c2a11adacce17a7bdced47c04a06e182cac5d9ea297",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
+          "src/artifacts.mjs": "d97f2c10d4561c0eb2caa05461f1ba0a634555e7c18c7b111bd673cb8aee9f61",
+          "src/context.mjs": "1ac405d5dbeafc33eae3c371dfb423b49bf254bb73a71b4bbd75b1b3bb70ce72",
+          "src/doctor.mjs": "ddc578a1e5fdfba7f416fe75ecb80f9fd7f98c15a2fd358a4ad2c6257430663c",
+          "src/documents.mjs": "7829a7fc2c6c26d576a688d2f411418fcf49a79f952cb1528603954824ba4916",
+          "src/manifest.mjs": "436ad877b461220cac01c7f52849ae671925a5d3aae93d30e66441143ef4dba6",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/product.mjs": "3d73692cda84ee36ab6dd22f962cbc41b59b97f63db78141422db8255ad6b55a",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
+        }
       },
       "command-review": {
-        "at": "2026-10-25T13:02:37.930Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "555fe9389f59ff92fa4576a4c0eb790e2087ba6dc2e06faf584be91d6e00c03a"
+        "at": "2026-10-25T14:18:12.389Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "538865f79630c00820edb71ca9baf23767d0b098d64c97f8131d69cd126a9fff",
+        "inputs": {
+          "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
+          "docs/fixtures/command-review.json": "4be68cf75c73379b12e7c6eb50323954d14025692decae648ee075172ddfb1db",
+          "scripts/check-command-review.mjs": "079a44dc5a670202b0235a863415a8e732b94a551bfbbbf959002534cc941665",
+          "src/command-review.mjs": "cf62b228512df4f6ec00e4021fb81dc0fba58f46bf5dcc26af502e20fb7c4f8c",
+          "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
+          "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
+        }
       },
       "delivery-flow/plan": {
-        "at": "2026-10-25T13:02:38.439Z",
-        "tool": "122c44d45e4ae39ae1959620959a624a2a609051",
-        "definition": "842b8b0a30c3ce341c445cc086249ba8129afb0b38293de7c0d4b01c02eb3326"
+        "at": "2026-10-25T14:18:12.876Z",
+        "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
+        "definition": "44b96947830f543b09fba18231b086a90688d88c5c8a9867a16532206990d401",
+        "inputs": {
+          "dist/packs/delivery-flow/base@0.1.1/check.mjs": "062e5103eed0a0caff13f5389385885731edfb4b7bcb8dfd3e09cf3f6c4f7620",
+          "dist/packs/delivery-flow/base@0.1.1/delivery.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
+          "scripts/check-delivery.mjs": "e8c687c3d476ebf3b4884c9bdb6972ac44f8f00da7cbe8738f894021f521fd12"
+        }
       }
     }
   }

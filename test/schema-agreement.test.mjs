@@ -14,6 +14,7 @@ const KEY_GROUPS = [
   ['PRODUCT_KEYS', items.product.properties],
   ['PRODUCT_VERSION_KEYS', items.product.properties.version.properties],
   ['GOVERNANCE_KEYS', items.governance.properties],
+  ['PROOFS_KEYS', items.governance.properties.proofs.properties],
   ['DOC_KEYS', items.governance.properties.docs.items.properties],
   ['CONTEXT_KEYS', items.governance.properties.context.properties],
   ['CONTEXT_SOURCE_KEYS', items.governance.properties.context.properties.sources.items.properties],

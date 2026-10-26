@@ -18,7 +18,7 @@ export const ROOT_KEYS = ['version', 'tool', 'base', 'product', 'governance', 'c
 export const EVAL_KEYS = ['id', 'fixture', 'task', 'assert', 'evidence', 'feedback', 'retries']
 export const COMPOSITION_KEYS = ['output', 'sources']
 export const SKILL_KEYS = ['id', 'path', 'trigger', 'owner']
-export const GATE_KEYS = ['id', 'command', 'setup_command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after', 'override']
+export const GATE_KEYS = ['id', 'command', 'setup_command', 'protects', 'prove_fires', 'prove_fires_command', 'revert_command', 'severity', 'expect', 'phase', 'always', 'needs', 'after', 'override', 'proof_inputs']
 export const EXPECT_KEYS = ['forbid', 'allow']
 export const BASE_KEYS = ['source', 'registry', 'cache']
 export const TOOL_KEYS = ['version', 'commit', 'source']
@@ -34,7 +34,7 @@ export const LEGIBILITY_ADAPTERS = ['start', 'ready', 'observe.ui', 'observe.log
 export const LEGIBILITY_KEYS = ['command', 'evidence']
 export const METRICS_KEYS = ['log', 'window', 'minFirstPassRate', 'maxFlaky', 'maxTimeouts', 'exclude', 'kind']
 export const METRICS_KINDS = ['gate-health', 'delivery-outcome']
-export const PROOFS_KEYS = ['require', 'maxAgeDays']
+export const PROOFS_KEYS = ['require', 'maxAgeDays', 'requireInputs']
 export const PROOF_REQUIRE = ['blocking', 'all', 'none']
 export const PRODUCT_KEYS = ['version', 'mentions']
 export const PRODUCT_VERSION_KEYS = ['path', 'pattern']
@@ -224,6 +224,7 @@ function validateGovernance(errors, governance) {
     requireObject(errors, governance.proofs, 'governance.proofs')
     rejectUnknown(errors, governance.proofs, PROOFS_KEYS, 'governance.proofs')
     if (isObject(governance.proofs)) {
+      if (governance.proofs.requireInputs !== undefined && typeof governance.proofs.requireInputs !== 'boolean') errors.push('governance.proofs.requireInputs: must be a boolean')
       if (governance.proofs.require !== undefined && !PROOF_REQUIRE.includes(governance.proofs.require)) {
         errors.push('governance.proofs.require: must be one of ' + PROOF_REQUIRE.join(', '))
       }
@@ -351,6 +352,20 @@ function validateLock(errors, lock) {
   }
   requireObject(errors, lock.outputs, 'lock.outputs')
   if (lock.proofs !== undefined) requireObject(errors, lock.proofs, 'lock.proofs')
+  if (isObject(lock.proofs)) for (const [id, record] of Object.entries(lock.proofs)) {
+    const where = 'lock.proofs.' + id
+    if (typeof record === 'string') continue // legacy evidence is diagnosed by prove
+    requireObject(errors, record, where)
+    if (!isObject(record)) continue
+    rejectUnknown(errors, record, ['at', 'tool', 'definition', 'inputs'], where)
+    for (const field of ['at', 'tool', 'definition']) requireString(errors, record[field], where + '.' + field)
+    if (record.inputs !== undefined) {
+      requireObject(errors, record.inputs, where + '.inputs')
+      if (isObject(record.inputs)) for (const [path, digest] of Object.entries(record.inputs)) {
+        if (typeof digest !== 'string' || !/^[a-f0-9]{64}$/.test(digest)) errors.push(where + '.inputs.' + path + ': required SHA-256')
+      }
+    }
+  }
   if (lock.tool !== undefined) validateLockTool(errors, lock.tool)
   if (lock.base !== undefined) {
     requireObject(errors, lock.base, 'lock.base')
@@ -425,6 +440,13 @@ export function validateManifest(manifest) {
       }
       if (gate?.phase !== undefined) requireString(errors, gate.phase, where + '.phase')
       if (gate?.always !== undefined && typeof gate.always !== 'boolean') errors.push(where + '.always: must be a boolean')
+      if (gate?.proof_inputs !== undefined) {
+        if (!Array.isArray(gate.proof_inputs) || gate.proof_inputs.length === 0) errors.push(where + '.proof_inputs: required non-empty array')
+        else {
+          gate.proof_inputs.forEach((path, i) => requireString(errors, path, where + '.proof_inputs[' + i + ']'))
+          if (new Set(gate.proof_inputs).size !== gate.proof_inputs.length) errors.push(where + '.proof_inputs: duplicate path')
+        }
+      }
       for (const field of ['needs', 'after']) {
         if (gate?.[field] !== undefined && !Array.isArray(gate[field])) {
           errors.push(where + '.' + field + ': required array')

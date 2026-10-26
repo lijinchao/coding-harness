@@ -1,6 +1,6 @@
 # Roadmap
 
-The [README status](../README.md#status) distinguishes the pinned v0.1.47 release from the working checkout. The detailed current contracts live in [reference.md](reference.md) and [contracts.md](contracts.md).
+The [README status](../README.md#status) distinguishes the pinned v0.1.49 release from the working checkout. The detailed current contracts live in [reference.md](reference.md) and [contracts.md](contracts.md).
 
 This page carries the forward plan: the next three actions, the milestones ahead, and which practices from a mature harness are worth adapting. The reference ([reference.md](reference.md)), the artifact contracts ([contracts.md](contracts.md)), and the governance rules ([governance.md](governance.md)) own current behavior; this page owns what is not built yet.
 
