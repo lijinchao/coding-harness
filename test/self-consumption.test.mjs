@@ -23,7 +23,7 @@ function checkDocument(t, declaration, body) {
 
 test('self-consumption policy: retain document checks without non-entry hard budgets', t => {
   const docs = manifest.governance.docs
-  assert.equal(docs.length, 23)
+  assert.ok(docs.length >= 23, 'retain the declared documents without forbidding future unbudgeted sources')
   const budgeted = docs.filter(doc => doc.maxWords !== undefined || doc.maxBytes !== undefined)
   assert.deepEqual(budgeted, [
     { path: 'AGENTS.md', maxBytes: 8192 },
@@ -66,8 +66,10 @@ test('operator delivery preflight names current criteria and does not claim veri
   const result = spawnSync(process.execPath, ['scripts/check-delivery.mjs', '--manifest', 'delivery.plan.json', '--stage', 'planned'], { cwd: root, encoding: 'utf8', timeout: 15000 })
   assert.equal(result.status, 0, result.stdout + result.stderr)
   const report = JSON.parse(result.stdout)
-  assert.equal(report.design, 'docs/decisions/0053-consume-the-harness-on-current-work.md')
-  assert.ok(report.criteria.some(criterion => criterion.id === 'AC-CURRENT'))
+  const plan = JSON.parse(read('delivery.plan.json'))
+  assert.notEqual(plan.id, 'checker-inputs-and-offline-resolution', 'the previous task is historical, not the active acceptance map')
+  assert.equal(report.design, plan.design)
+  assert.deepEqual(report.criteria.map(criterion => criterion.id), plan.acceptance.map(criterion => criterion.id))
   assert.equal(report.status, 'planned')
   assert.ok(report.criteria.every(criterion => criterion.evidence === 'pending'))
   assert.equal(report.human_decision, 'pending')
