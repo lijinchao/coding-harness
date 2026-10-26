@@ -9,7 +9,8 @@ approved A/B on 2026-10-27. Consumer decision 0031 owns the implementation plan:
 first commit its scope, compare parsed manifests and run disposable counterexamples,
 then qualify the committed candidate. Gate consolidation and product tasks remain
 outside this approval. Consumer change record 0050-non-entry-budget-reduction
-records the implementation and qualification; the three-task pilot is unperformed.
+records the implementation and qualification. Existing work is already real
+delivery; further observation has no minimum task quota.
 
 ## Observed baseline
 
@@ -66,7 +67,9 @@ Risk: ordinary documents can grow. Mitigation: existing source maps, ownership
 and review remain; review duplication and relevance rather than enforcing a
 universal word count. Whitespace word counting is not a multilingual token
 budget. Do not claim token savings from removing limits or retaining byte caps.
-This proposal does not alter coding-harness's own budget settings.
+The original A/B scope did not alter producer budgets. Subsequent self-consumption
+repair is owned by [0053](decisions/0053-consume-the-harness-on-current-work.md),
+not retroactively counted as consumer A/B.
 
 ### B. Stop turning every new test command into a new gate
 
@@ -109,9 +112,9 @@ do not advertise it as approved now or bypass proof checks to achieve green.
 5. Review the guide diff: no unconditional requirement to add a gate per test
    command, no suggestion that targeted green means delivery accepted.
 
-## Subsequent pilot, not performed by this change
+## Observe existing work, without a new pilot requirement
 
-Choose three separately authorized product tasks. Use each existing change/PR
+coding-harness and agentic-ops are real consumers. Use each existing change/PR
 record for criterion -> test/operation -> actual result -> limits -> human decision.
 Keep checks passed, adequacy reviewed and product accepted distinct; unknown or
 pending cannot become accepted. No parallel required ledger or new schema.
@@ -119,7 +122,7 @@ pending cannot become accepted. No parallel required ledger or new schema.
 Record product uncertainty work separately from governance maintenance, check
 elapsed time, rule-caused rework, defect discovery channel, and missing data.
 Do not substitute commits, code share, gate count or first-pass rate for benefit.
-Compare like tasks only; this small observational pilot cannot establish causality.
+Compare like tasks only; observational records do not establish causality.
 
 Review decision-bearing claims through the existing report outlet: source identity,
 sample exclusions/strata, evidence tier, paired wins/losses, limitations and review.
@@ -128,8 +131,9 @@ Markdown-number gate, arbitrary minimum sample size, or new blocking claim rule.
 Raw model responses require separate data-handling authority and redaction.
 
 Stop and revise if duplication or list maintenance dominates, traceability does
-not improve, or safety/contract/boundary checks weaken. At pilot end, the owner
-chooses retain, revise or revert; there is no automatic promotion to Kernel.
+not improve, or safety/contract/boundary checks weaken. The owner chooses retain,
+revise or revert based on available evidence; there is no automatic promotion to
+Kernel and no quota blocking ordinary development.
 
 ## Approval boundary
 
@@ -154,4 +158,4 @@ strict doctor, eight composition checks and fourteen current proofs in a clean
 detached worktree. Producer document tests passed 5/5, full tests 292/292 and
 the pinned example check passed. No proof was re-recorded by this change.
 Full commands and local evidence locations live in consumer change record 0050;
-product effectiveness and the three-task pilot remain unqualified.
+product effectiveness and net benefit remain unqualified by these configuration tests.

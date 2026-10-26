@@ -40,6 +40,11 @@ The check accepts valid failed and mutated evidence; its job is integrity, not
 promotion. It separately reports whether the command passed without changing
 the isolated tree.
 
+The self `command-review` gate executes `true` only to smoke-test receipt binding
+and temporary-state ownership. Its success is not delivery qualification. Actual
+task checks use separate exact-revision receipts, referenced by the active
+`delivery.plan.json`; planned validation does not replace verified evidence.
+
 ## Safety boundary
 
 Git archive isolation protects the source checkout and excludes its uncommitted

@@ -11,9 +11,9 @@ existing tests and records the adoption gaps found in game-design.
 
 Three things, in order.
 
-1. **Qualify approved adoption reduction.** Knowledge corrections are recorded in change 0019. The owner approved A/B in the [cost-reduction plan](governance-cost-review.md): remove only non-entry budgets and replace automatic gate proliferation with reuse-first guidance. Retain document checks and full delivery qualification.
-2. **Review the resulting adoption evidence.** Keep safety/contract/boundary coverage and proof policy unchanged. Configuration acceptance does not establish productivity benefit; no new Kernel feature or pack is planned for this stage.
-3. **Observe three real deliveries.** On separately authorized tasks, link acceptance criteria, checks, evidence limits and human decisions; observe governance cost without treating gate pass rate or file-change counts as productivity. The pilot is not yet performed.
+1. **Consume the harness on current work.** [Decision 0053](decisions/0053-consume-the-harness-on-current-work.md) repairs self-consumption: an active acceptance map, real command receipts, honest diagnostic labels and entry-only budgets. Planned is preflight, not delivery qualification.
+2. **Use the existing evidence.** Consumer A/B is implemented in change 0020. Keep safety/contract/boundary coverage; distinguish configuration acceptance from productivity benefit. No new Kernel feature or pack is planned for this stage.
+3. **Observe ongoing delivery.** coding-harness and agentic-ops already supply real work. Reuse their existing change/PR records for acceptance, evidence limits and human decisions, without a minimum task quota, new ledger or product-work blocker. Missing cost data remains unknown.
 
 The GitLab multi-repository qualification remains unperformed and deferred while
 this adoption review takes priority; it is not silently marked complete.

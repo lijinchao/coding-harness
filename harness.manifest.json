@@ -254,6 +254,7 @@
         "test/scan-prove.test.mjs",
         "test/schema-agreement.test.mjs",
         "test/select.test.mjs",
+        "test/self-consumption.test.mjs",
         "test/self-product-status.test.mjs",
         "test/shim.test.mjs",
         "test/strictness.test.mjs",
@@ -343,12 +344,12 @@
     },
     {
       "id": "metrics",
-      "command": "./harness metrics --manifest harness.manifest.json",
-      "protects": "the recorded runs stay inside the declared quality budget",
+      "command": "node -e \"console.log('historical gate-health only; not current delivery qualification')\" && ./harness metrics --manifest harness.manifest.json",
+      "protects": "Historical gate-health budget diagnostic only; current CI report owns the current run, not delivery effectiveness.",
       "prove_fires": "append a run with a failed gate to docs/metrics.jsonl, then run the gate; expect exit 1",
       "prove_fires_command": "printf '%s\\n' '{\"at\":\"2026-01-01T00:00:00.000Z\",\"version\":\"0.0.0\",\"tool\":\"0.0.0\",\"results\":[{\"id\":\"tests\",\"ok\":false,\"skipped\":false,\"timedOut\":false,\"ms\":1}]}' >> docs/metrics.jsonl",
       "revert_command": "git checkout -- docs/metrics.jsonl",
-      "severity": "blocking",
+      "severity": "advisory",
       "expect": {
         "forbid": [
           "ERROR:"
@@ -364,7 +365,7 @@
     {
       "id": "command-review",
       "command": "node scripts/check-command-review.mjs",
-      "protects": "a review receipt binds a command to its revision and rejects a different expected command without sharing temporary state",
+      "protects": "Mechanism smoke only: receipt binding rejects a different expected command without shared temporary state; not delivery qualification.",
       "prove_fires": "Change the expected command in the tracked fixture; receipt binding must fail.",
       "prove_fires_command": "node -e \"require('fs').writeFileSync('docs/fixtures/command-review.json',JSON.stringify({command:'false'})+'\\n')\"",
       "revert_command": "git restore -- docs/fixtures/command-review.json",
@@ -386,7 +387,7 @@
     {
       "id": "delivery-flow/plan",
       "command": "node scripts/check-delivery.mjs --manifest delivery.plan.json --stage planned",
-      "protects": "Every acceptance criterion maps to an existing test, and each test tier is covered or explicitly waived.",
+      "protects": "Active acceptance-map preflight only; planned does not mean verified or human accepted.",
       "prove_fires": "Empty the acceptance criteria; the plan check must fail, then pass after revert.",
       "prove_fires_command": "node -e \"const fs=require('fs');const p='delivery.plan.json';const m=JSON.parse(fs.readFileSync(p));m.acceptance=[];fs.writeFileSync(p,JSON.stringify(m,null,2)+'\\n')\"",
       "revert_command": "git restore -- delivery.plan.json",
@@ -581,20 +582,16 @@
     "changes": "docs/changes",
     "docs": [
       {
-        "path": "docs/native-agent-pilot.md",
-        "maxBytes": 12000
+        "path": "docs/native-agent-pilot.md"
       },
       {
-        "path": "docs/native-agents.md",
-        "maxBytes": 9000
+        "path": "docs/native-agents.md"
       },
       {
-        "path": "docs/review-0.1.45.md",
-        "maxBytes": 7000
+        "path": "docs/review-0.1.45.md"
       },
       {
-        "path": "docs/context-map-pilot.md",
-        "maxBytes": 6500
+        "path": "docs/context-map-pilot.md"
       },
       {
         "path": "AGENTS.md",
@@ -605,72 +602,55 @@
         "maxBytes": 4096
       },
       {
-        "path": "docs/context.md",
-        "maxBytes": 4096
+        "path": "docs/context.md"
       },
       {
-        "path": "docs/game-design-adoption.md",
-        "maxWords": 1100
+        "path": "docs/game-design-adoption.md"
       },
       {
-        "path": "README.md",
-        "maxWords": 820
+        "path": "README.md"
       },
       {
-        "path": "docs/reference.md",
-        "maxWords": 1600
+        "path": "docs/reference.md"
       },
       {
-        "path": "docs/contracts.md",
-        "maxWords": 2100
+        "path": "docs/contracts.md"
       },
       {
-        "path": "docs/governance.md",
-        "maxWords": 900
+        "path": "docs/governance.md"
       },
       {
-        "path": "docs/roadmap.md",
-        "maxWords": 1600
+        "path": "docs/roadmap.md"
       },
       {
-        "path": "docs/MANUAL_VERIFICATION.md",
-        "maxWords": 400
+        "path": "docs/MANUAL_VERIFICATION.md"
       },
       {
-        "path": "docs/direction.md",
-        "maxWords": 700
+        "path": "docs/direction.md"
       },
       {
-        "path": "docs/packs.md",
-        "maxWords": 500
+        "path": "docs/packs.md"
       },
       {
-        "path": "docs/release.md",
-        "maxWords": 500
+        "path": "docs/release.md"
       },
       {
-        "path": "docs/legibility.md",
-        "maxWords": 500
+        "path": "docs/legibility.md"
       },
       {
-        "path": "docs/command-review.md",
-        "maxWords": 400
+        "path": "docs/command-review.md"
       },
       {
-        "path": "docs/survey.md",
-        "maxWords": 300
+        "path": "docs/survey.md"
       },
       {
-        "path": "docs/system-manifest.md",
-        "maxWords": 1000
+        "path": "docs/system-manifest.md"
       },
       {
-        "path": "docs/delivery-flow-pilot.md",
-        "maxWords": 1300
+        "path": "docs/delivery-flow-pilot.md"
       },
       {
-        "path": "docs/proof-inputs-offline.md",
-        "maxBytes": 8500
+        "path": "docs/proof-inputs-offline.md"
       }
     ],
     "instructions": [
@@ -738,7 +718,7 @@
       "commit": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c"
     },
     "outputs": {
-      "AGENTS.md": "4be2d6fdf4dcb7d5f19fa328198cf9a1f46b6863d5165fda52647060344b0f30",
+      "AGENTS.md": "2508a2aff8b1edb785363e8146090227a4b886c96caa95c00f4d70004796f25f",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
       ".agents/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
       ".agents/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",

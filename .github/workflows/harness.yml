@@ -17,7 +17,7 @@ jobs:
           node-version: '22'
       - name: Run every declared gate
         run: ./harness gates --manifest harness.manifest.json --report .harness/gates.jsonl
-      - name: Report the first-pass rate
+      - name: Report current-run check health (not historical window)
         if: always()
         run: ./harness metrics --log .harness/gates.jsonl
       - name: Prove every gate still fires

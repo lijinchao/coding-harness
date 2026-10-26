@@ -78,6 +78,13 @@ normal repair from nondeterminism. Investigate before attributing cause. Check
 health is not delivery effectiveness. [The staged SPEC](decisions/0052-evidence-first-delivery.md)
 requires separate cost and acceptance observations; these are not implemented metrics.
 
+In this repository the committed history budget is advisory and explicitly
+historical. CI reports its current `.harness/gates.jsonl` separately; neither
+source establishes product acceptance. Other repositories retain their own policy.
+The command-review true-command gate is a mechanism smoke, not a receipt for
+actual task tests. The active delivery plan and revision-bound receipts own those
+checks; see [0053](decisions/0053-consume-the-harness-on-current-work.md).
+
 ## Pruning
 
 Delete a harness item when:

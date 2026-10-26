@@ -20,6 +20,14 @@ change their declared source and sync, never hand-edit the exports.
 
 Run the tests and the example check before reporting any task complete, and paste the output.
 
+`delivery.plan.json` names the active behavior change; update it before implementation.
+Its planned gate is preflight only. Reuse actual test receipts for verified evidence;
+pure prose changes use an existing change record, not invented red tests.
+
+For shared writing, isolate before staging: inspect status/worktrees first and use
+a separate worktree when another agent owns changes. Do not share a staging area,
+commit another task's files, stash/reset its work, or mistake a worktree for a sandbox.
+
 ## Conventions
 
 - Zero runtime dependencies. The CLI is plain Node.js ESM; do not add a package without the owner's approval.

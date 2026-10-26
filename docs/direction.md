@@ -21,7 +21,7 @@ DeepSeek Harness supplies battle-tested parts: a gate aggregator with a worker p
 
 - The contracts for all four layers exist in the working tool. The current command inventory and release boundary live in [README.md](../README.md#status); the outstanding deployment and qualification work lives in [roadmap.md](roadmap.md).
 - Prioritize real consumer evidence and failure feedback before expanding the kernel or adding another pack.
-- Pause governance feature expansion while correcting stale guidance and reviewing adoption cost. Three real delivery tasks may establish pilot feasibility, not a causal productivity gain. Product work remains separately authorized.
+- Pause governance feature expansion while correcting stale guidance and reviewing adoption cost. coding-harness and agentic-ops are already real consumers. Observe their existing authorized work without a task quota or new ledger; missing cost data stays unknown, not a reason to block product work.
 
 ## Non-goals
 

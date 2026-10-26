@@ -27,10 +27,11 @@ the next. Keep Kernel and product facts separate.
 2. **After owner approval of that proposal:** apply the smallest adoption
    adjustments, separating focused development feedback from delivery checks.
    Reuse existing artifacts; do not install a delivery pack merely to qualify.
-3. **On three separately authorized real delivery tasks:** observe criterion,
+3. **On existing authorized delivery work:** observe criterion,
    check, evidence, uncovered risk and human decision, plus governance work,
    elapsed checks and rework. Missing measurements remain unknown. This small
-   pilot is feasibility evidence, not a causal productivity estimate.
+   observation is descriptive evidence, not a causal productivity estimate;
+   no minimum task quota or new ledger is required.
 4. Consider automation only for repeated, reproducible failures with acceptable
    false positives. No new Kernel feature or pack is justified by this SPEC alone.
 
@@ -74,8 +75,9 @@ changes, automatic approval/merge, or product iteration. Existing delivery check
 remain mandatory until a separately approved adoption change replaces policy.
 Stage-one verification uses document review plus existing doctor, full tests,
 example check and consumer gates; it does not claim an automated prose-truth test.
-The next owner decision is the reduction proposal, not a declaration that the
-three-task pilot or product acceptance is complete.
+A/B adoption reduction was subsequently approved and implemented (change 0020).
+The owner clarified that existing consumer and self work is already real delivery:
+observe it without requiring an additional pilot or declaring product acceptance.
 
 Execution departure: another task edited and committed consumer runtime files
 during documentation work, including our staged consumer documents in its commit.
