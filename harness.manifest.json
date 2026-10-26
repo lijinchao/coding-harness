@@ -945,13 +945,13 @@
         }
       },
       "command-review": {
-        "at": "2026-10-25T14:18:12.389Z",
+        "at": "2026-10-26T17:14:09.138Z",
         "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "538865f79630c00820edb71ca9baf23767d0b098d64c97f8131d69cd126a9fff",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
           "docs/fixtures/command-review.json": "4be68cf75c73379b12e7c6eb50323954d14025692decae648ee075172ddfb1db",
-          "scripts/check-command-review.mjs": "079a44dc5a670202b0235a863415a8e732b94a551bfbbbf959002534cc941665",
+          "scripts/check-command-review.mjs": "eb7e4e7f52745e6118bdce29f33ad63f2c978999b102e734e2f195dfbd901692",
           "src/command-review.mjs": "cf62b228512df4f6ec00e4021fb81dc0fba58f46bf5dcc26af502e20fb7c4f8c",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
           "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"
