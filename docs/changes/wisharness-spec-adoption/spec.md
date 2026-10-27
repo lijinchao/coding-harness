@@ -1,7 +1,7 @@
 # 行为说明：项目需求与验证证据的可追溯关联
 
 - 已有需求、设计或契约引用：本仓 [delivery-flow 决策](../../decisions/0044-delivery-flow-starts-with-an-acceptance-map.md)、[现有 Pack 契约](../../../packs/delivery-flow/README.md)、[产品边界](../../direction.md)。借鉴来源为 `360MultiPaySdk_AS` 本地 `master@eaed603` 的 `.wisharness/templates/spec.md`、`.wisharness/templates/plan.md`、`.wisharness/rules/core.md` 和 `.wisharness/rules/method-design-planning.md`。
-- 实施方案：[plan.md](plan.md)。本文件是后续迭代的 SPEC；本次提交不实现下述行为。
+- 初次归档方案：[plan.md](plan.md)。后续实施与表示方式取舍见 [0054](../../decisions/0054-project-owned-behavior-evidence.md)。本文件保留行为真源；最初提交仅文档的历史边界不代表后续实现已验收。
 
 ## 目标行为
 
@@ -22,7 +22,7 @@
 
 ## 验收
 
-- 以下场景是**后续实现的验收定义，当前尚未执行**；已有 Pack v1 的测试和报告不能充当这些场景的通过证据。
+- 以下场景最初作为后续验收定义归档。已有 Pack v1 的测试不能充当 v2 通过证据；新实现须提供自身固定候选、真实回执和明确消费范围，不推断 SDK 或生产验收。
 
 | 场景 | 入口与操作 | 预期结果 |
 | --- | --- | --- |

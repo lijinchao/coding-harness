@@ -10,7 +10,7 @@
   ],
   "scope": [
     "packs/delivery-flow",
-    "dist/packs/delivery-flow/base@0.2.0",
+    "dist/packs/delivery-flow/base@0.2.1",
     "docs/changes/wisharness-spec-adoption/spec.md",
     "docs/changes/wisharness-spec-adoption/plan.md",
     "docs/decisions/0054-project-owned-behavior-evidence.md",

@@ -4,6 +4,18 @@ Each artifact type has a required skeleton. `harness validate` rejects a manifes
 
 ## Artifact contracts
 
+### Delivery behavior and tier evidence (opt-in pack)
+
+The [delivery-flow contract](../packs/delivery-flow/README.md) owns its v1/v2
+plan schemas, not the Kernel manifest. In v2 the checker requires canonical tracked
+regular behavior/plan files within scope, unique source markers referenced by
+criteria, and three explicit tier states. Candidate plan/behavior hashes must
+match one revision; blocked or unevaluated tiers cannot yield full verification.
+Covered evidence needs valid frozen red/green receipts; not-applicable remains
+a reasoned declaration for human review. Legacy v1 waivers are not reinterpreted.
+The pack's schema/checker and `test/delivery-v2.test.mjs` enforce these boundaries;
+they do not certify semantic completeness, production effectiveness or approval.
+
 ### System manifest
 
 | Field | Meaning |

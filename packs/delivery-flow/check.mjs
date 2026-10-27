@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import pathApi, { dirname, isAbsolute, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SCHEMA = JSON.parse(readFileSync(new URL('./delivery.schema.json', import.meta.url), 'utf8'))
+const LEGACY_SCHEMA = JSON.parse(readFileSync(new URL('./delivery-v1.schema.json', import.meta.url), 'utf8'))
 const TIERS = ['unit', 'integration', 'e2e']
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
@@ -48,6 +49,84 @@ function git(root, ...args) {
   return execFileSync('git', ['-C', root, ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
 }
 
+/** Explicit project-owned markers; examples inside fenced code are not scenarios. */
+export function scenarioIds(text) {
+  let fence = null
+  const prose = []
+  for (const line of text.split('\n')) {
+    if (fence) {
+      if (new RegExp('^ {0,3}' + fence.char + '{' + fence.length + ',}\\s*$').test(line)) fence = null
+      continue
+    }
+    const opening = line.match(/^ {0,3}(`{3,}|~{3,})/)
+    if (opening) { fence = { char: opening[1][0], length: opening[1].length }; continue }
+    prose.push(line)
+  }
+  return [...prose.join('\n').matchAll(/<!--\s*scenario:\s*([A-Za-z][A-Za-z0-9_-]*)\s*-->/g)].map(match => match[1])
+}
+
+function inScope(path, scope) {
+  return scope.some(item => path === item || path.startsWith(item.replace(/\/$/, '') + '/'))
+}
+
+function trackedRegular(root, path, kind) {
+  if (typeof path !== 'string' || path.includes('\\') || pathApi.posix.normalize(path) !== path) throw new Error(kind + ': noncanonical repository path')
+  const file = localPath(root, path)
+  if (!lstatSync(file).isFile()) throw new Error(kind + ': expected tracked regular file, not symlink')
+  try {
+    const tracked = git(root, 'ls-files', '--stage', '-z', '--', path).toString().split('\0')
+    const entry = tracked.find(item => item.slice(item.indexOf('\t') + 1) === path)
+    if (!entry) throw new Error('not indexed')
+    const fields = entry.slice(0, entry.indexOf('\t')).split(' ')
+    if (!['100644', '100755'].includes(fields[0]) || fields[2] !== '0') throw new Error('index is not regular')
+  } catch { throw new Error(kind + ': file must be a tracked regular index entry: ' + path) }
+  return readFileSync(file)
+}
+
+function inspectBehavior(root, manifestPath, plan, report) {
+  const planPath = pathApi.relative(root, resolve(manifestPath)).split(pathApi.sep).join('/')
+  trackedRegular(root, planPath, 'plan')
+  const bytes = trackedRegular(root, plan.design, 'behavior/design')
+  if (!inScope(planPath, plan.scope)) report.problems.push('plan must be inside declared scope')
+  if (!inScope(plan.design, plan.scope)) report.problems.push('behavior/design must be inside declared scope')
+  const ids = scenarioIds(bytes.toString('utf8')), seen = new Set()
+  for (const id of ids) {
+    if (seen.has(id)) report.problems.push('duplicate scenario marker: ' + id)
+    seen.add(id)
+  }
+  for (const criterion of plan.acceptance) if (!seen.has(criterion.scenario)) report.problems.push('scenario not found: ' + criterion.scenario)
+  report.plan_path = planPath
+  report.behavior = { path: plan.design, revision: null, sha256: hash(bytes), scenarios: [...seen] }
+}
+
+function inspectTiers(plan, report) {
+  const seen = new Set()
+  for (const declaration of plan.tiers) {
+    const { tier, status, reason, follow_up } = declaration
+    if (seen.has(tier)) report.problems.push('duplicate tier: ' + tier)
+    seen.add(tier)
+    const checks = plan.checks.filter(check => check.tier === tier).map(check => check.id)
+    if (status === 'covered' && checks.length === 0) report.problems.push(tier + ': covered requires a check')
+    if (status === 'not_applicable' && checks.length > 0) report.problems.push(tier + ': not_applicable contradicts declared checks')
+    if (['blocked', 'not_evaluated'].includes(status) && !follow_up?.trim()) report.problems.push(tier + ': ' + status + ' requires follow_up')
+    report.tiers.push({ tier, declared_status: status, status: status === 'covered' ? 'not_evaluated' : status, reason, ...(follow_up ? { follow_up } : {}), checks })
+  }
+  for (const tier of TIERS) if (!seen.has(tier)) report.problems.push('missing tier: ' + tier)
+}
+
+function bindCandidate(root, plan, bytes, revision, report) {
+  const prefix = git(root, 'rev-parse', '--show-prefix').toString().replace(/\r?\n$/, '')
+  for (const [kind, path] of [['plan', report.plan_path], ['behavior', plan.design]]) {
+    const mode = git(root, 'ls-tree', '-z', revision, '--', path).toString().split(' ')[0]
+    if (!['100644', '100755'].includes(mode)) throw new Error(kind + ': candidate must contain a regular tracked file')
+  }
+  const heldPlan = git(root, 'show', revision + ':' + prefix + report.plan_path)
+  if (hash(heldPlan) !== hash(bytes)) throw new Error('plan bytes differ from candidate revision')
+  const heldBehavior = git(root, 'show', revision + ':' + prefix + plan.design)
+  if (hash(heldBehavior) !== report.behavior.sha256) throw new Error('behavior bytes differ from candidate revision')
+  report.behavior.revision = revision
+}
+
 function readReceipt(root, check, phase, options) {
   const file = resolve(options.receipts, check.id + '.' + phase + '.json')
   const receipt = JSON.parse(readFileSync(file, 'utf8'))
@@ -73,7 +152,13 @@ export function inspectDelivery(manifestPath, options = {}) {
     const bytes = readFileSync(manifestPath)
     report.plan_sha256 = hash(bytes)
     const plan = JSON.parse(bytes)
-    validate(plan, SCHEMA, 'plan', report.problems)
+    const modern = plan.schema_version === 'coding-harness.delivery/v2'
+    if (modern) {
+      report.schema_version = 'coding-harness.delivery-report/v2'
+      report.verification_complete = false
+      report.tiers = []
+    }
+    validate(plan, modern ? SCHEMA : LEGACY_SCHEMA, 'plan', report.problems)
     if (report.problems.length) return report
     const root = dirname(resolve(manifestPath))
     report.scope = plan.scope
@@ -102,20 +187,28 @@ export function inspectDelivery(manifestPath, options = {}) {
         if (!checks.has(id)) report.problems.push(criterion.id + ': unknown check ' + id)
         used.add(id)
       }
-      report.criteria.push({ id: criterion.id, description: criterion.description, checks: criterion.checks, evidence: 'pending' })
+      report.criteria.push({ id: criterion.id, description: criterion.description, ...(modern ? { scenario: criterion.scenario } : {}), checks: criterion.checks, evidence: 'pending' })
     }
     for (const id of checks.keys()) if (!used.has(id)) report.problems.push('unmapped check: ' + id)
-    const waived = new Set()
-    for (const waiver of plan.tier_waivers) {
-      if (waived.has(waiver.tier)) report.problems.push('duplicate tier waiver: ' + waiver.tier)
-      waived.add(waiver.tier)
-      if (plan.checks.some((check) => check.tier === waiver.tier)) report.problems.push('tier is both covered and waived: ' + waiver.tier)
+    if (modern) {
+      inspectBehavior(root, manifestPath, plan, report)
+      inspectTiers(plan, report)
+    } else {
+      const waived = new Set()
+      for (const waiver of plan.tier_waivers) {
+        if (waived.has(waiver.tier)) report.problems.push('duplicate tier waiver: ' + waiver.tier)
+        waived.add(waiver.tier)
+        if (plan.checks.some((check) => check.tier === waiver.tier)) report.problems.push('tier is both covered and waived: ' + waiver.tier)
+      }
+      for (const tier of TIERS) if (!waived.has(tier) && !plan.checks.some((check) => check.tier === tier)) report.problems.push('unaddressed test tier: ' + tier)
+      report.tier_waivers = plan.tier_waivers
     }
-    for (const tier of TIERS) if (!waived.has(tier) && !plan.checks.some((check) => check.tier === tier)) report.problems.push('unaddressed test tier: ' + tier)
-    report.tier_waivers = plan.tier_waivers
     if (report.problems.length) return report
     if (stage !== 'planned') {
+      if (modern) for (const tier of report.tiers) if (['blocked', 'not_evaluated'].includes(tier.declared_status)) report.problems.push(tier.tier + ': ' + tier.declared_status + '; follow_up: ' + tier.follow_up)
+      if (report.problems.length) return report
       if (!/^[a-f0-9]{40}$/.test(options.revision ?? '')) throw new Error('verified stage requires a full candidate --revision and --receipts')
+      if (modern) bindCandidate(root, plan, bytes, options.revision, report)
       if (!options.receipts) throw new Error('verified stage requires --receipts')
       const drift = git(root, 'diff', options.revision, '--', ...plan.scope).toString()
       const untracked = git(root, 'ls-files', '--others', '--exclude-standard', '--', ...plan.scope).toString()
@@ -147,6 +240,10 @@ export function inspectDelivery(manifestPath, options = {}) {
         })
       }
       for (const criterion of report.criteria) criterion.evidence = 'verified'
+      if (modern) {
+        for (const tier of report.tiers) if (tier.declared_status === 'covered') tier.status = 'covered'
+        report.verification_complete = true
+      }
     }
     if (stage === 'accepted') {
       if (!options.approval) throw new Error('accepted stage requires a separately reviewed --approval file')

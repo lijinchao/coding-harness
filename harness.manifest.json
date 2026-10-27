@@ -14,7 +14,7 @@
     {
       "id": "delivery-flow",
       "source": "dist/packs/delivery-flow",
-      "version": "0.1.1"
+      "version": "0.2.1"
     }
   ],
   "product": {
@@ -187,6 +187,9 @@
       "proof_inputs": [
         "bin/harness.mjs",
         "package.json",
+        "packs/delivery-flow/check.mjs",
+        "packs/delivery-flow/delivery-v1.schema.json",
+        "packs/delivery-flow/delivery.schema.json",
         "scripts/capture-delivery-pilot.mjs",
         "scripts/check-command-review.mjs",
         "scripts/check-delivery.mjs",
@@ -230,6 +233,7 @@
         "test/context-map.test.mjs",
         "test/delivery-evidence.test.mjs",
         "test/delivery-flow.test.mjs",
+        "test/delivery-v2.test.mjs",
         "test/doctor.test.mjs",
         "test/documents.test.mjs",
         "test/evals.test.mjs",
@@ -401,8 +405,9 @@
       "override": true,
       "proof_inputs": [
         "scripts/check-delivery.mjs",
-        "dist/packs/delivery-flow/base@0.1.1/check.mjs",
-        "dist/packs/delivery-flow/base@0.1.1/delivery.schema.json"
+        "dist/packs/delivery-flow/base@0.2.1/check.mjs",
+        "dist/packs/delivery-flow/base@0.2.1/delivery.schema.json",
+        "dist/packs/delivery-flow/base@0.2.1/delivery-v1.schema.json"
       ]
     }
   ],
@@ -745,13 +750,14 @@
     },
     "packs": {
       "delivery-flow": {
-        "version": "0.1.1",
+        "version": "0.2.1",
         "files": {
-          "README.md": "3e686e808d0e37a9eff700d20efedb8b60ee5a15c4a54a31f073337e1ba34529",
-          "VERSION": "80447316529fc62014fbaa047fb67c51ac30e32830cda370405349d8d66d196c",
-          "check.mjs": "062e5103eed0a0caff13f5389385885731edfb4b7bcb8dfd3e09cf3f6c4f7620",
-          "delivery.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
-          "pack.json": "f33c987d6544d66dc8b426d7575417def43bd05986cd1beba3598301a5e745b8"
+          "README.md": "6e432120485729db0a007e653cb17bc69e40b77360e660f80060e010baae3d36",
+          "VERSION": "71015c979ccb0fc8a0be7ca0ae83046ab045cdc2c8faa09fb2f0f7e440f9b4a6",
+          "check.mjs": "3b154bcd3404c48fdc16c080c512eee2aa16a2e39b2af21ec121f00e1d09d609",
+          "delivery-v1.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
+          "delivery.schema.json": "ff023b407c88070f8527596e5460d9752eb1e2bf5fb6bfe849fe4274a616eb7c",
+          "pack.json": "370f28bd0ccbf10ec8b919ce0320b8f931a5b65082e34f0050b4cf55c859d4fb"
         }
       }
     },

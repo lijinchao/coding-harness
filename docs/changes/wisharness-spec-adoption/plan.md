@@ -1,5 +1,8 @@
 # 实施方案
 
+> 以下方案与执行记录属于最初仅文档的提交。当前实现计划由
+> [0054](../../decisions/0054-project-owned-behavior-evidence.md) 承担；不得把历史文档测试当作新功能通过。
+
 - 行为、边界与验收依据：同目录的 `spec.md`；对照来源为 `/Users/qihoo/workspace/360MultiPaySdk_AS` 的 `.wisharness/templates/spec.md`、`plan.md` 和 `rules/core.md`，基线 `master@eaed603`。本仓现有契约以 `docs/decisions/0044-delivery-flow-starts-with-an-acceptance-map.md` 和 `packs/delivery-flow/README.md` 为准。
 - 执行记录位置：本文的“执行记录”。
 
