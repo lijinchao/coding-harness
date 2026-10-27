@@ -1,6 +1,6 @@
 # 0054 — Bind project-owned behavior and distinguish missing verification
 
-Status: accepted
+Status: implemented
 Date: 2026-10-27
 
 ## Problem
@@ -88,6 +88,10 @@ supports repository-local truth, progressive disclosure and mechanical boundarie
 it does not specify our JSON fields. [Anthropic long-running harnesses](https://www.anthropic.com/research/effective-harnesses-for-long-running-agents)
 supports incremental work and observed completion rather than self-report. These
 are design inputs, not proof that this implementation improves productivity.
+The [March 2026 Anthropic follow-up](https://www.anthropic.com/research/harness-design-long-running-apps)
+also recommends revisiting scaffolding as models improve and testing realistic
+outcomes. Its multi-agent architecture is not adopted here: the demonstrated
+gap is evidence identity/status, not a missing execution or planning agent.
 The project-specific behavior remains the [adoption SPEC](../changes/wisharness-spec-adoption/spec.md).
 
 Integration departure: changing the source VERSION after locking a generated

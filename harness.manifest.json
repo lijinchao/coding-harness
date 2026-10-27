@@ -970,14 +970,14 @@
         }
       },
       "delivery-flow/plan": {
-        "at": "2026-10-27T16:10:59.590Z",
+        "at": "2026-10-27T16:15:49.967Z",
         "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-        "definition": "55f930ca2cd18a789b81ee8f8fbf9287e7d331c74501ae89988a50c4c3e229f2",
+        "definition": "2ba50fe384839c3057623cf02157b853c2466ed980d560cd4d8bc569b294c626",
         "inputs": {
-          "dist/packs/delivery-flow/base@0.2.1/check.mjs": "3b154bcd3404c48fdc16c080c512eee2aa16a2e39b2af21ec121f00e1d09d609",
-          "dist/packs/delivery-flow/base@0.2.1/delivery-v1.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
-          "dist/packs/delivery-flow/base@0.2.1/delivery.schema.json": "ff023b407c88070f8527596e5460d9752eb1e2bf5fb6bfe849fe4274a616eb7c",
-          "scripts/check-delivery.mjs": "6370ce40ff5fd9692c43951d41f403f42247050192c020202f8d52ea28153483"
+          "dist/packs/delivery-flow/base@0.2.2/check.mjs": "3737a331c8b47047222f01afc7c58378f3946f1b88dfe7d64f21bd8a922fbea0",
+          "dist/packs/delivery-flow/base@0.2.2/delivery-v1.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
+          "dist/packs/delivery-flow/base@0.2.2/delivery.schema.json": "ff023b407c88070f8527596e5460d9752eb1e2bf5fb6bfe849fe4274a616eb7c",
+          "scripts/check-delivery.mjs": "972d36a1f569f7887e0b6de187a1434be9173e7a390d6eef2ef8f51fc18fc386"
         }
       }
     }
