@@ -1,14 +1,14 @@
-# delivery-flow 0.2.1
+# delivery-flow 0.2.2
 
 An opt-in acceptance map reusing project-owned behavior, tests and receipts.
 Node.js and a pinned harness are required. No runtime or model is supplied.
-Kernel fields do not change. Immutable 0.1.1 remains available; 0.2.1 reads
+Kernel fields do not change. Immutable 0.1.1 remains available; 0.2.2 reads
 legacy delivery/v1 and strict delivery/v2 plans.
 
 ## Adoption
 
 Release with `harness release --base packs/delivery-flow --out <registry>
---version 0.2.1`. Declare a `delivery-flow` pack from that registry and version,
+--version 0.2.2`. Declare a `delivery-flow` pack from that registry and version,
 then sync the consumer. The pack contributes one always-selected plan gate.
 The consumer owns `scripts/check-delivery.mjs`, importing `main` from the
 resolved, locked release's `check.mjs`, and `delivery.plan.json` at its root.
@@ -54,6 +54,8 @@ scope source and plan, and replace each waiver with an assessed tier record.
 There is no automatic waiver-to-not-applicable conversion. Legacy v1 keeps its
 old interpretation, even for a weak waiver reason; that is not retrospective
 proof of non-applicability. Old pack releases reject the new schema version.
+Use 0.2.2 rather than the local 0.2.1 prerelease: v2 closed objects now reject
+inherited property names such as constructor. The old artifact remains immutable.
 
 For `--stage verified`, also supply `--revision <candidate SHA>` and
 `--receipts <directory>`. Each check needs `<id>.red.json` and `<id>.green.json`

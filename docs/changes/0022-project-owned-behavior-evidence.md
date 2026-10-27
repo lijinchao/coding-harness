@@ -11,7 +11,7 @@ templates nor actual SDK adoption. A controlled actual-self v1 counterexample
 removed design scope coverage and still returned planned; the original scope
 was restored. Existing v1 receipt tests also accept a design outside scope.
 
-The narrow repair is delivery-flow 0.2.1: opt-in delivery/v2 binds the existing
+The narrow repair is delivery-flow 0.2.2: opt-in delivery/v2 binds the existing
 behavior source, scenario refs, plan bytes and candidate revision, and distinguishes
 covered/not_applicable/not_evaluated/blocked. No new executor, Kernel/base release,
 gate, dependency, consumer runtime change or automatic applicability judgment.
@@ -43,3 +43,8 @@ Before implementation commit, sync rejected regenerated 0.2.0 draft bytes after
 source VERSION correction. No test suite was run from that rejected state.
 The integrity guard is retained; only never-committed draft files are discarded,
 and a new 0.2.1 artifact is generated. No old committed release is rewritten.
+
+Review reproduced constructor-name acceptance in v2 closed objects. The focused
+regression at 4d818ab fails before the own-property guard; constructor, toString
+and __proto__ are exercised at root and nested boundaries. Publish 0.2.2 with
+that fix, retaining committed 0.2.1 unchanged; the v1 branch is not tightened.

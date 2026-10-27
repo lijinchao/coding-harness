@@ -10,7 +10,7 @@
   ],
   "scope": [
     "packs/delivery-flow",
-    "dist/packs/delivery-flow/base@0.2.1",
+    "dist/packs/delivery-flow/base@0.2.2",
     "docs/changes/wisharness-spec-adoption/spec.md",
     "docs/changes/wisharness-spec-adoption/plan.md",
     "docs/decisions/0054-project-owned-behavior-evidence.md",
@@ -20,7 +20,8 @@
     "delivery.plan.json",
     "harness.manifest.json",
     "scripts/check-delivery.mjs",
-    "test/delivery-v2.test.mjs"
+    "test/delivery-v2.test.mjs",
+    "test/delivery-v2-boundaries.test.mjs"
   ],
   "acceptance": [
     {
@@ -38,7 +39,8 @@
       "description": "Invalid source paths or scenario references fail closed",
       "checks": [
         "unit",
-        "policy"
+        "policy",
+        "boundary"
       ]
     },
     {
@@ -103,6 +105,15 @@
         "test/delivery-v2.test.mjs"
       ],
       "expected_failure": "v2 operator"
+    },
+    {
+      "id": "boundary",
+      "tier": "integration",
+      "command": "node --test test/delivery-v2-boundaries.test.mjs",
+      "test_files": [
+        "test/delivery-v2-boundaries.test.mjs"
+      ],
+      "expected_failure": "v2 boundary"
     }
   ],
   "tiers": [

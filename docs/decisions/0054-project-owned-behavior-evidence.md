@@ -17,7 +17,7 @@ its templates and actual adoption cannot be independently qualified here.
 ## Decision
 
 Land the narrow, opt-in behavior/evidence contract in delivery-flow, not Kernel.
-Publish a new immutable in-repository pack 0.2.1 supporting delivery/v2 and the
+Publish a new immutable in-repository pack 0.2.2 supporting delivery/v2 and the
 unchanged legacy v1 path. Preserve every old release. Keep tool/base 0.1.49,
 zero dependencies, ten gates, existing receipts and project-owned documents.
 
@@ -49,7 +49,7 @@ zero dependencies, ten gates, existing receipts and project-owned documents.
 2. Implement schema/checker changes in pack source, not dist. Cover missing,
    untracked, out-of-scope, symlink/escaping paths, missing/duplicate scenario
    refs, all tier states, source/plan drift and incomplete migration.
-3. Generate the hashed 0.2.1 release using the pinned release command. Explicitly
+3. Generate the hashed 0.2.2 release using the pinned release command. Explicitly
    move self's pack pin, adapter and proof inputs, then sync. Keep v1 example/tool
    pins unchanged. Reuse the original adoption SPEC as design, with stable markers.
 4. Run actual self tasks across checker/schema/adapter boundaries. Capture exact
@@ -95,3 +95,10 @@ Integration departure: changing the source VERSION after locking a generated
 to evade that check. Discard only the never-committed draft and generate 0.2.1
 with consistent source metadata. The frozen adoption test identifies the 0.2
 contract line, not one patch number; this remains red on the v1 baseline.
+
+Pre-publication review then reproduced inherited-property acceptance in the
+mini-validator. Freeze a separate failing regression at 4d818ab, reject such
+unknown keys in v2 only, and publish 0.2.2 without modifying committed 0.2.1.
+The existing receipt API supports a different red ancestor per check; capture
+this boundary from 4d818ab and the original contract checks from 7aa8715.
+Do not force one synthetic baseline or mutate frozen tests to fit the capture helper.

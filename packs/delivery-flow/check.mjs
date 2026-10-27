@@ -11,7 +11,7 @@ const hash = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
 
 /** Interpret only the JSON Schema keywords used by this pack's closed schema. */
-function validate(value, schema, where, problems) {
+function validate(value, schema, where, problems, ownProperties = false) {
   const type = Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value
   if (schema.type && type !== schema.type) { problems.push(where + ': expected ' + schema.type); return }
   if (schema.enum && !schema.enum.includes(value)) problems.push(where + ': unsupported value')
@@ -21,13 +21,14 @@ function validate(value, schema, where, problems) {
   }
   if (Array.isArray(value)) {
     if (schema.minItems && value.length < schema.minItems) problems.push(where + ': required non-empty array')
-    value.forEach((entry, i) => validate(entry, schema.items, where + '[' + i + ']', problems))
+    value.forEach((entry, i) => validate(entry, schema.items, where + '[' + i + ']', problems, ownProperties))
   }
   if (object(value)) {
     for (const key of schema.required ?? []) if (!(key in value)) problems.push(where + '.' + key + ': required')
     for (const [key, entry] of Object.entries(value)) {
-      const rule = schema.properties?.[key]
-      if (rule) validate(entry, rule, where + '.' + key, problems)
+      const properties = schema.properties ?? {}
+      const rule = ownProperties && !Object.hasOwn(properties, key) ? undefined : properties[key]
+      if (rule) validate(entry, rule, where + '.' + key, problems, ownProperties)
       else if (schema.additionalProperties === false) problems.push(where + '.' + key + ': unknown field')
     }
   }
@@ -158,7 +159,7 @@ export function inspectDelivery(manifestPath, options = {}) {
       report.verification_complete = false
       report.tiers = []
     }
-    validate(plan, modern ? SCHEMA : LEGACY_SCHEMA, 'plan', report.problems)
+    validate(plan, modern ? SCHEMA : LEGACY_SCHEMA, 'plan', report.problems, modern)
     if (report.problems.length) return report
     const root = dirname(resolve(manifestPath))
     report.scope = plan.scope

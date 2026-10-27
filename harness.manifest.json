@@ -14,7 +14,7 @@
     {
       "id": "delivery-flow",
       "source": "dist/packs/delivery-flow",
-      "version": "0.2.1"
+      "version": "0.2.2"
     }
   ],
   "product": {
@@ -233,6 +233,7 @@
         "test/context-map.test.mjs",
         "test/delivery-evidence.test.mjs",
         "test/delivery-flow.test.mjs",
+        "test/delivery-v2-boundaries.test.mjs",
         "test/delivery-v2.test.mjs",
         "test/doctor.test.mjs",
         "test/documents.test.mjs",
@@ -405,9 +406,9 @@
       "override": true,
       "proof_inputs": [
         "scripts/check-delivery.mjs",
-        "dist/packs/delivery-flow/base@0.2.1/check.mjs",
-        "dist/packs/delivery-flow/base@0.2.1/delivery.schema.json",
-        "dist/packs/delivery-flow/base@0.2.1/delivery-v1.schema.json"
+        "dist/packs/delivery-flow/base@0.2.2/check.mjs",
+        "dist/packs/delivery-flow/base@0.2.2/delivery.schema.json",
+        "dist/packs/delivery-flow/base@0.2.2/delivery-v1.schema.json"
       ]
     }
   ],
@@ -750,11 +751,11 @@
     },
     "packs": {
       "delivery-flow": {
-        "version": "0.2.1",
+        "version": "0.2.2",
         "files": {
-          "README.md": "6e432120485729db0a007e653cb17bc69e40b77360e660f80060e010baae3d36",
-          "VERSION": "71015c979ccb0fc8a0be7ca0ae83046ab045cdc2c8faa09fb2f0f7e440f9b4a6",
-          "check.mjs": "3b154bcd3404c48fdc16c080c512eee2aa16a2e39b2af21ec121f00e1d09d609",
+          "README.md": "a3d23111cfd62077a3c765a1d2f8f21134bcb295c8b57549331da1dee5513c1c",
+          "VERSION": "998f6b887ed7a6ef44e84210d0237b715bed42ea7254f48dc418afec0a484103",
+          "check.mjs": "3737a331c8b47047222f01afc7c58378f3946f1b88dfe7d64f21bd8a922fbea0",
           "delivery-v1.schema.json": "62ad2fde5f47a5bfa6bb4530fbc30895d25ec48aee7a00fc2a77a2ddb5b2d7b1",
           "delivery.schema.json": "ff023b407c88070f8527596e5460d9752eb1e2bf5fb6bfe849fe4274a616eb7c",
           "pack.json": "370f28bd0ccbf10ec8b919ce0320b8f931a5b65082e34f0050b4cf55c859d4fb"
