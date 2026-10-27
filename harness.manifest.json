@@ -254,6 +254,7 @@
         "test/scan-prove.test.mjs",
         "test/schema-agreement.test.mjs",
         "test/select.test.mjs",
+        "test/self-consumption.test.mjs",
         "test/self-product-status.test.mjs",
         "test/shim.test.mjs",
         "test/strictness.test.mjs",
@@ -343,12 +344,12 @@
     },
     {
       "id": "metrics",
-      "command": "./harness metrics --manifest harness.manifest.json",
-      "protects": "the recorded runs stay inside the declared quality budget",
+      "command": "node -e \"console.log('historical gate-health only; not current delivery qualification')\" && ./harness metrics --manifest harness.manifest.json",
+      "protects": "Historical gate-health budget diagnostic only; current CI report owns the current run, not delivery effectiveness.",
       "prove_fires": "append a run with a failed gate to docs/metrics.jsonl, then run the gate; expect exit 1",
       "prove_fires_command": "printf '%s\\n' '{\"at\":\"2026-01-01T00:00:00.000Z\",\"version\":\"0.0.0\",\"tool\":\"0.0.0\",\"results\":[{\"id\":\"tests\",\"ok\":false,\"skipped\":false,\"timedOut\":false,\"ms\":1}]}' >> docs/metrics.jsonl",
       "revert_command": "git checkout -- docs/metrics.jsonl",
-      "severity": "blocking",
+      "severity": "advisory",
       "expect": {
         "forbid": [
           "ERROR:"
@@ -364,7 +365,7 @@
     {
       "id": "command-review",
       "command": "node scripts/check-command-review.mjs",
-      "protects": "a review receipt binds a command to its revision and rejects a different expected command without sharing temporary state",
+      "protects": "Mechanism smoke only: receipt binding rejects a different expected command without shared temporary state; not delivery qualification.",
       "prove_fires": "Change the expected command in the tracked fixture; receipt binding must fail.",
       "prove_fires_command": "node -e \"require('fs').writeFileSync('docs/fixtures/command-review.json',JSON.stringify({command:'false'})+'\\n')\"",
       "revert_command": "git restore -- docs/fixtures/command-review.json",
@@ -386,7 +387,7 @@
     {
       "id": "delivery-flow/plan",
       "command": "node scripts/check-delivery.mjs --manifest delivery.plan.json --stage planned",
-      "protects": "Every acceptance criterion maps to an existing test, and each test tier is covered or explicitly waived.",
+      "protects": "Active acceptance-map preflight only; planned does not mean verified or human accepted.",
       "prove_fires": "Empty the acceptance criteria; the plan check must fail, then pass after revert.",
       "prove_fires_command": "node -e \"const fs=require('fs');const p='delivery.plan.json';const m=JSON.parse(fs.readFileSync(p));m.acceptance=[];fs.writeFileSync(p,JSON.stringify(m,null,2)+'\\n')\"",
       "revert_command": "git restore -- delivery.plan.json",
@@ -581,20 +582,16 @@
     "changes": "docs/changes",
     "docs": [
       {
-        "path": "docs/native-agent-pilot.md",
-        "maxBytes": 12000
+        "path": "docs/native-agent-pilot.md"
       },
       {
-        "path": "docs/native-agents.md",
-        "maxBytes": 9000
+        "path": "docs/native-agents.md"
       },
       {
-        "path": "docs/review-0.1.45.md",
-        "maxBytes": 7000
+        "path": "docs/review-0.1.45.md"
       },
       {
-        "path": "docs/context-map-pilot.md",
-        "maxBytes": 6500
+        "path": "docs/context-map-pilot.md"
       },
       {
         "path": "AGENTS.md",
@@ -605,72 +602,55 @@
         "maxBytes": 4096
       },
       {
-        "path": "docs/context.md",
-        "maxBytes": 4096
+        "path": "docs/context.md"
       },
       {
-        "path": "docs/game-design-adoption.md",
-        "maxWords": 1100
+        "path": "docs/game-design-adoption.md"
       },
       {
-        "path": "README.md",
-        "maxWords": 820
+        "path": "README.md"
       },
       {
-        "path": "docs/reference.md",
-        "maxWords": 1600
+        "path": "docs/reference.md"
       },
       {
-        "path": "docs/contracts.md",
-        "maxWords": 2100
+        "path": "docs/contracts.md"
       },
       {
-        "path": "docs/governance.md",
-        "maxWords": 900
+        "path": "docs/governance.md"
       },
       {
-        "path": "docs/roadmap.md",
-        "maxWords": 1600
+        "path": "docs/roadmap.md"
       },
       {
-        "path": "docs/MANUAL_VERIFICATION.md",
-        "maxWords": 400
+        "path": "docs/MANUAL_VERIFICATION.md"
       },
       {
-        "path": "docs/direction.md",
-        "maxWords": 700
+        "path": "docs/direction.md"
       },
       {
-        "path": "docs/packs.md",
-        "maxWords": 500
+        "path": "docs/packs.md"
       },
       {
-        "path": "docs/release.md",
-        "maxWords": 500
+        "path": "docs/release.md"
       },
       {
-        "path": "docs/legibility.md",
-        "maxWords": 500
+        "path": "docs/legibility.md"
       },
       {
-        "path": "docs/command-review.md",
-        "maxWords": 400
+        "path": "docs/command-review.md"
       },
       {
-        "path": "docs/survey.md",
-        "maxWords": 300
+        "path": "docs/survey.md"
       },
       {
-        "path": "docs/system-manifest.md",
-        "maxWords": 1000
+        "path": "docs/system-manifest.md"
       },
       {
-        "path": "docs/delivery-flow-pilot.md",
-        "maxWords": 1300
+        "path": "docs/delivery-flow-pilot.md"
       },
       {
-        "path": "docs/proof-inputs-offline.md",
-        "maxBytes": 8500
+        "path": "docs/proof-inputs-offline.md"
       }
     ],
     "instructions": [
@@ -738,7 +718,7 @@
       "commit": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c"
     },
     "outputs": {
-      "AGENTS.md": "4be2d6fdf4dcb7d5f19fa328198cf9a1f46b6863d5165fda52647060344b0f30",
+      "AGENTS.md": "2508a2aff8b1edb785363e8146090227a4b886c96caa95c00f4d70004796f25f",
       "REVIEW.md": "63963d3839b7266410a1bf5ef12ed6aca57a24b505250be949c8bca826c2611b",
       ".agents/skills/test-driven-development/SKILL.md": "d8e3ded0203a5b8fb4fef60089ef4dc08e877b90903ae8fbe20fd63de39e097d",
       ".agents/skills/writing-a-gate/SKILL.md": "f552ae24b718ddc5c8ae928e2fc85d8f49b77113688884cb2fcbb8e4a89c0513",
@@ -826,14 +806,14 @@
         }
       },
       "tests": {
-        "at": "2026-10-25T14:18:04.961Z",
+        "at": "2026-10-26T17:13:58.134Z",
         "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-        "definition": "d02b64a46a8ecf83385511144101fa4a072714a5d12e35ff75a3d265b7be9b14",
+        "definition": "5ca225d3665f7ae213d17139f20150efc551b3921e2ac1c04e8a10928510dafa",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
           "package.json": "c4c64038c2dd23dfcbd99bf356f3e0f79df2822b724b3ec6474934078c6f337b",
           "scripts/capture-delivery-pilot.mjs": "48ce17f972621de1a2a9fe771ba87169b9447dd0c8893f543447c4b962f677e7",
-          "scripts/check-command-review.mjs": "079a44dc5a670202b0235a863415a8e732b94a551bfbbbf959002534cc941665",
+          "scripts/check-command-review.mjs": "eb7e4e7f52745e6118bdce29f33ad63f2c978999b102e734e2f195dfbd901692",
           "scripts/check-delivery.mjs": "e8c687c3d476ebf3b4884c9bdb6972ac44f8f00da7cbe8738f894021f521fd12",
           "scripts/native-agent-eval.mjs": "2a3808f9fbc950e08d6854309b95f1b6c2dc0fdf5c08cdb533bcd3863636a040",
           "src/adopt.mjs": "2b12b28d8e8fbd80f0d40d1aa404f51b06c699f3f77e1c115173ae04ca8f05ca",
@@ -899,6 +879,7 @@
           "test/scan-prove.test.mjs": "22af8e1e0d41f7570396ccd90e8a16d94d9cacbbf9c4cd54096c028eab897b9e",
           "test/schema-agreement.test.mjs": "1b519c47fa9a9eb8a2298f99910d3de3745bf1a1c9a7090e3ac082dda6d18e9e",
           "test/select.test.mjs": "499179e70fb15e069d2fd483bfb048be8f56d220d1551f0fe238da68649bfcef",
+          "test/self-consumption.test.mjs": "b5a9309a3da1d7313db3508c9c56bd6d33c1f04d3076db1f4973a7ea4fd59797",
           "test/self-product-status.test.mjs": "0f5e639fa0a9b6a23487b271cd31c5d3e88f6959dc8a1bf384d20189ba77ebe5",
           "test/shim.test.mjs": "094d37b0724d8cacabc0a6f5e9f9b3c5aca825bd06c5a1a2bb6355d1aeb71a72",
           "test/strictness.test.mjs": "894170b6a2ad244cfc8410e3bdd687d8eb7bdd268e7be36add9561cd02f42b80",
@@ -936,9 +917,9 @@
         }
       },
       "metrics": {
-        "at": "2026-10-25T14:18:10.167Z",
+        "at": "2026-10-26T17:14:15.165Z",
         "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-        "definition": "2affe866030a8ed21c601360fa60b7d71ae645e0baa01b797e8f4a254d67db26",
+        "definition": "005727112e4fea8de6177f085baa9cad8b7ca0fae8ea6a17ac457605f7a3324f",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
           "src/metrics.mjs": "f3d1bf431ea0e5b8fdf7eee6ca8a0d3605b45fadedd17df8074d1bfaca346b82",
@@ -964,13 +945,13 @@
         }
       },
       "command-review": {
-        "at": "2026-10-25T14:18:12.389Z",
+        "at": "2026-10-26T17:14:09.138Z",
         "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
         "definition": "538865f79630c00820edb71ca9baf23767d0b098d64c97f8131d69cd126a9fff",
         "inputs": {
           "bin/harness.mjs": "298e78ca084090550b6bfc3b94932b8175fd32d99a99ae57d4c42f69ac5ac3d9",
           "docs/fixtures/command-review.json": "4be68cf75c73379b12e7c6eb50323954d14025692decae648ee075172ddfb1db",
-          "scripts/check-command-review.mjs": "079a44dc5a670202b0235a863415a8e732b94a551bfbbbf959002534cc941665",
+          "scripts/check-command-review.mjs": "eb7e4e7f52745e6118bdce29f33ad63f2c978999b102e734e2f195dfbd901692",
           "src/command-review.mjs": "cf62b228512df4f6ec00e4021fb81dc0fba58f46bf5dcc26af502e20fb7c4f8c",
           "src/process.mjs": "e8ef757ed2cf0ed5652d85290834409ef1d8204575b2598f6fb66c8387ce1aee",
           "src/proof.mjs": "f2b7fde84cfbb4e1cc2b0798456867824cc4de0976fd8656e2fecf8e8707068f"

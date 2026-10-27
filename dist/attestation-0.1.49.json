@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-25T14:18:44.144Z",
+  "at": "2026-10-26T17:14:50.079Z",
   "version": "0.1.49",
   "toolCommit": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
   "tag": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
@@ -8,7 +8,7 @@
     "release": "59e4be313164c7ca3377dcecad7144a43da431fe09977e96f33de78ae69cbd0d"
   },
   "locks": {
-    "self": "a49a6c9683ef2e90be8234f9399f61c9eca55184fe18c46217c5242e212609b9",
+    "self": "f5ba121e4eda19f34da01854e680eec5c1afff5a40e9b5e8024b6b372032828f",
     "example": "56ea1b883ab9fdd305c73a0bea1093f5fa9b071972546c3f92c2cc7b444c32bc"
   },
   "proofs": {
@@ -26,7 +26,7 @@
     },
     "tests": {
       "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-      "definition": "d02b64a46a8ecf83385511144101fa4a072714a5d12e35ff75a3d265b7be9b14"
+      "definition": "5ca225d3665f7ae213d17139f20150efc551b3921e2ac1c04e8a10928510dafa"
     },
     "release": {
       "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
@@ -38,7 +38,7 @@
     },
     "metrics": {
       "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-      "definition": "2affe866030a8ed21c601360fa60b7d71ae645e0baa01b797e8f4a254d67db26"
+      "definition": "005727112e4fea8de6177f085baa9cad8b7ca0fae8ea6a17ac457605f7a3324f"
     },
     "release-ready": {
       "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",

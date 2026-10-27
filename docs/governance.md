@@ -44,8 +44,8 @@ A base release is a versioned artifact: publish it, tag it, and let consumers pu
 
 Read two signals together.
 
-- **First-pass check rate.** When the checks catch mistakes before a human reads the diff, review focuses on intent. When the rate does not move, either a guide is not triggering or a gate is not firing.
-- **Repeat findings.** A review that cites the same policy a second time means the guide carrying it is not working. Promote it to a gate, or fix the guide.
+- **Gate health.** Pass rate describes checks, not product success or governance benefit. A change in rate alone cannot establish either.
+- **Repeat findings.** Investigate whether guidance, coverage or implementation failed; automate only a reproducible invariant, not every judgment.
 
 A gate that never fires is ambiguous: either the code is clean, or the sensor is dead. Resolve the ambiguity by proving the gate can fail.
 
@@ -57,7 +57,12 @@ A blocking gate must declare `prove_fires_command` (introduce the failure) and `
 2. Run the gate's `command` and confirm it exits non-zero.
 3. Run `revert_command` and confirm the gate exits zero again.
 
-There is no default revert: `harness prove` refuses to guess. It also refuses to start unless the working tree is clean, and refuses to report success unless it is clean again after the revert, so a proof cannot discard uncommitted work; `--timeout` bounds every command. `harness prove --record` stores one record per proved gate: when, the tool commit, and a hash of the gate's definition. A repository that declares `governance.proofs` — `require` scope (`blocking`, `all`, `none`) and `maxAgeDays` (default 30) — makes `harness prove` refuse a gate in scope with no record, a changed definition, another tool commit, or an expired one; `doctor` checks the ids.
+There is no default revert. Proofs require a clean tree before and after recovery;
+`--timeout` bounds commands. Records bind time, tool commit and definition.
+Declared `proof_inputs` additionally bind tracked checker bytes; omitted helpers
+remain unbound. The [input contract](proof-inputs-offline.md) owns migration and
+strict policy. `governance.proofs` selects scope (`blocking`, `all`, `none`) and
+age (default 30 days). Stale records fail proof checks; doctor checks gate ids.
 
 ## Check the governance facts
 
@@ -67,7 +72,18 @@ A harness can pass every gate and still be wrong about itself: a README naming a
 
 ## Effectiveness signals
 
-`harness gates --report <file>` appends a run summary that `harness metrics --log <file>` reads: runs, green, first-pass rate, per-gate failures, skips, and timeouts, flakiness (a gate that both passed and failed), run duration percentiles, and the slowest gates. A gate that is flaky, that keeps failing, or that keeps getting slower is a guide or a gate to fix, not noise to tolerate.
+`harness gates --report <file>` records check outcomes, timeouts and durations.
+Metrics labels a gate with both passes and failures as flaky; it cannot distinguish
+normal repair from nondeterminism. Investigate before attributing cause. Check
+health is not delivery effectiveness. [The staged SPEC](decisions/0052-evidence-first-delivery.md)
+requires separate cost and acceptance observations; these are not implemented metrics.
+
+In this repository the committed history budget is advisory and explicitly
+historical. CI reports its current `.harness/gates.jsonl` separately; neither
+source establishes product acceptance. Other repositories retain their own policy.
+The command-review true-command gate is a mechanism smoke, not a receipt for
+actual task tests. The active delivery plan and revision-bound receipts own those
+checks; see [0053](decisions/0053-consume-the-harness-on-current-work.md).
 
 ## Pruning
 

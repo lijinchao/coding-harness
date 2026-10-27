@@ -15,7 +15,7 @@ try {
   const fixture = JSON.parse(readFileSync(join(root, 'docs/fixtures/command-review.json'), 'utf8'))
   const result = JSON.parse(execFileSync(process.execPath, [cli, 'command-review-check', '--repository', root, '--revision', revision, '--command', fixture.command, '--receipt', out], { encoding: 'utf8', stdio: 'pipe' }))
   if (result.valid !== true || result.passed_without_tree_changes !== true || result.authorizes_verification !== false) throw new Error('command-review receipt did not satisfy its contract')
-  console.log('command-review: valid receipt; no verification authority granted')
+  console.log('command-review: mechanism smoke only; valid receipt; not delivery qualification; no verification authority granted')
 } catch (error) {
   console.error('command-review: ' + error.message)
   process.exitCode = 1

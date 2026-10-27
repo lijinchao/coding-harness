@@ -11,9 +11,12 @@ existing tests and records the adoption gaps found in game-design.
 
 Three things, in order.
 
-1. **Qualify self-governance.** Keep the documented command inventory tied to the executable CLI, and check status claims when capabilities change. Record a failing case before trusting the gate.
-2. **Exercise one GitLab multi-repository pilot.** Pin the tool and each member revision, run the named local tiers, then validate the read-only collaboration observer against the target GitLab instance. Review the CI artifact provenance separately.
-3. **Measure actual adoption.** Keep gate and eval results bound to their version and snapshot; use consumer failures to decide which rules belong in the base, a pack, or a repository delta.
+1. **Consume the harness on current work.** [Decision 0053](decisions/0053-consume-the-harness-on-current-work.md) repairs self-consumption: an active acceptance map, real command receipts, honest diagnostic labels and entry-only budgets. Planned is preflight, not delivery qualification.
+2. **Use the existing evidence.** Consumer A/B is implemented in change 0020. Keep safety/contract/boundary coverage; distinguish configuration acceptance from productivity benefit. No new Kernel feature or pack is planned for this stage.
+3. **Observe ongoing delivery.** coding-harness and agentic-ops already supply real work. Reuse their existing change/PR records for acceptance, evidence limits and human decisions, without a minimum task quota, new ledger or product-work blocker. Missing cost data remains unknown.
+
+The GitLab multi-repository qualification remains unperformed and deferred while
+this adoption review takes priority; it is not silently marked complete.
 
 ## Milestones
 

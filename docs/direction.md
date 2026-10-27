@@ -1,6 +1,8 @@
 # Direction
 
-This project is a portable control plane for agent-first delivery: a repository declares what must hold, the harness makes those declarations checkable, and a released, pinned artifact carries the rules. [roadmap.md](roadmap.md) owns what is built; this document owns where it is going.
+This project is a portable control plane for agent-first delivery at bounded governance cost. Reuse a repository's plans, tests, reports and PRs to connect acceptance criteria with checkable evidence; released, pinned artifacts carry shared rules. [roadmap.md](roadmap.md) owns the forward plan; this document owns direction.
+
+Checks passed, evidence adequacy reviewed, and product accepted are separate states. Green gates establish neither sound measurement nor human acceptance. [Decision 0052](decisions/0052-evidence-first-delivery.md) owns the phased SPEC; its [reduction plan](governance-cost-review.md) has owner approval for A/B only. Product tasks and other governance changes remain separately scoped.
 
 ## Two references, two jobs
 
@@ -19,6 +21,7 @@ DeepSeek Harness supplies battle-tested parts: a gate aggregator with a worker p
 
 - The contracts for all four layers exist in the working tool. The current command inventory and release boundary live in [README.md](../README.md#status); the outstanding deployment and qualification work lives in [roadmap.md](roadmap.md).
 - Prioritize real consumer evidence and failure feedback before expanding the kernel or adding another pack.
+- Pause governance feature expansion while correcting stale guidance and reviewing adoption cost. coding-harness and agentic-ops are already real consumers. Observe their existing authorized work without a task quota or new ledger; missing cost data stays unknown, not a reason to block product work.
 
 ## Non-goals
 
@@ -29,4 +32,4 @@ DeepSeek Harness supplies battle-tested parts: a gate aggregator with a worker p
 
 ## The release protocol
 
-A governance tool that lags its own governance state is the failure this project exists to prevent, and the current answer is partial. What exists is a **release acceptance protocol**: `release-ready` fails when a recommended artifact is undeclared, `prove --check` reports whether every blocking gate carries a current proof, the full `prove` re-proves them, and the operator owns the order — release, tag, move the pins, re-record, push. A commit between those steps has a tag whose tool commit its proofs do not yet cover: the final state is correct and the intermediate one is exposed. **Atomic publication is not yet enforced by CI.** `harness attest` binds those facts and `--verify` recomputes them; what remains is running it in the release workflow. The next kernel change is a release attestation binding the version, the tag commit, the base release hash, the self lock, the example lock, and the proof set, verified before a release is announced.
+The [release acceptance protocol](release.md) already includes attestation: it binds version, tag/tool commit, base release, self/example locks and proof set. The current repository CI verifies a recorded attestation after gates and isolated proofs. This is not atomic publication: operators still order release, tag, pin movement, proof recording and push, and CI conditionally skips attestation when none exists. Do not describe the implemented verifier as future work or claim that it prevents every partial publication state.

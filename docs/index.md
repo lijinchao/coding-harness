@@ -6,6 +6,7 @@ own their facts. This map does not copy their contents or authorize actions.
 | Task / question | Authoritative source | When to read |
 |---|---|---|
 | Product boundaries and direction | [direction](direction.md) | Before changing scope or choosing a new subsystem |
+| Delivery cost and adoption changes | [SPEC](decisions/0052-evidence-first-delivery.md), [adoption results](governance-cost-review.md), [self repair](decisions/0053-consume-the-harness-on-current-work.md) | Before expanding governance or changing consumer policy |
 | Current capabilities and next work | [roadmap](roadmap.md) | Before planning an iteration |
 | Manifest fields and artifact contracts | [contracts](contracts.md), [schema](../schema/harness.manifest.schema.json) | Before adding or changing a declaration |
 | Why a choice was made | [context decision](decisions/0046-context-map-contract.md) and relevant `docs/decisions/` record | Before revisiting that choice |
