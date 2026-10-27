@@ -48,3 +48,59 @@ Review reproduced constructor-name acceptance in v2 closed objects. The focused
 regression at 4d818ab fails before the own-property guard; constructor, toString
 and __proto__ are exercised at root and nested boundaries. Publish 0.2.2 with
 that fix, retaining committed 0.2.1 unchanged; the v1 branch is not tightened.
+
+## Final local qualification
+
+`node --test test/delivery-v2.test.mjs test/delivery-v2-boundaries.test.mjs
+test/delivery-flow.test.mjs test/delivery-evidence.test.mjs`: 20 pass / 0 fail.
+`./harness gates --manifest harness.manifest.json --offline --timeout 180
+--report .harness/wisharness-final-gates.jsonl`: ten gates passed; npm test
+309 pass / 0 fail; proofs_checked=true and proof_problems=[]. Strict doctor,
+ten current input-bound proofs, derived 0.1.49 attestation, and the pinned v1
+example (two compositions) passed. Logs are `/tmp/wisharness-final-gates.log`
+and `/tmp/wisharness-final-proof-tests.log` / `wisharness-final-proof-plan.log`.
+Only tests and delivery-flow/plan were re-proved; their injected failures fired
+and recovery passed. No proof check was bypassed.
+
+Regenerating 0.2.2 into `/tmp/wisharness-pack-verify.PL3JjI` and diffing it against
+the committed artifact was byte-identical. Source VERSION, release version and
+self pin are 0.2.2. Kernel/base and every prior committed release are unchanged.
+
+## Actual self-consumer evidence
+
+Existing runCommandReview captured each command from delivery.plan.json, using
+its own timeout/tree/output machinery and selected red stdout/stderr capture.
+No new execution engine or receipt validator was introduced. Different real TDD
+baselines are supported by the existing checker; one synthetic common baseline
+was not manufactured to accommodate the convenience capture script.
+
+| Check | Frozen red revision | Green revision | Exit red/green |
+|---|---|---|---|
+| unit / policy / operator | 7aa87159b0abea30f4aa79d2bd485e32c8f5a618 | 5fd429f16ce215622f0fe4b30a702dae13baded2 | 1 / 0 |
+| boundary | 4d818ab284eec1a95aa9189b429f4f2a0862d6e3 | 5fd429f16ce215622f0fe4b30a702dae13baded2 | 1 / 0 |
+
+Frozen main test SHA-256:
+`630af663d13741eb564c705bb8172c3eb31bb8d6cfcdc76bc787602aa6668d29`;
+boundary test SHA-256:
+`85f78a4776cebfe291558d350894be0d2b5343597f5fd856ba97cbf7e77a9933`.
+The source and all green receipts bind to 5fd429f. The existing behavior SPEC hash
+is `fd95bb61a292ee0b85423c6ed030d2c8bdc704d67b1ab16f8110535a78056a6c`;
+plan hash is `25a9a65fa785311c18d4252d35092ab43577970a5bbe8f53238850864280fdd7`.
+
+Recheck without executing commands:
+
+```sh
+node scripts/check-delivery.mjs --manifest delivery.plan.json --stage verified \
+  --revision 5fd429f16ce215622f0fe4b30a702dae13baded2 \
+  --receipts /tmp/wisharness-v2-evidence.NHRXLR
+```
+
+Report `/tmp/wisharness-v2-evidence.NHRXLR/delivery-report.json`, SHA-256
+`a716acda4c8840fc2937d332dd42af7d3c84211234b9fb314d9df04a6c1c1dd9`:
+status=verified, verification_complete=true, six mapped criteria verified;
+unit/integration/e2e covered by valid local contract/adapter receipts;
+human_decision=pending, authorizes_merge=false, problems=[]. This does not
+qualify an SDK, production system, arbitrary native format or semantic coverage.
+Raw artifacts are local evidence, not hosted CI provenance. This final record is
+outside the declared implementation scope; the named candidate, not this future
+record, is what the receipts tested. Remote review/CI/merge follow separately.
