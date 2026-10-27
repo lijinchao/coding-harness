@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-26T17:14:50.079Z",
+  "at": "2026-10-27T16:11:00.446Z",
   "version": "0.1.49",
   "toolCommit": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
   "tag": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
@@ -8,7 +8,7 @@
     "release": "59e4be313164c7ca3377dcecad7144a43da431fe09977e96f33de78ae69cbd0d"
   },
   "locks": {
-    "self": "f5ba121e4eda19f34da01854e680eec5c1afff5a40e9b5e8024b6b372032828f",
+    "self": "c97f16e3f9c1858f660118d4773ce453166727dbe27b3654db99fcf80dfd2a8f",
     "example": "56ea1b883ab9fdd305c73a0bea1093f5fa9b071972546c3f92c2cc7b444c32bc"
   },
   "proofs": {
@@ -26,7 +26,7 @@
     },
     "tests": {
       "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-      "definition": "5ca225d3665f7ae213d17139f20150efc551b3921e2ac1c04e8a10928510dafa"
+      "definition": "51b2a91b68f624125eb9b2aab6078f40a8569bae6f6875214eb2130165e9b4ae"
     },
     "release": {
       "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
@@ -50,7 +50,7 @@
     },
     "delivery-flow/plan": {
       "tool": "c5fb3cd3dd92f32b49861ba18b0d341819ff951c",
-      "definition": "44b96947830f543b09fba18231b086a90688d88c5c8a9867a16532206990d401"
+      "definition": "55f930ca2cd18a789b81ee8f8fbf9287e7d331c74501ae89988a50c4c3e229f2"
     }
   },
   "example": "examples/consumer/harness.manifest.json"
