@@ -97,6 +97,15 @@ test('v2 policy rejects missing and duplicate scenario markers, ignoring fenced 
   assert.equal(f.inspect().status, 'planned')
 })
 
+test('v2 policy requires regular index entries, not only regular working files', t => {
+  const f = fixture(t)
+  symlinkSync('value.mjs', join(f.root, 'link.md'))
+  f.git('add', 'link.md')
+  const oid = f.git('ls-files', '--stage', 'link.md').split(' ')[1]
+  f.git('update-index', '--cacheinfo', '120000', oid, 'requirement.md')
+  assert.match(f.inspect().problems.join('\n'), /tracked regular|index.*regular/)
+})
+
 test('v2 policy cannot promote blocked or unevaluated tiers into full verification', t => {
   const f = fixture(t)
   for (const status of ['blocked', 'not_evaluated']) {
