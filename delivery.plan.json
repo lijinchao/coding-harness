@@ -1,71 +1,136 @@
 {
-  "schema_version": "coding-harness.delivery/v1",
-  "id": "current-work-self-consumption",
-  "outcome": "Use the harness on current work, separate diagnostics from delivery evidence, and reduce self-imposed adoption friction.",
-  "design": "docs/decisions/0053-consume-the-harness-on-current-work.md",
+  "schema_version": "coding-harness.delivery/v2",
+  "id": "project-owned-behavior-evidence",
+  "outcome": "Bind existing behavior scenarios and honest tier evidence to the candidate without changing legacy consumers.",
+  "design": "docs/changes/wisharness-spec-adoption/spec.md",
   "constraints": [
-    "No Kernel, base, pack, consumer product or immutable release changes",
-    "Keep existing document declarations and entry limits; no new gate or dependency",
-    "Historical diagnostics and mechanism smoke do not qualify current delivery",
-    "No minimum task quota, fabricated acceptance, credential or network isolation claim"
+    "Opt-in pack contract; Kernel/base stays 0.1.49 and v1 keeps its semantics",
+    "No new executor, dependency, consumer product change or automatic human acceptance",
+    "Behavior text stays in its existing source; machine map stores only references and check links"
   ],
   "scope": [
-    "docs/decisions/0053-consume-the-harness-on-current-work.md",
-    "docs/decisions/0052-evidence-first-delivery.md",
-    "docs/direction.md",
-    "docs/roadmap.md",
-    "docs/governance-cost-review.md",
-    "docs/governance.md",
+    "packs/delivery-flow",
+    "dist/packs/delivery-flow/base@0.2.2",
+    "docs/changes/wisharness-spec-adoption/spec.md",
+    "docs/changes/wisharness-spec-adoption/plan.md",
+    "docs/decisions/0054-project-owned-behavior-evidence.md",
+    "docs/packs.md",
+    "docs/contracts.md",
     "docs/index.md",
-    "docs/command-review.md",
-    "AGENTS.delta.md",
-    "AGENTS.md",
-    "harness.manifest.json",
     "delivery.plan.json",
-    "scripts/check-command-review.mjs",
-    "test/self-consumption.test.mjs",
-    ".github/workflows/harness.yml"
+    "harness.manifest.json",
+    "scripts/check-delivery.mjs",
+    "test/delivery-v2.test.mjs",
+    "test/delivery-v2-boundaries.test.mjs"
   ],
   "acceptance": [
     {
-      "id": "AC-CURRENT",
-      "description": "Operator preflight references the active task and leaves verification and acceptance pending",
+      "id": "AC-SOURCE",
+      "scenario": "AC-01",
+      "description": "Reuse tracked project-owned behavior and stable scenario references",
       "checks": [
-        "preflight"
+        "unit",
+        "policy"
       ]
     },
     {
-      "id": "AC-POLICY",
-      "description": "Self budget, historical metrics, smoke boundaries and shared-writing instructions match the approved repair",
+      "id": "AC-REFERENCES",
+      "scenario": "AC-02",
+      "description": "Invalid source paths or scenario references fail closed",
+      "checks": [
+        "unit",
+        "policy",
+        "boundary"
+      ]
+    },
+    {
+      "id": "AC-DRIFT",
+      "scenario": "AC-03",
+      "description": "Source and plan drift invalidate candidate evidence",
       "checks": [
         "policy"
+      ]
+    },
+    {
+      "id": "AC-TIERS",
+      "scenario": "AC-04",
+      "description": "Missing or blocked tier evidence cannot become verified",
+      "checks": [
+        "policy",
+        "operator"
+      ]
+    },
+    {
+      "id": "AC-LEGACY",
+      "scenario": "AC-05",
+      "description": "Legacy behavior is unchanged and migration is explicit",
+      "checks": [
+        "policy"
+      ]
+    },
+    {
+      "id": "AC-SELF",
+      "scenario": "AC-06",
+      "description": "The actual self consumer uses the new pinned pack and named checks",
+      "checks": [
+        "policy",
+        "operator"
       ]
     }
   ],
   "checks": [
     {
-      "id": "policy",
-      "tier": "integration",
-      "command": "node --test --test-name-pattern='self-consumption policy' test/self-consumption.test.mjs",
+      "id": "unit",
+      "tier": "unit",
+      "command": "node --test --test-name-pattern='v2 unit' test/delivery-v2.test.mjs",
       "test_files": [
-        "test/self-consumption.test.mjs"
+        "test/delivery-v2.test.mjs"
       ],
-      "expected_failure": "self-consumption policy"
+      "expected_failure": "v2 unit"
     },
     {
-      "id": "preflight",
-      "tier": "e2e",
-      "command": "node --test --test-name-pattern='operator delivery preflight' test/self-consumption.test.mjs",
+      "id": "policy",
+      "tier": "integration",
+      "command": "node --test --test-name-pattern='v2 policy|v2 evidence|v2 self' test/delivery-v2.test.mjs",
       "test_files": [
-        "test/self-consumption.test.mjs"
+        "test/delivery-v2.test.mjs"
       ],
-      "expected_failure": "operator delivery preflight"
+      "expected_failure": "v2 policy"
+    },
+    {
+      "id": "operator",
+      "tier": "e2e",
+      "command": "node --test --test-name-pattern='v2 operator' test/delivery-v2.test.mjs",
+      "test_files": [
+        "test/delivery-v2.test.mjs"
+      ],
+      "expected_failure": "v2 operator"
+    },
+    {
+      "id": "boundary",
+      "tier": "integration",
+      "command": "node --test test/delivery-v2-boundaries.test.mjs",
+      "test_files": [
+        "test/delivery-v2-boundaries.test.mjs"
+      ],
+      "expected_failure": "v2 boundary"
     }
   ],
-  "tier_waivers": [
+  "tiers": [
     {
       "tier": "unit",
-      "reason": "No new pure-function implementation. These repository policy and real adapter CLI checks complement, not replace, existing document/metrics/receipt unit tests and the mandatory whole suite."
+      "status": "covered",
+      "reason": "Pure scenario extraction has explicit unit assertions"
+    },
+    {
+      "tier": "integration",
+      "status": "covered",
+      "reason": "Git, schemas, candidate bytes and actual red/green receipts are exercised together"
+    },
+    {
+      "tier": "e2e",
+      "status": "covered",
+      "reason": "The local pack operator CLI is exercised; no SDK or production environment qualification is claimed"
     }
   ]
 }

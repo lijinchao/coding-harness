@@ -1,0 +1,21 @@
+{
+  "id": "delivery-flow",
+  "kernelVersion": ">=0.1.41",
+  "gates": [{
+    "id": "delivery-flow/plan",
+    "command": "node scripts/check-delivery.mjs --manifest delivery.plan.json --stage planned",
+    "protects": "Acceptance-map preflight only: legacy v1 mappings or opt-in v2 tracked behavior references and explicit tier declarations; not verified execution or human acceptance.",
+    "prove_fires": "Empty the acceptance criteria; the plan check must fail, then pass after revert.",
+    "prove_fires_command": "node -e \"const fs=require('fs');const p='delivery.plan.json';const m=JSON.parse(fs.readFileSync(p));m.acceptance=[];fs.writeFileSync(p,JSON.stringify(m,null,2)+'\\n')\"",
+    "revert_command": "git restore -- delivery.plan.json",
+    "severity": "blocking",
+    "expect": {"forbid": ["\"status\": \"blocked\""]},
+    "always": true
+  }],
+  "surfaces": [{
+    "id": "delivery-flow/artifacts",
+    "paths": ["delivery.plan.json", "scripts/check-delivery.mjs"],
+    "requires": ["delivery-flow/plan"]
+  }],
+  "skills": []
+}
