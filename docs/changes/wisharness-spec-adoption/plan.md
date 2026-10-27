@@ -26,5 +26,5 @@
 
 ## 执行记录
 
-- 已完成与验证证据：待本轮检查后填写。
-- 剩余事项、阻塞与下一步：依据 SPEC 决定是否实现 opt-in 的需求映射和验证状态检查；本轮不实现。
+- 已完成与验证证据：在隔离 worktree 编写 [spec.md](spec.md)，对照 SDK 本地 `master@eaed603` 和本仓 `main@840205f` 的实际模板、配置、Pack schema 与 checker；`npm test` 输出 `tests 292 / pass 292 / fail 0`；`./harness check --manifest examples/consumer/harness.manifest.json` 输出 `check: 2 composition(s) match 0.1.49`。两项均在本次仅文档变更后执行。
+- 剩余事项、阻塞与下一步：依据 SPEC 决定是否实现 opt-in 的需求映射和验证状态检查，并先取得真实消费者误判证据；本轮不实现，也不把插件配置启用解释为 SDK 项目的工作流执行结果。
