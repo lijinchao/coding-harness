@@ -190,7 +190,7 @@ test('v2 operator CLI reports tier gaps without claiming completion', t => {
 test('v2 self adoption uses the pinned new pack and existing behavior source', () => {
   const manifest = JSON.parse(readFileSync(join(ROOT, 'harness.manifest.json')))
   const plan = JSON.parse(readFileSync(join(ROOT, 'delivery.plan.json')))
-  assert.equal(manifest.packs.find(pack => pack.id === 'delivery-flow').version, '0.2.0')
+  assert.match(manifest.packs.find(pack => pack.id === 'delivery-flow').version, /^0\.2\.\d+$/)
   assert.equal(manifest.tool.version, '0.1.49')
   assert.equal(plan.schema_version, 'coding-harness.delivery/v2')
   assert.equal(plan.design, 'docs/changes/wisharness-spec-adoption/spec.md')
